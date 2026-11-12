@@ -1,22 +1,24 @@
 /*
  * The environment, checked once at boot.
  *
- * `instrumentation.ts` calls `env()` before anything else runs, so a missing or
+ * `instrumentation.ts` calls `checkEnv()` before anything else runs, so a missing or
  * malformed setting stops the server with a message naming each variable,
  * instead of an app that boots, reports healthy, and fails at the first sign-in,
  * share link or OAuth discovery. Messages name the variable and the rule, never
  * the value.
  *
+ * The migrator runs the same check first (lib/db/migrate.ts), so a deploy with
+ * a bad setting is refused before it migrates anything.
+ *
  * The readers elsewhere (`lib/auth/tokens.ts`, `lib/crypto/sealed.ts`,
  * `lib/web/urls.ts`, `lib/auth/oidc-config.ts`, …) still read `process.env` when
  * used: tests change it per case, and a memoised copy would hide that. This file
- * is where the rules live.
+ * is where the rules live, at least as strict as each reader, so a value that
+ * passes here reads the same there.
  */
 
 import { z } from 'zod'
-
-/** Shared with the readers that check their secret again at first use. */
-export const MIN_SECRET_LENGTH = 32
+import { MIN_SECRET_LENGTH } from './secret-length'
 
 /* What `oidc-config.ts`'s `flag()` reads with a clear meaning (it trims and
    lowercases first). Anything else (`enabled`, a typo) would quietly read as
@@ -35,9 +37,11 @@ const secret = (name: string) =>
 
 const LOCAL_HOSTS = ['localhost', '127.0.0.1', '[::1]']
 
-/* An https origin (http only for a local run), with nothing after it but an
-   optional slash: share links, OAuth discovery and the sign-on callback are all
-   built by appending a path to it. */
+/* An https origin (http only for a local run), written exactly as the parser
+   writes it, plus at most trailing slashes: `baseUrl()` uses the raw string with
+   only those stripped, and share links, OAuth discovery and the sign-on callback
+   are all built by appending a path to it. So a space, a lone `?` or `#`, a
+   path, credentials, upper case or a default port are refused, not normalised. */
 function isOrigin(raw: string): boolean {
   let url: URL
   try {
@@ -47,7 +51,7 @@ function isOrigin(raw: string): boolean {
   }
   const scheme =
     url.protocol === 'https:' || (url.protocol === 'http:' && LOCAL_HOSTS.includes(url.hostname))
-  return scheme && url.pathname === '/' && !url.search && !url.hash && !url.username && !url.password
+  return scheme && raw.replace(/\/+$/, '') === url.origin
 }
 
 function isTimeZone(raw: string): boolean {
@@ -75,8 +79,7 @@ const schema = z.object({
   INTEGRATIONS_KEY: secret('INTEGRATIONS_KEY'),
   PUBLIC_BASE_URL: z
     .string({ error: 'PUBLIC_BASE_URL must be set' })
-    .refine(isOrigin, 'PUBLIC_BASE_URL must be an https origin with no path, query or credentials'),
-  GIT_REVISION: z.string().default('dev'),
+    .refine(isOrigin, 'PUBLIC_BASE_URL must be an https origin alone, e.g. https://homedocs.example.com'),
   DATA_DIR: z.string().optional(),
   BACKUP_DIR: z.string().optional(),
   /* How many proxies append to X-Forwarded-For (lib/web/client-ip.ts). The
@@ -176,16 +179,6 @@ function refuse(error: z.ZodError | null, problems: Problem[]): void {
   if (lines.length > 0) throw new Error(`Invalid environment:\n${lines.join('\n')}`)
 }
 
-/**
- * Only what the migrator needs (DATABASE_URL, PGPASSWORD), so a recovery run
- * with just those isn't refused over app settings that don't affect migrations.
- */
-export function checkDatabaseEnv(raw: Record<string, string | undefined>): void {
-  const present = withoutBlanks(raw)
-  const result = schema.pick({ DATABASE_URL: true, PGPASSWORD: true }).safeParse(present)
-  refuse(result.success ? null : result.error, databaseChecks(present))
-}
-
 /** Parse an environment; throws with every problem, by variable name, never a value. */
 export function parseEnv(raw: Record<string, string | undefined>): Env {
   const present = withoutBlanks(raw)
@@ -195,8 +188,7 @@ export function parseEnv(raw: Record<string, string | undefined>): Env {
   return result.data
 }
 
-let parsed: Env | undefined
-
-export function env(): Env {
-  return (parsed ??= parseEnv(process.env))
+/** This process's environment; throws as parseEnv does. */
+export function checkEnv(): void {
+  parseEnv(process.env)
 }

@@ -11,12 +11,15 @@
  */
 
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto'
+import { MIN_SECRET_LENGTH } from '../secret-length'
 
 export class SealedError extends Error {}
 
 function key(): { key: Buffer; id: string } {
   const raw = process.env.INTEGRATIONS_KEY ?? ''
-  if (raw.length < 32) throw new SealedError('INTEGRATIONS_KEY must be set (32+ characters).')
+  if (raw.length < MIN_SECRET_LENGTH) {
+    throw new SealedError(`INTEGRATIONS_KEY must be set (${MIN_SECRET_LENGTH}+ characters).`)
+  }
   const k = createHash('sha256').update(`homedocs:sealed:v1:${raw}`).digest()
   const id = createHash('sha256').update(k).digest('base64url').slice(0, 8)
   return { key: k, id }

@@ -78,16 +78,16 @@ address or your WAN address, not the proxy's.
 Compose refuses to start without `POSTGRES_PASSWORD`, `SESSION_SECRET`, `INTEGRATIONS_KEY` and
 `PUBLIC_BASE_URL` (`${VAR:?}`). At boot, `lib/env.ts` (zod) checks everything below from
 `instrumentation.ts`, and the server exits 1 with a message naming each bad variable, never its
-value. The migrator (`dist/migrate.cjs`, before the server) checks only `DATABASE_URL` and
-`PGPASSWORD` the same way, so a missing password is named rather than reported as a failed
-query. A blank value counts as unset. Locally, `.env.local` from `.env.example`.
+value. The migrator (`dist/migrate.cjs`, which the entrypoint runs before the server) runs the
+same check first, so a deploy with a bad setting stops before anything is migrated. A blank
+value counts as unset. Locally, `.env.local` from `.env.example`.
 
 | Variable | Required | Rule and notes |
 |---|---|---|
 | `POSTGRES_PASSWORD` | yes | Any characters. The app gets it as `PGPASSWORD` beside a password-less `DATABASE_URL` (compose builds both), which postgres-js and `pg_dump` read themselves, so a `/` or `@` in it is safe. It only sets the password when Postgres creates a new cluster: changing it later also needs `ALTER ROLE` in the database. |
 | `SESSION_SECRET` | yes | 32+ characters (`openssl rand -base64 48`). Tokens (sessions, invites, share links, OAuth codes and tokens) are stored as HMACs under it, so **rotating it signs everyone out, the claude.ai connector included**, and invalidates share links. |
 | `INTEGRATIONS_KEY` | yes | 32+ characters and **different** from `SESSION_SECRET`. Encrypts codes and integration tokens. **Keep a copy with the backups**: losing it makes them unreadable (they can be re-entered). |
-| `PUBLIC_BASE_URL` | yes | An `https` origin with no path, e.g. `https://homedocs.example.com` (`http` only for `localhost`). Share links, OAuth discovery and the sign-on callback are built from it. |
+| `PUBLIC_BASE_URL` | yes | An `https` origin alone, lower case, e.g. `https://homedocs.example.com` (a trailing `/` is fine; no path, `?`, `#`, spaces or default port; `http` only for `localhost`). Share links, OAuth discovery and the sign-on callback are built from it. |
 | `CLIENT_IP_HEADER` | `x-real-ip` here | A header name. When set, the client address is read from it alone (above). |
 | `TRUSTED_PROXY_HOPS` | default `1` | A whole number, 1 or more: how many proxies append to `X-Forwarded-For`. Used only when `CLIENT_IP_HEADER` is unset. |
 | `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` | | Single sign-on: all three or none; the issuer an http(s) URL. Redirect URI: `<PUBLIC_BASE_URL>/login/oidc/callback`. |

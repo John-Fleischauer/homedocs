@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { checkDatabaseEnv, parseEnv } from '@/lib/env'
+import { parseEnv } from '@/lib/env'
 
 /* Fixtures only; they match no deployment. */
 const SECRET = 'x'.repeat(32)
@@ -49,7 +49,6 @@ describe('parseEnv', () => {
     expect(env.INTEGRATIONS_KEY).toBe(KEY)
     expect(env.OIDC_ISSUER).toBeUndefined()
     expect(env.CLIENT_IP_HEADER).toBe('x-real-ip')
-    expect(env.GIT_REVISION).toBe('dev')
   })
 
   it('accepts single sign-on with every setting the reader understands', () => {
@@ -74,6 +73,22 @@ describe('parseEnv', () => {
     expect(refusal({ ...production, PUBLIC_BASE_URL: 'https://example.test/homedocs' })).toContain(
       'PUBLIC_BASE_URL',
     )
+  })
+
+  it('refuses an origin the readers would use unnormalised', () => {
+    /* baseUrl() strips only trailing slashes, so each of these would reach a share
+       link or the OAuth issuer as written. */
+    for (const value of [
+      'https://homedocs.example.test ',
+      'https://homedocs.example.test/?',
+      'https://homedocs.example.test#',
+      'https://HomeDocs.example.test',
+      'https://homedocs.example.test:443',
+      'https://user@homedocs.example.test',
+    ]) {
+      expect(refusal({ ...production, PUBLIC_BASE_URL: value })).toContain('PUBLIC_BASE_URL')
+    }
+    expect(parseEnv({ ...production, PUBLIC_BASE_URL: 'https://homedocs.example.test:8443' })).toBeTruthy()
   })
 
   it('names every missing required variable and prints no value', () => {
@@ -138,20 +153,5 @@ describe('parseEnv', () => {
     expect(refusal({ ...production, DATABASE_URL: 'mysql://homedocs@db/homedocs' })).toContain(
       'DATABASE_URL',
     )
-  })
-})
-
-describe('checkDatabaseEnv', () => {
-  it('checks only the database variables', () => {
-    expect(() =>
-      checkDatabaseEnv({
-        NODE_ENV: 'production',
-        DATABASE_URL: production.DATABASE_URL,
-        PGPASSWORD: 'pw',
-      }),
-    ).not.toThrow()
-    expect(() =>
-      checkDatabaseEnv({ NODE_ENV: 'production', DATABASE_URL: production.DATABASE_URL }),
-    ).toThrow(/PGPASSWORD/)
   })
 })

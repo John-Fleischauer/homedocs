@@ -10,7 +10,7 @@
  */
 
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
-import { MIN_SECRET_LENGTH } from '../env'
+import { MIN_SECRET_LENGTH } from '../secret-length'
 
 /** 256 bits, per docs/ARCHITECTURE.md. base64url so it is cookie-safe. */
 export const TOKEN_BYTES = 32

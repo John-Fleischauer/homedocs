@@ -9,8 +9,9 @@
  * our outermost proxy and is the real client; everything to its left is
  * whatever the client claimed, and is ignored.
  *
- * Behind Cloudflare, set CLIENT_IP_HEADER=cf-connecting-ip — Cloudflare
- * overwrites that header, so it cannot be forged through the tunnel.
+ * Or CLIENT_IP_HEADER names one header to read instead, which is only safe when
+ * the proxy in front overwrites that header on every request, so a client
+ * cannot choose its value (production: x-real-ip; docs/DEPLOYMENT.md).
  *
  * This decides whether the house guide treats a visitor as "at home"
  * (lib/guide/location.ts), so the hop count must match the deployment. If the

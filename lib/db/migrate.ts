@@ -21,7 +21,7 @@ import { join } from 'node:path'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
-import { checkDatabaseEnv } from '../env'
+import { checkEnv } from '../env'
 
 const MIGRATIONS_FOLDER = process.env.MIGRATIONS_FOLDER ?? 'lib/db/migrations'
 
@@ -48,14 +48,15 @@ function snapshot(url: string, dir: string) {
 }
 
 async function main() {
-  /* In the container this runs before the server, so a missing PGPASSWORD would
-     otherwise surface as a failed query rather than a message naming it. Only the
-     database variables: the server checks the rest (lib/env.ts) when it starts,
-     and a recovery run with just these shouldn't be refused over app settings.
-     The image sets NODE_ENV=production; a local `pnpm db:migrate` is not checked. */
+  /* The server's whole check (lib/env.ts), before anything is migrated: the
+     container runs this first, and a deploy with a bad setting must be refused
+     while the database is untouched, not migrated and then left behind a server
+     that won't start. It also names a missing PGPASSWORD instead of a failed
+     query. The image sets NODE_ENV=production; a local `pnpm db:migrate` is not
+     checked. */
   if (process.env.NODE_ENV === 'production') {
     try {
-      checkDatabaseEnv(process.env)
+      checkEnv()
     } catch (err) {
       console.error(err instanceof Error ? err.message : err)
       process.exit(1)

@@ -55,23 +55,8 @@ export function formatScope(scopes: readonly Scope[]): string {
   return scopes.join(' ')
 }
 
-/**
- * The external origin, with no trailing slash.
- *
- * Required in every mode and checked at boot (lib/env.ts), never defaulted:
- * guessing an origin here produces discovery documents that are wrong in a way
- * nothing surfaces until a connector fails with an issuer mismatch. A local run
- * sets it to http://localhost:3000 (.env.example).
- */
-export function baseUrl(): string {
-  const raw = process.env.PUBLIC_BASE_URL
-  if (!raw) throw new Error('PUBLIC_BASE_URL must be set — OAuth discovery is built from it')
-  return raw.replace(/\/+$/, '')
-}
-
-export function absoluteUrl(path: string): string {
-  return `${baseUrl()}${path.startsWith('/') ? path : `/${path}`}`
-}
+/* One origin for share links and OAuth alike (lib/web/urls.ts). */
+export { absoluteUrl, baseUrl } from '../web/urls'
 
 /** The MCP endpoint, which is also the OAuth resource (RFC 8707) callers bind to. */
 export const MCP_PATH = '/mcp'
