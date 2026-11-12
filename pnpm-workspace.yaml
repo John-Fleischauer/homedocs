@@ -16,7 +16,7 @@ allowBuilds:
 # sharp ships its libvips binding as per-platform optional dependencies. Resolve
 # them for the deploy target as well as for whoever ran the install, or a
 # lockfile written on a Mac omits @img/sharp-linuxmusl-* entirely and
-# `pnpm install --frozen-lockfile` inside node:22-alpine produces an image that
+# `pnpm install --frozen-lockfile` inside node:24-alpine produces an image that
 # builds, pushes, deploys, and then throws "Could not load the sharp module" the
 # first time anything touches a cover.
 #

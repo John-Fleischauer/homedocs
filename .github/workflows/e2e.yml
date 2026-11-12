@@ -28,8 +28,7 @@ jobs:
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
-          # The runtime is still Node 22 (Dockerfile); Node 24 is its own PR.
-          node-version: '22'
+          node-version: '24'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       # Chromium only: the phone project in playwright.config.ts is a Pixel 7.

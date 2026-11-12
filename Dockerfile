@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # --- deps ---
-FROM node:22-alpine AS deps
+FROM node:24-alpine AS deps
 WORKDIR /app
 # pnpm-workspace.yaml is required: it holds the build-script approvals, the
 # per-platform native bindings (argon2, sharp) and `nodeLinker: hoisted`,
@@ -10,7 +10,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN corepack enable && pnpm install --frozen-lockfile
 
 # --- build ---
-FROM node:22-alpine AS build
+FROM node:24-alpine AS build
 WORKDIR /app
 ARG GIT_REVISION=dev
 ENV GIT_REVISION=$GIT_REVISION
@@ -23,7 +23,7 @@ RUN pnpm exec esbuild lib/db/migrate.ts \
       --bundle --platform=node --format=cjs --outfile=dist/migrate.cjs
 
 # --- runtime ---
-FROM node:22-alpine AS runtime
+FROM node:24-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
