@@ -33,7 +33,7 @@ Postgres 18; pnpm.
   - Use the colour tokens in `app/globals.css`, never raw palette colours.
   - Plain words: Place, System, Fixture, Part, Note, Contact, Project. (Fixtures were "Things" and contacts
     were "People" until October 2026; the old routes redirect.)
-- **Compose.** No `build:` block, and `pull_policy: always`; CI builds the image.
+- **Compose.** No `build:` block, and `pull_policy: always` on the app image (not on postgres); CI builds the image.
 
 ## Git
 Conventional Commits. `main` deploys (CI → GHCR → Dockhand webhook).

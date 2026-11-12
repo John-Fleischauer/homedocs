@@ -55,29 +55,8 @@ export function formatScope(scopes: readonly Scope[]): string {
   return scopes.join(' ')
 }
 
-/**
- * The external origin, with no trailing slash.
- *
- * Missing in production is fatal rather than defaulted: guessing an origin here
- * produces discovery documents that are wrong in a way nothing surfaces until a
- * connector fails with an issuer mismatch. Development falls back to localhost
- * so the OAuth routes can be exercised without a tunnel — the flow that needs
- * real HTTPS is claude.ai's, and that one is manual anyway.
- */
-export function baseUrl(): string {
-  const raw = process.env.PUBLIC_BASE_URL
-  if (!raw) {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('PUBLIC_BASE_URL must be set — OAuth discovery is built from it')
-    }
-    return 'http://localhost:3000'
-  }
-  return raw.replace(/\/+$/, '')
-}
-
-export function absoluteUrl(path: string): string {
-  return `${baseUrl()}${path.startsWith('/') ? path : `/${path}`}`
-}
+/* One origin for share links and OAuth alike (lib/web/urls.ts). */
+export { absoluteUrl, baseUrl } from '../web/urls'
 
 /** The MCP endpoint, which is also the OAuth resource (RFC 8707) callers bind to. */
 export const MCP_PATH = '/mcp'

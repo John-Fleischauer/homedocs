@@ -1,6 +1,6 @@
 /*
- * Where background work starts. Next calls `register()` once per server
- * process, before any request is served.
+ * Next calls `register()` once per server process, before any request is
+ * served. The work is in lib/boot.ts.
  */
 
 export async function register() {
@@ -10,14 +10,6 @@ export async function register() {
   /* Imported inside the function: `next build` evaluates this file, and a
      top-level import would pull the database driver into a build with no
      DATABASE_URL. */
-
-  // Half-set single sign-on stops the container here, with the reason.
-  const { checkOidcAtBoot } = await import('./lib/auth/oidc')
-  checkOidcAtBoot()
-
-  const { checkEnvAtBoot } = await import('./lib/boot')
-  checkEnvAtBoot()
-
-  const { startJobs } = await import('./lib/jobs')
-  if (startJobs()) console.log('[jobs] scheduler started')
+  const { boot } = await import('./lib/boot')
+  await boot()
 }

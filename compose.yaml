@@ -13,18 +13,26 @@ services:
       # URL with `new URL()`, and a `/` in the password breaks it.
       DATABASE_URL: postgres://homedocs@db:5432/homedocs
       PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      # Required secrets have no default: compose refuses to start without them,
+      # and lib/env.ts checks them again at boot (each at least 32 characters).
+      # Rotating SESSION_SECRET signs everyone out, the claude.ai connector included.
       SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET}
       # Encrypts stored secrets and integration tokens. Separate from
       # SESSION_SECRET so signing everyone out does not destroy them. Back it up.
       INTEGRATIONS_KEY: ${INTEGRATIONS_KEY:?set INTEGRATIONS_KEY}
-      # The external HTTPS origin. OAuth discovery and share links are built from it.
+      # The external HTTPS origin, no path. OAuth discovery and share links are
+      # built from it, so there is no default: a wrong origin sends claude.ai to
+      # the wrong host.
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?set PUBLIC_BASE_URL}
       DATA_DIR: /data
-      # Where the pre-migration snapshot is written (shared with `backup`).
-      BACKUP_DIR: /backups
+      # Where the pre-migration dump is written (lib/db/migrate.ts): on the
+      # `files` volume, so it outlives the container and is in the host's snapshots.
+      BACKUP_DIR: /data/backups
       # Proxies in front of the app; the client address is that many entries from
-      # the right of X-Forwarded-For. Behind Cloudflare, set CLIENT_IP_HEADER.
+      # the right of X-Forwarded-For. Ignored while CLIENT_IP_HEADER is set.
       TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-1}
+      # A header the proxy in front sets to the client address on every request
+      # (production: x-real-ip; docs/DEPLOYMENT.md, Client address).
       CLIENT_IP_HEADER: ${CLIENT_IP_HEADER:-}
       # Single sign-on. Off unless issuer, id and secret are all set; two of three
       # fails the boot. Redirect URI: ${PUBLIC_BASE_URL}/login/oidc/callback.
@@ -39,7 +47,6 @@ services:
       TZ: ${TZ:-America/New_York}
     volumes:
       - files:/data
-      - backups:/backups
     healthcheck:
       # The entrypoint applies migrations before the server listens, hence the
       # longer start_period.
@@ -52,21 +59,25 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    # Caddy reaches the app over the shared `web` network as homedocs-app-1:3000
-    # (alias `homedocs`). No published port: Caddy sets X-Real-IP, which the app
-    # trusts, so the app must not be reachable except through Caddy.
+    # The reverse proxy reaches the app over the shared `web` network as
+    # homedocs-app-1:3000 (alias `homedocs`). No published port: the proxy sets
+    # X-Real-IP, which the app trusts, so the app must not be reachable except
+    # through the proxy.
     networks:
       default:
       web:
         aliases: [homedocs]
 
   db:
+    # Pinned major, no `pull_policy`: a Postgres upgrade is planned work, not a
+    # side effect of a redeploy.
     image: postgres:18-alpine
-    pull_policy: always
     restart: unless-stopped
     environment:
       POSTGRES_USER: homedocs
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # Sets the password only when the cluster is first created; changing it
+      # later also needs ALTER ROLE in the database.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
       POSTGRES_DB: homedocs
     volumes:
       # PG18 keeps data in a version subdirectory and wants the mount at
@@ -78,47 +89,12 @@ services:
       timeout: 5s
       retries: 10
 
-  # Nightly logical dump of the database, kept 30 days. Photos are primary data
-  # here (there is no other copy), so the `files` and `backups` volumes both
-  # belong in the host's offsite backup — see docs/DEPLOYMENT.md.
-  backup:
-    image: postgres:18-alpine
-    pull_policy: always
-    restart: unless-stopped
-    environment:
-      PGHOST: db
-      PGUSER: homedocs
-      PGDATABASE: homedocs
-      PGPASSWORD: ${POSTGRES_PASSWORD}
-      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-30}
-      BACKUP_AT_HOUR: ${BACKUP_AT_HOUR:-3}
-      TZ: ${TZ:-America/New_York}
-    volumes:
-      - backups:/backups
-    depends_on:
-      db:
-        condition: service_healthy
-    entrypoint: ['/bin/sh', '-c']
-    command:
-      - |
-        set -eu
-        dump() {
-          f="/backups/homedocs-$$(date +%Y%m%d-%H%M%S).dump"
-          pg_dump -Fc -f "$$f.partial" && mv "$$f.partial" "$$f" && echo "backup: wrote $$f"
-          find /backups -name 'homedocs-*.dump' -mtime +$$BACKUP_KEEP_DAYS -delete
-        }
-        dump
-        while true; do
-          sleep 3600
-          [ "$$(date +%H)" -eq "$$BACKUP_AT_HOUR" ] && dump || true
-        done
-
 networks:
   # The reverse proxy's network, created outside this stack.
   web:
     external: true
 
+# The host's daily snapshots back these up (docs/DEPLOYMENT.md, Backups).
 volumes:
   pgdata18:
   files:
-  backups:

@@ -127,20 +127,13 @@ function configOrOff(): OidcConfig {
 }
 
 /**
- * Called once from instrumentation.ts. A partial configuration stops the
- * server here, with the variables named, rather than coming up without the
- * button its owner set up. A complete one is discovered now, so an unreachable
- * issuer is in the log at boot rather than at the first visit to the login
- * page — not awaited, since it is no reason to delay serving.
+ * Called once from instrumentation.ts, after lib/env.ts has refused a partial
+ * configuration with the variables named. A complete one is discovered now, so
+ * an unreachable issuer is in the log at boot rather than at the first visit to
+ * the login page — not awaited, since it is no reason to delay serving.
  */
 export function checkOidcAtBoot(): void {
-  let config: OidcConfig
-  try {
-    config = readOidcConfig()
-  } catch (error) {
-    console.error(`[oidc] ${error instanceof Error ? error.message : String(error)}`)
-    process.exit(1)
-  }
+  const config = configOrOff()
   if (config.enabled) void discover(config).result
 }
 
