@@ -5,13 +5,12 @@ templates and workflow comments only ahead), Next.js app profile. This is the Ph
 tracked from the Phase 1 PR on. The findings below describe `main` as audited; John's answers are
 in "John's decisions (2026-11-12)" at the end, and each phase carries them out, so where a
 section and a decision disagree, the decision wins.
-Repo: `John-Fleischauer/homedocs` (**public**; moved from `ki4hrg`; the local `origin` already
+Repo: `John-Fleischauer/homedocs` (**public**; moved from the previous owner account; the local `origin` already
 points at the new owner). Local `main` = `origin/main` = `6345c55` (#8), which is also what
 production runs (`/api/health` revision, checked from outside 2026-11-12).
 
-**This repo is public**, so this report names no hostnames, addresses or private repos. "The EC2
-host" is the AWS instance homedocs runs on; "the homelab repo" is where the lab's own decisions
-live.
+**This repo is public**, so this report names no hostnames, addresses or private repos. "The host" is the
+machine homedocs runs on; "the infrastructure repo" is where its own decisions live.
 
 - **Profile:** Next.js app, already very close: Next **16.3.3** (App Router, `output:
   'standalone'`, `agentRules: false`), TypeScript strict + `noUncheckedIndexedAccess`, pnpm
@@ -23,16 +22,14 @@ live.
   (Testcontainers, 18 files), Playwright e2e with axe. Roles viewer/member/admin over one property.
 - **Exposure: internet-facing.** The claude.ai Homedocs connector reaches `/mcp` and the OAuth
   routes from Anthropic's cloud; share links (`/g/<token>`) go to housesitters; `APP_HEALTH_URL`
-  answers from outside: `{"status":"ok","revision":"6345c55…"}`, HTTP 200. Caddy runs on the same
-  EC2 host and reaches the app over the external `web` network; no published port.
-- **Deploy host differs from the homelab apps:** an AWS EC2 instance, **arm64**, not a Proxmox
-  VM. Dockhand (on the homelab) drives it through its Hawser agent; the last deploy's reply was
-  `{"success":true,"output":"Stack \"homedocs\" up completed via Hawser"}` (run 40440405206). So
-  it is deploy mode A, but backups, architecture and the proxy are the EC2 host's (Deploy, and
-  question 3).
+  answers from outside: `{"status":"ok","revision":"6345c55…"}`, HTTP 200. A reverse proxy on the same
+  host reaches the app over the external `web` network; no published port.
+- **Deploy host differs from the other apps:** an **arm64** host. Dockhand drives it through an
+  agent on that host, and the last deploy's reply was `success: true`. So it is deploy mode A,
+  but backups, architecture and the proxy are that host's (Deploy, and question 3).
 - **Activity:** 10 commits, 2026-10-16 to 2026-10-26 (inside 90 days; nothing since the org
-  move). **All 10** carry a Claude trailer; 3 are authored by a second account
-  (`john-foundry`, #6–#8). CLAUDE.md: 3 commits, all with a trailer.
+  move). **All 10** carry a Claude trailer; 3 are authored by a second
+  account of John's (#6–#8). CLAUDE.md: 3 commits, all with a trailer.
 - **Checks today:** not run (no install, build or Docker, by brief). This box has Node 20, which
   pnpm 11 refuses, so the audit ran through `corepack pnpm@10.33.0 audit` on a copy of
   `package.json` (without `packageManager`), `pnpm-lock.yaml` and `pnpm-workspace.yaml` in a
@@ -90,7 +87,7 @@ production writes unless John asks. Per phase:
    check, although `APP_HEALTH_URL` is set. Phase 1.
 5. **A hand merge today deploys nothing new.** CI pushes to `ghcr.io/${GITHUB_REPOSITORY,,}`
    (`deploy.yml:66`), now `ghcr.io/john-fleischauer/homedocs`, which doesn't exist yet; compose
-   still pulls `ghcr.io/ki4hrg/homedocs:main` (`compose.yaml:6`). Dockhand would say
+   still pulls `ghcr.io/<old owner>/homedocs:main` (`compose.yaml:6`). Dockhand would say
    `success: true` with the old image running. The first PR after the move must change the compose
    path (question 1).
 
@@ -105,10 +102,10 @@ Lower: the repo is public and names its deploy host (`deploy.yml:49`) and two pr
 | Workflow | partial | `deploy.yml` runs on `pull_request` ✓, squash-merged Conventional Commit titles ✓ (8 of 8), but hand-rolled, not the template caller; **`image` needs `e2e`**, so Playwright sits in the deploy path; `ubuntu-latest`; no top-level `permissions:`, no `workflow_dispatch`; no merge-on-green, `automerge` or `agent-found` label; merge commit and rebase allowed, `COMMIT_OR_PR_TITLE`, branches not deleted (3 stale); no PR template; public repo with `PR_RUNNER` set (inert) |
 | Quality | partial | typecheck, lint, test gate the image ✓; tests on real Postgres, no skip path ✓; MCP tools zod ✓; every action through `act()` ✓; guard table ✓; **82 server actions and the OAuth/ext routes parse by hand**; 69 `ActionForm`s with no `keepFormValues`; no `db:drift`; guard table not in the standard's columns; upload accepts a missing `Content-Length` |
 | Security | conflicts | **audit fails: 3 critical, 5 high**; no audit in CI; no Dependabot (config or alerts); **OIDC creates viewer/admin accounts**; no `lib/env.ts` (partial boot checks exit 1 ✓); no top-level `permissions:`; public repo naming its host and private repos. Meets: `${VAR:?}` on the app ✓, non-root ✓, `INTEGRATIONS_KEY` separate from and checked against `SESSION_SECRET` ✓, client IP from the right ✓, GitGuardian ✓, login throttled ✓ |
-| Deploy | partial | image in CI ✓ (arm64, native), no `build:` ✓, `pull_policy: always` ✓, `:main` + `:sha-` + revision label ✓, `GIT_REVISION` ✓, `/api/health` no auth, no DB, reports the revision ✓, PG18 mount ✓, `PGPASSWORD` ✓, migrations at boot ✓, no published port ✓; **webhook check inverted**, no revision check; `/api/health` says `status`, not `ok`; **compose pulls `ki4hrg`**; `pull_policy` on the `db` and `backup` postgres images; Node 22; DEPLOYMENT.md doesn't name the host's snapshot, mode or architecture |
+| Deploy | partial | image in CI ✓ (arm64, native), no `build:` ✓, `pull_policy: always` ✓, `:main` + `:sha-` + revision label ✓, `GIT_REVISION` ✓, `/api/health` no auth, no DB, reports the revision ✓, PG18 mount ✓, `PGPASSWORD` ✓, migrations at boot ✓, no published port ✓; **webhook check inverted**, no revision check; `/api/health` says `status`, not `ok`; **compose pulls the old owner's image**; `pull_policy` on the `db` and `backup` postgres images; Node 22; DEPLOYMENT.md doesn't name the host's snapshot, mode or architecture |
 | Stack | close | Node 22; no Prettier; MCP SDK and zod on caret ranges; no `format`, `db:drift`, `check:contrast` scripts |
 | Design | partial | standard token names ✓ (missing `ok*`, `warn-ink`, `danger-ink`), 1 raw palette class, 0 `dark:` ✓; system dark mode, no flash ✓, **no toggle**; no contrast check; manifest ✓; Title Case ✓ (#8); **15 `truncate`s, most on names** (incl. the shared `Card` row); **`confirm()`/`alert()`** in 12 places; `autoFocus` on 10 fields; date inputs keep native appearance; phone check in Chromium (Pixel 7), not WebKit 360px |
-| Agent docs | partial | CLAUDE.md 39 lines ✓, every path it names exists ✓, but half repeats standards; ARCHITECTURE ✓ (guard table, model), DEPLOYMENT ✓, ROADMAP ✓, README ✓; stale `ki4hrg` path; claims about other repos; no `AGENTS.md`, `.claude/settings.json`, DECISIONS, `claude-candidates.md` |
+| Agent docs | partial | CLAUDE.md 39 lines ✓, every path it names exists ✓, but half repeats standards; ARCHITECTURE ✓ (guard table, model), DEPLOYMENT ✓, ROADMAP ✓, README ✓; stale old-owner image path; claims about other repos; no `AGENTS.md`, `.claude/settings.json`, DECISIONS, `claude-candidates.md` |
 
 Gaps counted: Workflow 7, Quality 7, Security 7, Deploy 8, Stack 4, Design 8, Agent docs 5
 (46; the fix list groups them).
@@ -209,7 +206,7 @@ Gaps counted: Workflow 7, Quality 7, Security 7, Deploy 8, Stack 4, Design 8, Ag
 
 ### Deploy
 
-- `compose.yaml` (Dockhand tracks this name): `image: ${APP_IMAGE:-ghcr.io/ki4hrg/homedocs:main}`
+- `compose.yaml` (Dockhand tracks this name): `image: ${APP_IMAGE:-ghcr.io/<old owner>/homedocs:main}`
   (l.6, **old owner**), `pull_policy: always` ✓, no `build:` ✓, `restart: unless-stopped` ✓,
   `depends_on: service_healthy` ✓, a comment on every non-obvious line ✓.
 - Healthcheck: Node `fetch` on `/api/health` ✓, `start_period: 60s`. The route
@@ -217,7 +214,7 @@ Gaps counted: Workflow 7, Quality 7, Security 7, Deploy 8, Stack 4, Design 8, Ag
   revision ✓, as `{ status: 'ok', revision }` (l.14); the standard shape is `{ ok: true, revision }`.
   `dockhand-deploy.yml` reads only `.revision`, so `APP_HEALTH_URL` works with either; Phase 1
   changes the shape in the same PR as the template caller.
-- **GHCR:** `ghcr.io/ki4hrg/homedocs` is public (anonymous pull works; tags `main` and
+- **GHCR:** `ghcr.io/<old owner>/homedocs` is public (anonymous pull works; tags `main` and
   `sha-376d988` … `sha-6345c55`). `ghcr.io/john-fleischauer/homedocs` doesn't exist yet: the first
   `main` run creates it, possibly private (question 4).
 - Postgres: `postgres:18-alpine`, `pgdata18` at `/var/lib/postgresql` ✓, `pg_isready` ✓, no
@@ -226,20 +223,20 @@ Gaps counted: Workflow 7, Quality 7, Security 7, Deploy 8, Stack 4, Design 8, Ag
 - Migrations: esbuild-bundled `dist/migrate.cjs` from the entrypoint ✓; committed ✓; never
   `db push` ✓. When there's something to apply, `lib/db/migrate.ts` writes
   `homedocs-premigrate-*.dump` first ✓ (better than the standard asks).
-- Exposure: no published port; the app joins the external `web` network as `homedocs` and Caddy,
-  on the same host, proxies to it (`compose.yaml:61–67`) ✓: `deploy.md`'s "join the proxy's
+- Exposure: no published port; the app joins the external `web` network as `homedocs` and the
+  reverse proxy, on the same host, proxies to it (`compose.yaml:61–67`) ✓: `deploy.md`'s "join the proxy's
   network" case.
 - **Backups:** a `backup` sidecar (`compose.yaml:85–113`) `pg_dump -Fc`s nightly into the
   `backups` volume, keeping 30 days. The standard backup is the host's whole-machine snapshot; for
-  this host that's **EBS snapshots through AWS DLM, daily, kept 7 days, crash-consistent** (per
-  the homelab repo). The sidecar is allowed as the app's own. `docs/DEPLOYMENT.md:89–100` says to
-  include `backups` and `files` in "the host's offsite backup" but doesn't name the EBS snapshots
+  this host that's its provider's **daily block-level snapshots, kept 7 days, crash-consistent**
+  (per the infrastructure repo). The sidecar is allowed as the app's own. `docs/DEPLOYMENT.md:89–100` says to
+  include `backups` and `files` in "the host's offsite backup" but doesn't name the host snapshots
   (question 5).
 - Architecture: arm64 (`deploy.yml:49–52`, `:81`); not in `docs/DEPLOYMENT.md`.
 - Node 22: `node:22-alpine` ×3 (`Dockerfile:4,13,26`), CI `node-version: 22`, `engines: >=22`,
   `@types/node` 22.19.4, and the `pnpm-workspace.yaml` comment (l.19). `postgresql18-client`
   (`Dockerfile:39`) must still install on `node:24-alpine`.
-- `docs/DEPLOYMENT.md:8` names `ghcr.io/ki4hrg/homedocs`; l.24 shows the `status` shape.
+- `docs/DEPLOYMENT.md:8` names `ghcr.io/<old owner>/homedocs`; l.24 shows the `status` shape.
 
 ### Stack
 
@@ -285,7 +282,7 @@ kit isn't built yet; `components/ui/` stays until it is.
 - **CLAUDE.md: 39 lines** ✓. Every path, helper and command it names exists (`liveIn()`,
   `buildGuide()`, `lib/search/rebuild.ts`, `lib/crypto/sealed.ts`, `clientIp()`, the e2e port
   3100) ✓. About half restates the profile, `security.md` or `design.md` (triage below).
-- Stale: `docs/DEPLOYMENT.md:8` (`ki4hrg` image), l.24 (health shape); CLAUDE.md l.36 says
+- Stale: `docs/DEPLOYMENT.md:8` (old-owner image), l.24 (health shape); CLAUDE.md l.36 says
   `pull_policy: always` without "app images only".
 - Claims about other repos: `docs/ARCHITECTURE.md:23–24` ("Auth and OAuth/MCP come from …", "CI
   and Compose come from …"), and "copied from …, ADR-0012 there" in `lib/auth/oidc.ts:2`,
@@ -389,8 +386,8 @@ Recommendation in brackets.
    `node-version: '22'`, the workspace comment; check `postgresql18-client` on `node:24-alpine`.
 7. **Compose and deploy docs** (S, Phase 2): no `pull_policy` on `db` and `backup`; guarded
    `${POSTGRES_PASSWORD:?}` everywhere or a comment; `docs/DEPLOYMENT.md`: mode A through Dockhand
-   and its agent on the EC2 host, arm64, exposure (Caddy on the same host, `web` network, no port),
-   backups (EBS snapshots + the sidecar, question 5), one `CLIENT_IP_HEADER` row, the health
+   and its agent on the host, arm64, exposure (the reverse proxy on the same host, `web` network, no port),
+   backups (host snapshots + the sidecar, question 5), one `CLIENT_IP_HEADER` row, the health
    shape.
 8. **Trust boundaries** (M, Phase 3): (a) zod at server actions (a schema argument to `act()` or a
    form-parse helper, area by area), `keepFormValues` on `ActionForm`, the one person-facing
@@ -421,7 +418,7 @@ Still needed:
   check; a public repo's hosted minutes are free, so billing shouldn't block it.
 - **Compose image path** to the org (in the advisory PR, fix list 1). Then **registry access**:
   the first `main` run creates `ghcr.io/john-fleischauer/homedocs`; make it public like the
-  current one, or give Dockhand registry credentials for the EC2 host (question 4). Then confirm
+  current one, or give Dockhand registry credentials for the host (question 4). Then confirm
   `/api/health` reports the merged commit (it's public, so anyone can check).
 - **John confirms** the Dockhand stack has **Force redeploy** and **Re-pull images** on
   (question 2).
@@ -456,7 +453,7 @@ merge as well.
 ### Exceptions to record in `docs/DECISIONS.md` (if John agrees)
 
 - arm64 image, built natively on `ubuntu-24.04-arm` (the host's architecture).
-- The `backup` sidecar kept beside the EBS snapshots (question 5).
+- The `backup` sidecar kept beside the host snapshots (question 5).
 - Client IP from a proxy-set header, if that's what production uses (question 9).
 - System-only dark mode, only if John says no to the toggle (question 11).
 
@@ -468,17 +465,16 @@ merge as well.
    without the image path the merge deploys nothing new while Dockhand reports success.
 2. **Dockhand:** are Force redeploy and Re-pull images on for the homedocs stack? Recommend yes;
    Phase 1's revision check depends on them.
-3. **The EC2 host:** confirm homedocs stays deploy mode A (Dockhand git stack, webhook to the
-   homelab's Dockhand, applied on the EC2 host by its agent, which the last deploy's reply
+3. **The host:** confirm homedocs stays deploy mode A (Dockhand git stack, webhook to
+   Dockhand, applied on the host by its agent, which the last deploy's reply
    shows), with the image built for arm64 on GitHub's arm runner. Recommend yes, recorded in
-   DEPLOYMENT.md and DECISIONS.md. Is anything about that host (its own update policy, Hawser over
-   the tunnel being down) something the deploy job should expect?
+   DEPLOYMENT.md and DECISIONS.md. Is anything about that host (its own update policy, its agent being unreachable) something the deploy job should expect?
 4. **Registry:** the org package doesn't exist yet. Make `ghcr.io/john-fleischauer/homedocs`
-   public after the first push (the current `ki4hrg` one is public, and so is the repo), or give
-   Dockhand registry credentials for the EC2 host? Recommend public. And remove the old
-   `ki4hrg/homedocs` package once the new one serves?
-5. **Backups:** the standard backup here is the EC2 host's EBS snapshots (daily, 7 days,
-   crash-consistent, per the homelab repo). Keep the `backup` sidecar as the app's own (30 days of
+   public after the first push (the old owner's one is public, and so is the repo), or give
+   Dockhand registry credentials for the host? Recommend public. And remove the
+   old owner's `homedocs` package once the new one serves?
+5. **Backups:** the standard backup here is the host's snapshots (daily, 7 days,
+   crash-consistent, per the infrastructure repo). Keep the `backup` sidecar as the app's own (30 days of
    dumps, on the same disk, so inside the snapshots), and say both in DEPLOYMENT.md? Recommend
    keep it: photos and codes have no other copy, and 30 days of dumps reach further back than 7
    days of snapshots. Can you confirm the snapshot policy covers the volume holding Docker's data?
@@ -495,7 +491,7 @@ merge as well.
    `/setup`. The alternative is a recorded exception relying on the identity provider's group
    restriction.
 9. **Client IP:** does production set `CLIENT_IP_HEADER=x-real-ip` (DEPLOYMENT.md l.37), and is
-   there a Cloudflare route (l.39)? It decides "at home" for the house guide. Recommend: if Caddy
+   there another proxy in front (l.39)? It decides "at home" for the house guide. Recommend: if the proxy
    overwrites `X-Real-IP` on every request, keep it and record it as an exception; otherwise unset
    it and use `TRUSTED_PROXY_HOPS`. One DEPLOYMENT.md row either way.
 10. **e2e:** a PR-only job (local `e2e.yml`) that gates the merge but not the image or deploy, on
@@ -515,13 +511,13 @@ merge as well.
 
 - **Q1:** yes, today: deps-only advisory PR (Next 16.4.6, sharp 0.35.5, lockfile refresh) with the compose image moved to `ghcr.io/john-fleischauer/homedocs`, through the current `deploy.yml`; John merges by hand.
 - **Q2:** Dockhand Force redeploy and Re-pull images are both on for the stack.
-- **Q3:** keep deploy mode A as is (Dockhand webhook, applied on the EC2 host by its agent; arm64 built on GitHub's arm runner); record it in DEPLOYMENT.md and DECISIONS.md.
-- **Q4:** make the org package public after its first push; delete the old `ki4hrg/homedocs` package once the new one serves.
-- **Q5:** **drop the `backup` sidecar.** The host's EBS snapshots (daily, 7 days) are the approach until a broader backup approach is considered (as the homelab repo records). DEPLOYMENT.md says so.
+- **Q3:** keep deploy mode A as is (Dockhand webhook, applied on the host by its agent; arm64 built on GitHub's arm runner); record it in DEPLOYMENT.md and DECISIONS.md.
+- **Q4:** make the org package public after its first push; delete the old owner's `homedocs` package once the new one serves.
+- **Q5:** **drop the `backup` sidecar.** The host's snapshots (daily, 7 days) are the approach until a broader backup approach is considered (as the infrastructure repo records). DEPLOYMENT.md says so.
 - **Q6:** drop `pull_policy: always` on `db` (and the sidecar goes with Q5).
 - **Q7:** keep public; it was always public. Do the cleanup (delete `PR_RUNNER`, remove host and other repos' names from comments and docs, one gitleaks pass over history).
 - **Q8:** conform as another of John's apps already did: a sign-on that matches nobody gets no access and waits on an "awaiting placement" list on Family; the first account only via `/setup`.
-- **Q9:** Cloudflare is in front; Caddy sets `header_up X-Real-IP {client_ip}` on every request. Keep `CLIENT_IP_HEADER=x-real-ip`, recorded as an exception in DEPLOYMENT.md.
+- **Q9:** The proxy in front sets `X-Real-IP` to the client address on every request. Keep `CLIENT_IP_HEADER=x-real-ip`, recorded as an exception in DEPLOYMENT.md.
 - **Q10:** e2e as a PR-only job gating the merge, not the image or deploy, on GitHub's runner.
 - **Q11:** theme toggle (light/dark/system, head script) in Settings, not the header.
 - **Q12:** replace `confirm()`/`alert()`: inline two-step confirm, errors in place; a modal only for the series "send back" confirms.
