@@ -1,5 +1,5 @@
 /*
- * The OIDC protocol plumbing (copied from Biblios, ADR-0012 there).
+ * The OIDC protocol plumbing.
  *
  * Deliberately thin. Which account a claim set signs in as — the part with the
  * security decisions in it — is `resolveOidcAccount` in `oidc-accounts.ts`, a

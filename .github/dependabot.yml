@@ -1,0 +1,80 @@
+version: 2
+updates:
+  # Dependabot's `npm` ecosystem also reads pnpm-lock.yaml.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    # PR title becomes "chore(deps): …", which merge-on-green's title check accepts.
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Node's major is a stack decision; @types/node follows the runtime, not npm.
+      - dependency-name: "@types/node"
+        update-types: [version-update:semver-major]
+      # Framework majors change runtime behaviour; each is planned (migration Phase 6).
+      - dependency-name: next
+        update-types: [version-update:semver-major]
+      - dependency-name: react
+        update-types: [version-update:semver-major]
+      - dependency-name: react-dom
+        update-types: [version-update:semver-major]
+      - dependency-name: tailwindcss
+        update-types: [version-update:semver-major]
+      - dependency-name: "@tailwindcss/*"
+        update-types: [version-update:semver-major]
+      # A TypeScript major changes the compiler (7 is the native rewrite) and surfaces new
+      # type errors across the app: planned, like a framework major.
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Node 24 LTS is the standard; a newer major (often a non-LTS odd one) is a stack decision.
+      - dependency-name: node
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # A Postgres major needs a dump and restore, so it's planned, not a Dependabot PR.
+      - dependency-name: postgres
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+      include: scope
+    # Action updates are low-risk and arrive together, majors included: one PR for all.
+    groups:
+      actions:
+        update-types: [major, minor, patch]
+    ignore:
+      # The standards' reusable workflows: a new major (v2) is breaking by definition and
+      # is adopted as planned work, never inside a routine grouped PR.
+      - dependency-name: "ki4hrg/standards*"
+        update-types: [version-update:semver-major]

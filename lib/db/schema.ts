@@ -740,7 +740,7 @@ export const externalRefs = pgTable(
   ],
 )
 
-// ─── OAuth (MCP connectors) — ported from Biblios ────────────────────────────
+// ─── OAuth (MCP connectors) ─────────────────────────────────────────────────
 
 export const oauthTokenKind = pgEnum('oauth_token_kind', ['access', 'refresh'])
 export const oauthRegistrationSource = pgEnum('oauth_registration_source', ['dcr', 'manual'])

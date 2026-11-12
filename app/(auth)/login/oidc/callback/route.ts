@@ -1,5 +1,5 @@
 /*
- * Finish a single sign-on round trip (from Biblios). The redirect URI registered at
+ * Finish a single sign-on round trip. The redirect URI registered at
  * the provider is `<PUBLIC_BASE_URL>/login/oidc/callback`.
  *
  * Every failure goes back to the login page as a refusal code, never a 500:
