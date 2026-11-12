@@ -6,8 +6,9 @@
  * dist/migrate.cjs.
  *
  * When there is something to apply and BACKUP_DIR is set, the database is
- * dumped first. A migration is the one moment the app itself rewrites data
- * wholesale, and the nightly dump can be up to a day old.
+ * dumped first, into BACKUP_DIR (made if missing; on the `files` volume in
+ * compose). A migration is the one moment the app itself rewrites data
+ * wholesale, and the host's daily snapshot can be up to a day old.
  *
  * A failed migration (or a failed snapshot) exits non-zero, which `set -e` in
  * the entrypoint turns into a container crash. That is deliberate: a
@@ -15,11 +16,12 @@
  */
 
 import { spawnSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
+import { mkdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
+import { checkDatabaseEnv } from '../env'
 
 const MIGRATIONS_FOLDER = process.env.MIGRATIONS_FOLDER ?? 'lib/db/migrations'
 
@@ -35,6 +37,8 @@ async function pendingCount(sql: postgres.Sql): Promise<number> {
 
 function snapshot(url: string, dir: string) {
   const stamp = new Date().toISOString().replace(/[:.]/g, '-')
+  /* An existing volume doesn't gain directories the image adds later. */
+  mkdirSync(dir, { recursive: true })
   const file = join(dir, `homedocs-premigrate-${stamp}.dump`)
   const result = spawnSync('pg_dump', ['-Fc', '-f', file, url], { stdio: 'inherit', env: process.env })
   if (result.error || result.status !== 0) {
@@ -44,6 +48,20 @@ function snapshot(url: string, dir: string) {
 }
 
 async function main() {
+  /* In the container this runs before the server, so a missing PGPASSWORD would
+     otherwise surface as a failed query rather than a message naming it. Only the
+     database variables: the server checks the rest (lib/env.ts) when it starts,
+     and a recovery run with just these shouldn't be refused over app settings.
+     The image sets NODE_ENV=production; a local `pnpm db:migrate` is not checked. */
+  if (process.env.NODE_ENV === 'production') {
+    try {
+      checkDatabaseEnv(process.env)
+    } catch (err) {
+      console.error(err instanceof Error ? err.message : err)
+      process.exit(1)
+    }
+  }
+
   const url = process.env.DATABASE_URL
   if (!url) {
     console.error('DATABASE_URL is not set')

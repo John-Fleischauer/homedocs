@@ -50,8 +50,8 @@ COPY docker-entrypoint.sh /usr/local/bin/
 # and handed to the app user before USER, or the first upload fails with EACCES
 # on a fresh volume.
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
- && mkdir -p /data/files /data/ext-cache /backups \
- && chown -R app:app /data /backups
+ && mkdir -p /data/files /data/ext-cache /data/backups \
+ && chown -R app:app /data
 USER app
 EXPOSE 3000
 ENTRYPOINT ["docker-entrypoint.sh"]

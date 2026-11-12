@@ -139,7 +139,8 @@ A page under `app/(app)/` is authenticated by its layout. Everything else authen
 Next gives a route handler no socket address, so `lib/web/client-ip.ts` reads `X-Forwarded-For`
 **from the right**. With `TRUSTED_PROXY_HOPS=N`, it takes the Nth entry from the right, which is the
 one our outermost proxy appended. Anything to the left of it was written by the client and is ignored.
-Behind Cloudflare, set `CLIENT_IP_HEADER=cf-connecting-ip`.
+With `CLIENT_IP_HEADER` set, it reads that one header instead, which the proxy in front must set on
+every request. Production does this with `x-real-ip`, an exception recorded in `docs/DEPLOYMENT.md`.
 
 A LAN client that reaches the container port directly can forge the header. A LAN client is at home
 anyway, so that gains nothing.

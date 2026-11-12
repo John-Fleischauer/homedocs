@@ -58,20 +58,14 @@ export function formatScope(scopes: readonly Scope[]): string {
 /**
  * The external origin, with no trailing slash.
  *
- * Missing in production is fatal rather than defaulted: guessing an origin here
- * produces discovery documents that are wrong in a way nothing surfaces until a
- * connector fails with an issuer mismatch. Development falls back to localhost
- * so the OAuth routes can be exercised without a tunnel — the flow that needs
- * real HTTPS is claude.ai's, and that one is manual anyway.
+ * Required in every mode and checked at boot (lib/env.ts), never defaulted:
+ * guessing an origin here produces discovery documents that are wrong in a way
+ * nothing surfaces until a connector fails with an issuer mismatch. A local run
+ * sets it to http://localhost:3000 (.env.example).
  */
 export function baseUrl(): string {
   const raw = process.env.PUBLIC_BASE_URL
-  if (!raw) {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('PUBLIC_BASE_URL must be set — OAuth discovery is built from it')
-    }
-    return 'http://localhost:3000'
-  }
+  if (!raw) throw new Error('PUBLIC_BASE_URL must be set — OAuth discovery is built from it')
   return raw.replace(/\/+$/, '')
 }
 
