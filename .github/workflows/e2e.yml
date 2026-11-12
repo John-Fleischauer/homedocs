@@ -1,0 +1,42 @@
+name: e2e
+
+# The browser suite: Playwright against its own Postgres and `next dev` on 3100
+# (e2e/serve.ts, playwright.config.ts), with axe. Called by ci.yml on PRs only.
+#
+# A called workflow rather than a plain job in ci.yml, because merge-on-green's
+# `require-jobs` finds a job's earlier result by the check name "<caller job> / <job>",
+# which only a called workflow's jobs have. A plain `e2e` job would never match, and an
+# `automerge` label added after the checks passed would never merge.
+#
+#   e2e:
+#     uses: ./.github/workflows/e2e.yml
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    # GitHub's runner: the repo is public, so the self-hosted runner never takes it.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          # The runtime is still Node 22 (Dockerfile); Node 24 is its own PR.
+          node-version: '22'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Chromium only: the phone project in playwright.config.ts is a Pixel 7.
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm e2e
+      # Traces and screenshots of the failing tests.
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-results
+          path: test-results/
+          retention-days: 7

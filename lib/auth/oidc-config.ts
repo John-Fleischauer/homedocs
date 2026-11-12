@@ -1,5 +1,5 @@
 /*
- * Single sign-on settings, read once from the environment (copied from Biblios, ADR-0012 there).
+ * Single sign-on settings, read once from the environment.
  *
  * Off unless the deployment turns it on, and "on" means all three of issuer,
  * client id and secret. Two of three is refused outright rather than read as

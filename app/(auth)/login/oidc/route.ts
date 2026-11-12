@@ -1,5 +1,5 @@
 /*
- * Start a single sign-on round trip (from Biblios).
+ * Start a single sign-on round trip.
  *
  * Not under app/api/ and not authenticated, because signing in is what it is
  * for. It sets the flow cookie and sends the browser to the provider; nothing

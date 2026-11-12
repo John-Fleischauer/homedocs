@@ -1,5 +1,5 @@
 /*
- * Which account a single sign-on identity signs in as (from Biblios).
+ * Which account a single sign-on identity signs in as.
  *
  * Kept apart from the protocol plumbing in `oidc.ts`: this is the part with the
  * security decisions in it, and it is a function of a claim set and the users

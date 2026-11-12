@@ -17,6 +17,7 @@
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx lib/db/migrate.ts",
+    "db:drift": "sh scripts/db-drift.sh",
     "render:icons": "tsx scripts/render-icons.ts",
     "e2e": "playwright test"
   },

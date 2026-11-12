@@ -2,17 +2,21 @@
 
 ## How a change reaches the house
 
-1. A push to `main` runs `.github/workflows/deploy.yml`:
-   - `check`: typecheck, lint, and Vitest against Postgres in Docker.
-   - `e2e`: Playwright.
-   - `image`: builds and pushes `ghcr.io/john-fleischauer/homedocs:main` and `:sha-…`.
-   - `deploy`: pings the Dockhand webhook.
+1. `.github/workflows/ci.yml` (the standards' `ci` template, reusable workflows at `@v1`):
+   - On a pull request: `check` (typecheck, lint, Vitest against Postgres in Docker, `db:drift`),
+     `security` (`pnpm audit`), `image` (built, not pushed) and `e2e` (Playwright,
+     `.github/workflows/e2e.yml`). All four gate the merge; e2e never gates the image or deploy.
+   - On `main`: `check` and `security`, then `image` builds for `linux/arm64` on GitHub's arm
+     runner (the deploy host is arm64) and pushes `ghcr.io/john-fleischauer/homedocs:main` and
+     `:sha-…`, then `deploy` calls the Dockhand webhook, fails unless the reply says
+     `success: true`, and waits until `APP_HEALTH_URL` reports the new revision.
 2. Dockhand runs `docker compose up`. `pull_policy: always` makes sure the fresh `:main` is actually
    pulled. There is no `build:` block; the deploy host only pulls.
 3. The entrypoint applies migrations, after taking a pre-migration `pg_dump` into the backups volume
    whenever there is something to apply.
 
 **GitHub setup** (secrets or variables):
+- `APP_HEALTH_URL` (variable): the public `/api/health` URL the deploy checks.
 - `DOCKHAND_WEBHOOK_URL`: the stack's `.../api/git/stacks/<id>/webhook`.
 - `DOCKHAND_WEBHOOK_TOKEN`: appended as `?secret=`.
 - The first push creates the GHCR package as **private**. Either make it public, or give Dockhand
@@ -21,7 +25,7 @@
 **Check what's running:**
 
 ```sh
-curl -s https://homedocs.example.com/api/health   # {"status":"ok","revision":"<git sha>"}
+curl -s https://homedocs.example.com/api/health   # {"ok":true,"revision":"<git sha>"}
 git rev-parse HEAD
 ```
 

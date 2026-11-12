@@ -11,5 +11,5 @@ import { NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 
 export function GET() {
-  return NextResponse.json({ status: 'ok', revision: process.env.GIT_REVISION ?? 'dev' })
+  return NextResponse.json({ ok: true, revision: process.env.GIT_REVISION ?? 'dev' })
 }

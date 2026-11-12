@@ -19,9 +19,6 @@ housesitter.
   follows the device.
 - **Tests:** Vitest against a real Postgres via testcontainers (`test/`), and Playwright at phone width
   with axe (`e2e/`).
-- **Origins:**
-  - Auth and OAuth/MCP come from Biblios.
-  - CI and Compose come from meeting-manager.
 
 ## Domain model (`lib/db/schema.ts`)
 
