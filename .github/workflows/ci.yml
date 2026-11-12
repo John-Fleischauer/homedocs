@@ -49,8 +49,6 @@ jobs:
       # GitHub's runner for every run: this repo is public, and the self-hosted runner
       # takes only private repos (docs/core/workflow.md).
       runs-on: ubuntu-24.04
-      # The runtime is still Node 22 (Dockerfile); Node 24 is its own PR.
-      node-version: '22'
       # No contrast check yet (migration Phase 5 adds it as a test inside `test`).
       scripts: typecheck lint test db:drift
 
