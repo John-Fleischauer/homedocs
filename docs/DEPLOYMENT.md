@@ -5,7 +5,7 @@
 1. A push to `main` runs `.github/workflows/deploy.yml`:
    - `check`: typecheck, lint, and Vitest against Postgres in Docker.
    - `e2e`: Playwright.
-   - `image`: builds and pushes `ghcr.io/ki4hrg/homedocs:main` and `:sha-…`.
+   - `image`: builds and pushes `ghcr.io/john-fleischauer/homedocs:main` and `:sha-…`.
    - `deploy`: pings the Dockhand webhook.
 2. Dockhand runs `docker compose up`. `pull_policy: always` makes sure the fresh `:main` is actually
    pulled. There is no `build:` block; the deploy host only pulls.

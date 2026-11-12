@@ -3,7 +3,7 @@ name: homedocs
 services:
   app:
     # Built and pushed by GitHub Actions. No `build:` block: this stack only pulls.
-    image: ${APP_IMAGE:-ghcr.io/ki4hrg/homedocs:main}
+    image: ${APP_IMAGE:-ghcr.io/john-fleischauer/homedocs:main}
     # `:main` is a mutable tag and `docker compose up` will not re-pull a tag that
     # already exists locally. Without this the redeploy keeps running old code.
     pull_policy: always
