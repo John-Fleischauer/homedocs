@@ -21,6 +21,8 @@ jobs:
   e2e:
     # GitHub's runner: the repo is public, so the self-hosted runner never takes it.
     runs-on: ubuntu-24.04
+    # A hung container pull or `next dev` fails the PR in half an hour, not GitHub's six.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6

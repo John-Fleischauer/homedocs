@@ -78,7 +78,7 @@ A page under `app/(app)/` is authenticated by its layout. Everything else authen
 |---|---|
 | `app/(app)/**` | layout → `viewer()` → `requireUser()`; admin pages also call `requireRole('admin')` |
 | server actions | `act()` → `viewer()` (every action is a public endpoint) |
-| `GET /api/health` | none (returns status and git revision only) |
+| `GET /api/health` | none (returns `{ ok: true, revision }` only, no database call) |
 | `POST /api/files` | `requireApiRole('member')`; the property comes from the owning record |
 | `GET /api/files/[sha]` | `requireApiUser()`, and the sha must belong to a live attachment |
 | `GET /api/ext/search` | `requireApiRole('member')`; `kind=location` searches Homebox locations, `kind=tag` / `kind=correspondent` paperless tags or correspondents (an empty query lists them all) |

@@ -1,9 +1,10 @@
 # Standards conformance: homedocs
 
 Audited 2026-11-12 against the standards at `v1` (`c70622c`; local clone at `0c19300`, docs,
-templates and workflow comments only ahead), Next.js app profile. This is the Phase 0 report (no
-code changed; this file is untracked and goes in with the Phase 1 PR). Scope and the candidate
-rules below are **not yet agreed with John**.
+templates and workflow comments only ahead), Next.js app profile. This is the Phase 0 report,
+tracked from the Phase 1 PR on. The findings below describe `main` as audited; John's answers are
+in "John's decisions (2026-11-12)" at the end, and each phase carries them out, so where a
+section and a decision disagree, the decision wins.
 Repo: `John-Fleischauer/homedocs` (**public**; moved from `ki4hrg`; the local `origin` already
 points at the new owner). Local `main` = `origin/main` = `6345c55` (#8), which is also what
 production runs (`/api/health` revision, checked from outside 2026-11-12).
