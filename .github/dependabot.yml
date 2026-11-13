@@ -10,6 +10,12 @@ updates:
       prefix: chore
       include: scope
     groups:
+      # Prettier can change its output in any release, and `lint` runs `prettier --check`,
+      # so its bump gets its own PR: a red one there doesn't hold back the group below.
+      # Fix it with `pnpm format` on the branch. A dependency joins the first group it
+      # matches, so this one stays above minor-and-patch.
+      prettier:
+        patterns: [prettier]
       minor-and-patch:
         update-types: [minor, patch]
     ignore:

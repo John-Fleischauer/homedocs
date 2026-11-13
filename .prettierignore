@@ -1,0 +1,17 @@
+# Prettier also skips what .gitignore lists (build output, node_modules, .claude/).
+
+# Written by tools, not by hand.
+pnpm-lock.yaml
+lib/db/migrations/
+# Next.js and Claude Code rewrite these in their own JSON style (one array item per line).
+tsconfig.json
+.claude/settings.json
+
+# The docs are hand-wrapped to a consistent measure and their tables are laid out for
+# reading in a diff, not for column alignment. Prettier reflows both and turns *emphasis*
+# into _emphasis_, which buries real edits under formatting churn.
+*.md
+
+# Workflow files change only in John's hand merges; formatting them belongs to one of those,
+# and this line goes with it.
+.github/workflows/
