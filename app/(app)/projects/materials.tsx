@@ -7,39 +7,22 @@
  * will change.
  */
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
 import { ActionForm, type FormAction } from '@/components/ActionForm'
 import { DeleteButton } from '@/components/DeleteButton'
 import { buttonClass } from '@/components/ui/Button'
 import { Pill } from '@/components/ui/Card'
 import { Checkbox, Field, Select, SubmitButton, TextInput } from '@/components/ui/Field'
 import { Icon } from '@/components/ui/icons'
+import { useSeriesConfirm } from '@/components/SeriesConfirm'
+import { InlineError, useRun } from '@/components/useRun'
 import type { ActionResult } from '@/lib/web/action'
 import { amountOf, type MaterialView, type MissingView } from './series-view'
 
 type Part = { id: string; name: string; units: string[] }
 type Place = { id: string; label: string }
-type Run = (fn: () => Promise<ActionResult>) => void
 
 const LINK = 'inline-flex min-h-11 items-center text-sm font-medium text-accent'
-
-/** Runs a server action from a button, showing a refusal the way DeleteButton does. */
-function useRun(): [boolean, Run] {
-  const [pending, start] = useTransition()
-  return [
-    pending,
-    (fn) =>
-      start(async () => {
-        const result = await fn()
-        if (result?.error) alert(result.error)
-      }),
-  ]
-}
-
-/** The confirmation every write to a series goes through. */
-export function confirmSeries(changes: string[]) {
-  return confirm(`Update the series? Next time starts from this.\n\n${changes.map((c) => `• ${c}`).join('\n')}`)
-}
 
 export function Materials({
   rows,
@@ -73,7 +56,8 @@ export function Materials({
 }) {
   const [editing, setEditing] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
-  const [pending, run] = useRun()
+  const { pending, run, error, at } = useRun()
+  const [ask, dialog] = useSeriesConfirm()
 
   return (
     <div className="flex flex-col gap-3">
@@ -115,17 +99,17 @@ export function Materials({
                 {canEdit ? (
                   <div className="flex flex-wrap items-center gap-x-4">
                     {differs && sendToSeries ? (
-                      <button type="button" disabled={pending} className={LINK} onClick={() => confirmSeries([m.change!]) && run(() => sendToSeries(m.id))}>
+                      <button type="button" disabled={pending} className={LINK} onClick={() => ask([m.change!], () => run(() => sendToSeries(m.id), m.id))}>
                         Update Series
                       </button>
                     ) : null}
                     {m.status === 'added' && setOneOff ? (
-                      <button type="button" disabled={pending} className={LINK} onClick={() => run(() => setOneOff(m.id, true))}>
+                      <button type="button" disabled={pending} className={LINK} onClick={() => run(() => setOneOff(m.id, true), m.id)}>
                         Only This Project
                       </button>
                     ) : null}
                     {m.oneOff && setOneOff ? (
-                      <button type="button" disabled={pending} className={LINK} onClick={() => run(() => setOneOff(m.id, false))}>
+                      <button type="button" disabled={pending} className={LINK} onClick={() => run(() => setOneOff(m.id, false), m.id)}>
                         Not Just This Project
                       </button>
                     ) : null}
@@ -137,6 +121,7 @@ export function Materials({
                     </span>
                   </div>
                 ) : null}
+                <InlineError>{at === m.id ? error : null}</InlineError>
               </li>
             )
           })}
@@ -148,14 +133,15 @@ export function Materials({
               </div>
               {canEdit && copyHere && dropFromSeries ? (
                 <div className="flex flex-wrap gap-x-4">
-                  <button type="button" disabled={pending} className={LINK} onClick={() => run(() => copyHere(m.id))}>
+                  <button type="button" disabled={pending} className={LINK} onClick={() => run(() => copyHere(m.id), m.id)}>
                     Add Here
                   </button>
-                  <button type="button" disabled={pending} className={LINK} onClick={() => confirmSeries([m.change]) && run(() => dropFromSeries(m.id))}>
+                  <button type="button" disabled={pending} className={LINK} onClick={() => ask([m.change], () => run(() => dropFromSeries(m.id), m.id))}>
                     Remove from Series
                   </button>
                 </div>
               ) : null}
+              <InlineError>{at === m.id ? error : null}</InlineError>
             </li>
           ))}
         </ul>
@@ -174,6 +160,8 @@ export function Materials({
           </button>
         )
       ) : null}
+      <InlineError>{at ? null : error}</InlineError>
+      {dialog}
     </div>
   )
 }
@@ -280,7 +268,8 @@ export function SeriesBanner({
   canEdit: boolean
   sendAll: () => Promise<ActionResult>
 }) {
-  const [pending, run] = useRun()
+  const { pending, run, error, at } = useRun()
+  const [ask, dialog] = useSeriesConfirm()
   if (changes.length === 0) return null
   return (
     <div className="mt-4 flex flex-col gap-2 rounded-card border border-warn/30 bg-warn-soft px-4 py-3 text-warn">
@@ -294,11 +283,13 @@ export function SeriesBanner({
           type="button"
           disabled={pending}
           className={buttonClass('secondary', 'self-start')}
-          onClick={() => confirmSeries(changes) && run(sendAll)}
+          onClick={() => ask(changes, () => run(sendAll))}
         >
           Update Series with All Changes
         </button>
       ) : null}
+      <InlineError>{at ? null : error}</InlineError>
+      {dialog}
     </div>
   )
 }

@@ -1,6 +1,7 @@
 'use client'
 
-import { useActionState, useTransition } from 'react'
+import { useActionState, useState, useTransition } from 'react'
+import { InlineError } from '@/components/useRun'
 import { CopyButton } from '@/components/CopyButton'
 import { ActionForm, type FormAction } from '@/components/ActionForm'
 import { buttonClass } from '@/components/ui/Button'
@@ -130,26 +131,41 @@ export function RoleSelect({
   disabled?: boolean
 }) {
   const [pending, start] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+  /* Controlled, so a refused change snaps back to the role that stands, and
+     follows the role when a revalidation brings a new one. */
+  const [shown, setShown] = useState(role)
+  const [was, setWas] = useState(role)
+  if (role !== was) {
+    setWas(role)
+    setShown(role)
+  }
   return (
-    <Select
-      aria-label="Role"
-      defaultValue={role}
-      disabled={disabled || pending}
-      onChange={(e) =>
-        start(async () => {
-          const r = await setRole(e.target.value)
-          if (r.error) {
-            alert(r.error)
-            location.reload()
-          }
-        })
-      }
-      className="max-w-32 shrink-0"
-    >
-      <option value="admin">Admin</option>
-      <option value="member">Member</option>
-      <option value="viewer">Viewer</option>
-    </Select>
+    <span className="flex shrink-0 flex-col items-end gap-1">
+      <Select
+        aria-label="Role"
+        value={shown}
+        disabled={disabled || pending}
+        onChange={(e) => {
+          const next = e.target.value
+          setShown(next)
+          start(async () => {
+            setError(null)
+            const r = await setRole(next)
+            if (r.error) {
+              setError(r.error)
+              setShown(role)
+            }
+          })
+        }}
+        className="max-w-32"
+      >
+        <option value="admin">Admin</option>
+        <option value="member">Member</option>
+        <option value="viewer">Viewer</option>
+      </Select>
+      <InlineError className="max-w-56 text-right">{error}</InlineError>
+    </span>
   )
 }
 

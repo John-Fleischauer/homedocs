@@ -13,6 +13,9 @@ const RULES: [string, RegExp][] = [
   ['a translucent surface fill', /(?:^|['"`\s:])bg-(?:page|card|sunk|line|ink(?:-[23])?|accent|ok|warn|danger|white|black)(?:-[\w]+)?\/(?:\d+|\[)/],
   /* Opacity on anything but a disabled control (exempt from contrast). */
   ['a faded element', /(?:^|['"`\s])(?:[\w-]+:)*opacity-(?:\d+|\[)/],
+  /* Browser dialogs (standards design.md, Actions): confirm in place
+     (ConfirmInline), show a refusal in place. */
+  ['confirm() or alert()', /(?<![\w.$])(?:window\.)?(?:confirm|alert)\(/],
 ]
 
 function sources(dir: string): string[] {

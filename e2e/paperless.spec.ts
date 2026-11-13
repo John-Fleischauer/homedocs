@@ -97,8 +97,8 @@ test('a contact lists its paperless correspondent’s documents', async ({ page 
   await expect(page.getByRole('link', { name: /Open Correspondent/ })).toHaveAttribute('href', `${base}/documents?correspondent__id__in=2`)
 
   // Unlinking brings the picker back.
-  page.once('dialog', (d) => d.accept())
   await page.getByRole('button', { name: /Unlink/ }).click()
+  await page.getByRole('group', { name: /^Unlink/ }).getByRole('button', { name: 'Unlink', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Add Correspondent Documents' })).toBeVisible()
 })
 
@@ -109,7 +109,7 @@ test('Settings narrows paperless to the house’s tag', async ({ page }) => {
   await expect(page.getByText('Only Documents Tagged')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Remove the Pantry filter' })).toBeVisible()
 
-  page.once('dialog', (d) => d.accept())
   await page.getByRole('button', { name: 'Remove the Pantry filter' }).click()
+  await page.getByRole('group', { name: 'Remove the Pantry filter?' }).getByRole('button', { name: 'Remove', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Pick Tag' })).toBeVisible()
 })

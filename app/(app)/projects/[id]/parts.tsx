@@ -8,7 +8,8 @@ import { Pill } from '@/components/ui/Card'
 import { Checkbox, Field, Select, SubmitButton, TextArea, TextInput } from '@/components/ui/Field'
 import { Icon } from '@/components/ui/icons'
 import type { ActionResult } from '@/lib/web/action'
-import { confirmSeries } from '../materials'
+import { InlineError, useRun } from '@/components/useRun'
+import { useSeriesConfirm } from '@/components/SeriesConfirm'
 import type { ItemView, MissingView } from '../series-view'
 
 const FLOW = [
@@ -90,13 +91,9 @@ export function Checklist({
   copyHere?: (seriesRowId: string) => Promise<ActionResult>
   dropFromSeries?: (seriesRowId: string) => Promise<ActionResult>
 }) {
-  const [pending, start] = useTransition()
+  const { pending, run, error, at } = useRun()
+  const [ask, dialog] = useSeriesConfirm()
   const [details, setDetails] = useState(false)
-  const run = (fn: () => Promise<ActionResult>) =>
-    start(async () => {
-      const result = await fn()
-      if (result?.error) alert(result.error)
-    })
   const link = 'inline-flex min-h-11 items-center text-sm font-medium text-accent'
   return (
     <div className="flex flex-col gap-3">
@@ -113,7 +110,10 @@ export function Checklist({
                       checked={item.done}
                       disabled={!canEdit}
                       aria-label={item.text}
-                      onChange={(e) => start(async () => void (await toggle(item.id, e.target.checked)))}
+                      onChange={(e) => {
+                        const done = e.target.checked
+                        run(() => toggle(item.id, done), item.id)
+                      }}
                       className="h-6 w-6 shrink-0 accent-[var(--color-accent)]"
                     />
                   ) : null}
@@ -133,22 +133,23 @@ export function Checklist({
                 {canEdit && (differs || item.oneOff) ? (
                   <div className="flex flex-wrap gap-x-4 pl-9">
                     {differs && sendToSeries ? (
-                      <button type="button" disabled={pending} className={link} onClick={() => confirmSeries([item.change!]) && run(() => sendToSeries(item.id))}>
+                      <button type="button" disabled={pending} className={link} onClick={() => ask([item.change!], () => run(() => sendToSeries(item.id), item.id))}>
                         Update Series
                       </button>
                     ) : null}
                     {item.status === 'added' && setOneOff ? (
-                      <button type="button" disabled={pending} className={link} onClick={() => run(() => setOneOff(item.id, true))}>
+                      <button type="button" disabled={pending} className={link} onClick={() => run(() => setOneOff(item.id, true), item.id)}>
                         Only This Project
                       </button>
                     ) : null}
                     {item.oneOff && setOneOff ? (
-                      <button type="button" disabled={pending} className={link} onClick={() => run(() => setOneOff(item.id, false))}>
+                      <button type="button" disabled={pending} className={link} onClick={() => run(() => setOneOff(item.id, false), item.id)}>
                         Not Just This Project
                       </button>
                     ) : null}
                   </div>
                 ) : null}
+                <InlineError className="pb-1">{at === item.id ? error : null}</InlineError>
               </li>
             )
           })}
@@ -160,14 +161,15 @@ export function Checklist({
               </div>
               {canEdit && copyHere && dropFromSeries ? (
                 <div className="flex flex-wrap gap-x-4">
-                  <button type="button" disabled={pending} className={link} onClick={() => run(() => copyHere(m.id))}>
+                  <button type="button" disabled={pending} className={link} onClick={() => run(() => copyHere(m.id), m.id)}>
                     Add Here
                   </button>
-                  <button type="button" disabled={pending} className={link} onClick={() => confirmSeries([m.change]) && run(() => dropFromSeries(m.id))}>
+                  <button type="button" disabled={pending} className={link} onClick={() => ask([m.change], () => run(() => dropFromSeries(m.id), m.id))}>
                     Remove from Series
                   </button>
                 </div>
               ) : null}
+              <InlineError>{at === m.id ? error : null}</InlineError>
             </li>
           ))}
         </ul>
@@ -207,6 +209,8 @@ export function Checklist({
           )}
         </ActionForm>
       ) : null}
+      <InlineError>{at ? null : error}</InlineError>
+      {dialog}
     </div>
   )
 }

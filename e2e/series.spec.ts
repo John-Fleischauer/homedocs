@@ -69,14 +69,13 @@ test('this year: a one-off roll, and the stairs only took 7, sent back to the se
   await expect(stairs.getByText('was 8 rolls')).toBeVisible()
   await expect(page.getByText('1 difference from Back yard pine straw')).toBeVisible()
 
-  let asked = ''
-  page.once('dialog', (d) => {
-    asked = d.message()
-    void d.accept()
-  })
+  // The one modal confirm: it lists what the series will change.
   await stairs.getByRole('button', { name: 'Update Series' }).click()
+  const ask = page.getByRole('dialog', { name: 'Update the Series?' })
+  await expect(ask).toContainText('Pine straw (around the stairs): 8 rolls → 7 rolls')
+  await ask.getByRole('button', { name: 'Update Series' }).click()
+  await expect(ask).toBeHidden()
   await expect(stairs.getByText('was 8 rolls')).toHaveCount(0)
-  expect(asked).toContain('Pine straw (around the stairs): 8 rolls → 7 rolls')
   await expect(page.getByText(/differences? from/)).toHaveCount(0)
   await noSeriousProblems(page)
 

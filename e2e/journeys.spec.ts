@@ -139,8 +139,15 @@ test('a paint can’s label: its details, then a photo of it', async ({ page }) 
   const photo = page.getByRole('img', { name: 'Photo' })
   await expect(photo).toBeVisible()
 
-  page.once('dialog', (dialog) => dialog.accept())
+  // Asked in place (standards design.md): Cancel first, then the real thing.
   await page.getByRole('button', { name: 'Remove this photo' }).click()
+  const ask = page.getByRole('group', { name: 'Remove this photo?' })
+  await expect(ask.getByRole('button', { name: 'Cancel' })).toBeFocused()
+  await ask.getByRole('button', { name: 'Cancel' }).click()
+  await expect(ask).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Remove this photo' })).toBeFocused()
+  await page.getByRole('button', { name: 'Remove this photo' }).click()
+  await ask.getByRole('button', { name: 'Remove', exact: true }).click()
   await expect(photo).toHaveCount(0)
 })
 

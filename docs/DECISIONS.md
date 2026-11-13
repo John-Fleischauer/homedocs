@@ -13,6 +13,7 @@ rejected. Newest last. The standards sweep's questions and John's answers are in
 - [Server actions through `act()` with a zod schema, and forms that say what a reset does: a CLAUDE.md rule](#2026-11-12-server-actions-through-act-with-a-zod-schema-and-forms-that-say-what-a-reset-does-a-claudemd-rule)
 - [`pnpm db:migrate` defaults to the local database outside production](#2026-11-12-pnpm-dbmigrate-defaults-to-the-local-database-outside-production)
 - [A theme choice in Settings; `accent-strong` and the status tokens](#2026-11-12-a-theme-choice-in-settings-accent-strong-and-the-status-tokens)
+- [Confirms in place; a modal only for writes back to a series](#2026-11-12-confirms-in-place-a-modal-only-for-writes-back-to-a-series)
 
 ## 2026-11-12: A sign-on that matches nobody gets no access until an admin places it
 
@@ -142,3 +143,21 @@ can't measure. The header and tab bar lost their translucent `bg-card/95` for th
 
 The Wi-Fi QR code keeps `bg-white` (`components/guide/GuideView.tsx`): a QR code needs a white
 quiet zone in either theme.
+
+## 2026-11-12: Confirms in place; a modal only for writes back to a series
+
+**Before:** `confirm()` before every delete, Turn Off, Make Series and series update, and `alert()`
+for every refusal.
+
+**Now** (standards design.md, Actions; John's answer to Q12): `components/ConfirmInline.tsx`
+replaces the trigger with "<verb>?", the verb and Cancel (focus on Cancel; Escape or a tap outside
+cancels), with one line on what can be had back ("Restorable from Recently Deleted"). It is
+`DeleteButton` (every delete, remove, unlink and disconnect), Turn Off on a share link, and Make
+Series. A refusal shows where it happened (`FormError` or a line beside the button), never in a
+browser dialog.
+
+The one modal is `components/SeriesConfirm.tsx`, a native `<dialog>`, for the writes that go back
+to a series (Update Series, Remove from Series, Update Series with All Changes, Add to
+Instructions): each changes what every later project in the series starts from, so it lists each
+change before it's made, which an inline question has no room for. `test/design/classes.test.ts`
+refuses `confirm()` and `alert()`.

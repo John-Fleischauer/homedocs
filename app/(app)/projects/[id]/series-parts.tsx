@@ -1,13 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { useTransition } from 'react'
-import { buttonClass } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Icon } from '@/components/ui/icons'
 import type { NoteRow } from '@/lib/notes/notes'
 import type { ActionResult } from '@/lib/web/action'
 import { formatDay } from '@/lib/web/format'
+import { ConfirmInline } from '@/components/ConfirmInline'
+import { useSeriesConfirm } from '@/components/SeriesConfirm'
+import { InlineError, useRun } from '@/components/useRun'
 import { addLessonToHowToAction } from '../actions'
 
 /* The series' one "how we do it" — read-only here, edited on the series so it can't drift. */
@@ -34,7 +35,8 @@ export function HowTo({ seriesId, text, canEdit }: { seriesId: string; text: str
 
 /* Last round's "next time" lessons, each one tap from becoming part of the how-to. */
 export function LastTime({ lessons, seenAt, canEdit, howTo }: { lessons: NoteRow[]; seenAt: string; canEdit: boolean; howTo: string }) {
-  const [pending, start] = useTransition()
+  const { pending, run, error, at } = useRun()
+  const [ask, dialog] = useSeriesConfirm()
   if (lessons.length === 0) return null
   return (
     <div className="mt-4 flex flex-col gap-2">
@@ -51,43 +53,35 @@ export function LastTime({ lessons, seenAt, canEdit, howTo }: { lessons: NoteRow
                 type="button"
                 disabled={pending}
                 className="mt-1 inline-flex min-h-11 items-center text-sm font-medium underline"
-                onClick={() => {
-                  if (!confirm(`Add this to the series instructions? Every project in the series will show it.\n\n“${note.nextTime}”`)) return
-                  start(async () => {
-                    const result = await addLessonToHowToAction(note.id, seenAt)
-                    if (result.error) alert(result.error)
-                  })
-                }}
+                onClick={() =>
+                  ask([`Instructions gain “${note.nextTime}”, shown on every project in the series`], () =>
+                    run(() => addLessonToHowToAction(note.id, seenAt), note.id),
+                  )
+                }
               >
                 Add to Instructions
               </button>
             ) : null}
+            <InlineError>{at === note.id ? error : null}</InlineError>
           </span>
         </div>
       ))}
+      {dialog}
     </div>
   )
 }
 
-export function MakeSeriesButton({ title, make }: { title: string; make: () => Promise<ActionResult> }) {
-  const [pending, start] = useTransition()
+export function MakeSeriesButton({ make }: { make: () => Promise<ActionResult> }) {
   return (
-    <div className="mt-8 border-t border-line pt-6">
-      <p className="mb-2 px-1 text-sm text-ink-3">Reuse this checklist and materials next time</p>
-      <button
-        type="button"
-        disabled={pending}
-        className={buttonClass('secondary')}
-        onClick={() => {
-          if (!confirm(`Make “${title}” a series? Its checklist and materials become the defaults for next time, and its details become the instructions.`)) return
-          start(async () => {
-            const result = await make()
-            if (result?.error) alert(result.error)
-          })
-        }}
-      >
-        {pending ? 'Making…' : 'Make Series'}
-      </button>
+    <div className="mt-8 flex flex-col items-start gap-2 border-t border-line pt-6">
+      <p className="px-1 text-sm text-ink-3">Reuse this checklist and materials next time</p>
+      <ConfirmInline
+        action={make}
+        verb="Make Series"
+        variant="secondary"
+        pendingText="Making…"
+        note="Its checklist and materials become the defaults, and its details the instructions"
+      />
     </div>
   )
 }
