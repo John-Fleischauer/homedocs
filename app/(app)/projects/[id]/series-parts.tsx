@@ -43,7 +43,7 @@ export function LastTime({ lessons, seenAt, canEdit, howTo }: { lessons: NoteRow
           <Icon name="alert" className="mt-0.5 h-5 w-5 shrink-0" />
           <span className="min-w-0 flex-1 text-[15px]">
             <span className="font-semibold">Last Time:</span> {note.nextTime}
-            <Link href={`/notes/${note.id}`} className="block text-xs opacity-80">
+            <Link href={`/notes/${note.id}`} className="block text-xs">
               From “{note.title}”, {formatDay(note.happenedOn)}
             </Link>
             {canEdit && !howTo.includes(note.nextTime) ? (

@@ -8,6 +8,7 @@
  * Dark in Settings: the head script (lib/design/theme.ts) sets `data-theme` on
  * <html> before first paint, and the two dark blocks below must stay identical
  * (test/design/contrast.test.ts checks that, and every text pair for AA).
+ * Both are screen only, so a page printed from a dark screen prints light.
  *
  * `accent-strong` is an app token: a filled accent button's hover, a solid
  * fill so the label's contrast is measured (no alpha under text).
@@ -42,7 +43,7 @@
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
+@media screen and (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
     --color-page: #141412;
@@ -68,28 +69,31 @@
   }
 }
 
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --color-page: #141412;
-  --color-card: #1e1d1b;
-  --color-sunk: #262522;
-  --color-line: #35332f;
-  --color-ink: #f2f0ea;
-  --color-ink-2: #cfcbc2;
-  --color-ink-3: #a29d93;
-  --color-accent: #5cc4ae;
-  --color-accent-ink: #0b1c18;
-  --color-accent-soft: #17332d;
-  --color-accent-strong: #86d6c4;
-  --color-ok: #5cc4ae;
-  --color-ok-ink: #0b1c18;
-  --color-ok-soft: #17332d;
-  --color-warn: #f0b45c;
-  --color-warn-ink: #141412;
-  --color-warn-soft: #33260f;
-  --color-danger: #f28b82;
-  --color-danger-ink: #141412;
-  --color-danger-soft: #3a1714;
+/* Screen only, like the media block: paper is always printed light. */
+@media screen {
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --color-page: #141412;
+    --color-card: #1e1d1b;
+    --color-sunk: #262522;
+    --color-line: #35332f;
+    --color-ink: #f2f0ea;
+    --color-ink-2: #cfcbc2;
+    --color-ink-3: #a29d93;
+    --color-accent: #5cc4ae;
+    --color-accent-ink: #0b1c18;
+    --color-accent-soft: #17332d;
+    --color-accent-strong: #86d6c4;
+    --color-ok: #5cc4ae;
+    --color-ok-ink: #0b1c18;
+    --color-ok-soft: #17332d;
+    --color-warn: #f0b45c;
+    --color-warn-ink: #141412;
+    --color-warn-soft: #33260f;
+    --color-danger: #f28b82;
+    --color-danger-ink: #141412;
+    --color-danger-soft: #3a1714;
+  }
 }
 
 body {

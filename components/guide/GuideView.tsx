@@ -146,7 +146,7 @@ export async function GuideView({
                       >
                         <Icon name="phone" className="h-4 w-4" />
                         {ph.value}
-                        {ph.label ? <span className="opacity-80">({ph.label})</span> : null}
+                        {ph.label ? <span>({ph.label})</span> : null}
                       </a>
                     ))}
                   </div>

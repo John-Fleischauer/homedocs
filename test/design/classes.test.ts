@@ -5,13 +5,14 @@ import { describe, expect, it } from 'vitest'
 /*
  * No alpha under text (standards design.md, Tokens): the contrast check
  * measures token pairs, so a translucent fill, or a filled button that fades
- * on hover, goes unchecked. A filled button's hover is its `-strong` fill
+ * on hover, or faded text, goes unchecked. A filled button's hover is its `-strong` fill
  * (`hover:bg-accent-strong`). Rings and borders may use alpha: no text sits on
  * them.
  */
 const RULES: [string, RegExp][] = [
-  ['a translucent surface fill', /(?:^|['"`\s:])bg-(?:page|card|sunk|accent|ok|warn|danger)(?:-[\w]+)?\/\d+/],
-  ['a fading hover', /(?:^|['"`\s])hover:opacity-\d+/],
+  ['a translucent surface fill', /(?:^|['"`\s:])bg-(?:page|card|sunk|line|ink(?:-[23])?|accent|ok|warn|danger|white|black)(?:-[\w]+)?\/(?:\d+|\[)/],
+  /* Opacity on anything but a disabled control (exempt from contrast). */
+  ['a faded element', /(?:^|['"`\s])(?:[\w-]+:)*opacity-(?:\d+|\[)/],
 ]
 
 function sources(dir: string): string[] {
@@ -30,6 +31,7 @@ describe('token classes', () => {
   )
 
   it.each(RULES)('no component uses %s', (_, pattern) => {
-    expect(lines.filter(({ line }) => pattern.test(line)).map(({ where }) => where)).toEqual([])
+    const offending = lines.filter(({ line }) => pattern.test(line.replace(/(?:^|\s)disabled:opacity-\d+/g, ' ')))
+    expect(offending.map(({ where }) => where)).toEqual([])
   })
 })

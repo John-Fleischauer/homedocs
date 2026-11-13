@@ -44,8 +44,12 @@ function contrast(a: string, b: string) {
 const SURFACES = ['page', 'card', 'sunk']
 const PAIRS: [fg: string, bg: string][] = [
   ...['ink', 'ink-2', 'ink-3', 'accent', 'warn', 'danger', 'ok'].flatMap((fg) => SURFACES.map((bg): [string, string] => [fg, bg])),
+  /* Rows marked as differing from a series, the Last Time callouts. */
+  ...['ink', 'ink-2', 'ink-3', 'accent', 'warn'].map((fg): [string, string] => [fg, 'warn-soft']),
   ['ink', 'accent-soft'],
+  ['ink-2', 'accent-soft'],
   ['ink-3', 'accent-soft'],
+  ['danger', 'card'],
   ['accent', 'accent-soft'],
   ['accent-ink', 'accent'],
   ['accent-ink', 'accent-strong'],
