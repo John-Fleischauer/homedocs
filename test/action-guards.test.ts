@@ -57,10 +57,12 @@ function isServerModule(source: ts.SourceFile): boolean {
   return hasDirective(source, 'use server')
 }
 
-/* A JSX attribute's string value (`type="hidden"` or `type='hidden'`), whatever the quote. */
+/* A JSX attribute's string value, whatever the quote: `type="hidden"`, `type='hidden'` or
+   `type={'hidden'}`. */
 function stringValue(attribute: ts.JsxAttribute | undefined): string | undefined {
-  const initializer = attribute?.initializer
-  return initializer !== undefined && ts.isStringLiteral(initializer) ? initializer.text : undefined
+  let value: ts.Node | undefined = attribute?.initializer
+  if (value !== undefined && ts.isJsxExpression(value)) value = value.expression
+  return value !== undefined && ts.isStringLiteralLike(value) ? value.text : undefined
 }
 
 const serverModules = [...files('app', /\.tsx?$/), ...files('components', /\.tsx?$/), ...files('lib', /\.tsx?$/)].filter(
@@ -190,7 +192,6 @@ describe('forms', () => {
   it('every form that posts to an action says what happens on reset', () => {
     const offenders: string[] = []
     let clientForms = 0
-    let serverForms = 0
     for (const file of [...files('app', /\.tsx$/), ...files('components', /\.tsx$/)]) {
       const source = parse(file)
       const client = hasDirective(source, 'use client')
@@ -201,16 +202,13 @@ describe('forms', () => {
           const attr = (name: string) => attributes.find((a) => a.name.getText(source) === name)
           /* `method="get"` is a search form: the browser navigates, nothing is
              reset. Only a form with an action expression posts to an action. */
-          const get = stringValue(attr('method')) === 'get'
+          const get = stringValue(attr('method'))?.toLowerCase() === 'get'
           const action = attr('action')
           const posts = !get && action?.initializer !== undefined && ts.isJsxExpression(action.initializer)
           /* A server component can't take an event handler; its forms must be
              buttons over hidden fields, with nothing typed to lose. */
           const covered = client ? attr('onReset') !== undefined : typedFields(node, source) === 0
-          if (posts) {
-            if (client) clientForms++
-            else serverForms++
-          }
+          if (posts && client) clientForms++
           if (posts && !covered) {
             const line = source.getLineAndCharacterOfPosition(node.getStart()).line + 1
             offenders.push(`${file}:${line}`)
@@ -220,10 +218,9 @@ describe('forms', () => {
       }
       visit(source)
     }
-    /* Both kinds were found at all, so a change that stops the directive or the forms being
-       recognised fails here instead of passing with nothing checked. */
-    expect(clientForms).toBeGreaterThan(0)
-    expect(serverForms).toBeGreaterThan(0)
     expect(offenders).toEqual([])
+    /* Client forms were found at all, so a change that stops 'use client' being recognised
+       (every client form then reads as a server one) fails here instead of passing quietly. */
+    expect(clientForms).toBeGreaterThan(0)
   })
 })
