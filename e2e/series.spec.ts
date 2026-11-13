@@ -42,7 +42,7 @@ test('set up the pine straw series', async ({ page }) => {
 
   await addMaterial(page, { quantity: '8', notes: 'around the stairs' })
   await addMaterial(page, { quantity: '5', notes: 'around the deck' })
-  await page.getByRole('textbox', { name: 'New to-do' }).fill('Rake out old straw')
+  await page.getByRole('textbox', { name: 'New To-Do' }).fill('Rake out old straw')
   await page.getByRole('button', { name: 'Add', exact: true }).first().click()
   await expect(page.getByText('Rake out old straw')).toBeVisible()
   await noSeriousProblems(page)

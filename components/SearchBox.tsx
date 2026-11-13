@@ -14,7 +14,7 @@ export function SearchBox({ defaultValue = '', focus = false }: { defaultValue?:
         defaultValue={defaultValue}
         ref={focus ? focusUnlessTouch : undefined}
         placeholder="Bulb, paint, plumber, shutoff…"
-        aria-label="Search everything"
+        aria-label="Search Everything"
         className="h-12 w-full rounded-full border border-line bg-card pl-11 pr-4 text-[16px] text-ink placeholder:text-ink-3 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
       />
     </form>

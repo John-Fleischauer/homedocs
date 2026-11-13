@@ -47,7 +47,7 @@ export function AddMenu() {
       <a
         href="/add"
         role="button"
-        aria-label="Add something"
+        aria-label="Add Something"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
@@ -63,7 +63,7 @@ export function AddMenu() {
         <div
           id={menuId}
           role="menu"
-          aria-label="Add something"
+          aria-label="Add Something"
           className="absolute inset-x-4 top-full z-40 mt-1 overflow-hidden rounded-card border border-line bg-card shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:w-80"
         >
           <ul className="divide-y divide-line">

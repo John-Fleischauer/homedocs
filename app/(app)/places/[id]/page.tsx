@@ -47,7 +47,7 @@ export default async function PlacePage({ params }: { params: Promise<{ id: stri
       />
 
       {canEdit ? (
-        <div className="grid grid-cols-3 gap-2" role="group" aria-label="Add to this place">
+        <div className="grid grid-cols-3 gap-2" role="group" aria-label="Add to This Place">
           {[
             { href: `/fixtures/new?space=${id}`, label: 'Add Fixture', icon: 'fixture' as const },
             { href: `/use?space=${id}`, label: 'Add Part', icon: 'part' as const },

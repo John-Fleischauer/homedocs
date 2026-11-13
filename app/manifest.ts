@@ -19,7 +19,7 @@ export default function manifest(): MetadataRoute.Manifest {
     shortcuts: [
       { name: 'Search', url: '/search' },
       { name: 'Add', url: '/add' },
-      { name: 'House guide', url: '/guide' },
+      { name: 'House Guide', url: '/guide' },
     ],
   }
 }

@@ -40,8 +40,7 @@ export default async function ProjectsPage() {
           </List>
         ) : (
           <p className="px-1 text-sm text-ink-3">
-            A series is a job you do again and again — pine straw every spring. It keeps the checklist and materials to start
-            from next time.
+            Recurring jobs, each with the checklist and materials a new project starts from
           </p>
         )}
       </Section>

@@ -33,10 +33,10 @@ export default async function SharedGuidePage({ params }: { params: Promise<{ to
 
   const locked = visit.link.lockedAt || visit.link.pinFailures >= MAX_PIN_FAILURES
   const lockSlot = !visit.link.pinHash ? (
-    <Card className="p-4 text-sm text-ink-3">Codes and the address are shown when you’re on the house Wi-Fi.</Card>
+    <Card className="p-4 text-sm text-ink-3">Codes and the address show on the house Wi-Fi</Card>
   ) : locked ? (
     <Card className="p-4 text-sm text-ink-3">
-      Codes are shown when you’re on the house Wi-Fi. (The PIN is locked after too many tries.)
+      PIN locked after too many tries. Codes show on the house Wi-Fi
     </Card>
   ) : (
     <PinForm token={token} />

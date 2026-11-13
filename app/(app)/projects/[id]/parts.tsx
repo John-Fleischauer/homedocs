@@ -177,7 +177,7 @@ export function Checklist({
       {canEdit ? (
         <ActionForm action={add} resetOnSuccess className="flex flex-col gap-2">
           <div className="flex gap-2">
-            <TextInput name="text" placeholder="Add a to-do" aria-label="New to-do" required />
+            <TextInput name="text" placeholder="Add a to-do" aria-label="New To-Do" required />
             <SubmitButton pendingText="…">Add</SubmitButton>
           </div>
           {inSeries ? <Checkbox name="oneOff" label="Only This Project" /> : null}
@@ -192,7 +192,7 @@ export function Checklist({
                 ))}
               </Select>
               {quotes.length ? (
-                <Select name="quoteId" aria-label="Covered by quote" defaultValue="">
+                <Select name="quoteId" aria-label="Covered by Quote" defaultValue="">
                   <option value="">Which Quote?</option>
                   {quotes.map((q) => (
                     <option key={q.id} value={q.id}>
