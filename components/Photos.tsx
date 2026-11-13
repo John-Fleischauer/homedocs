@@ -1,6 +1,6 @@
-import type { Attachment } from '@/lib/files/attachments'
-import { DeleteButton } from './DeleteButton'
-import { Icon } from './ui/icons'
+import type { Attachment } from "@/lib/files/attachments";
+import { DeleteButton } from "./DeleteButton";
+import { Icon } from "./ui/icons";
 
 /*
  * A grid of a record's photos and files. `base` is where files are served from.
@@ -13,48 +13,72 @@ import { Icon } from './ui/icons'
 export function Photos({
   items,
   remove,
-  base = '/api/files',
+  base = "/api/files",
   hero = false,
 }: {
-  items: Attachment[]
-  remove?: (id: string) => Promise<unknown>
-  base?: string
-  hero?: boolean
+  items: Attachment[];
+  remove?: (id: string) => Promise<unknown>;
+  base?: string;
+  hero?: boolean;
 }) {
-  if (items.length === 0) return null
+  if (items.length === 0) return null;
   return (
     <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
       {items.map((a, i) => {
-        const big = hero && i === 0 && a.mime.startsWith('image/')
+        const big = hero && i === 0 && a.mime.startsWith("image/");
         return (
-          <li key={a.id} className={`relative overflow-hidden rounded-card border border-line bg-card ${big ? 'col-span-2 sm:col-span-3' : ''}`}>
-            <a href={`${base}/${a.sha256}`} target="_blank" rel="noreferrer" className="block">
-              {a.mime.startsWith('image/') ? (
+          <li
+            key={a.id}
+            className={`relative overflow-hidden rounded-card border border-line bg-card ${big ? "col-span-2 sm:col-span-3" : ""}`}
+          >
+            <a
+              href={`${base}/${a.sha256}`}
+              target="_blank"
+              rel="noreferrer"
+              className="block"
+            >
+              {a.mime.startsWith("image/") ? (
                 // eslint-disable-next-line @next/next/no-img-element -- served from our own authenticated route
                 <img
-                  src={big ? `${base}/${a.sha256}` : `${base}/${a.sha256}?thumb=1`}
-                  alt={a.caption || 'Photo'}
-                  loading={big ? 'eager' : 'lazy'}
-                  className={big ? 'max-h-96 w-full object-cover' : 'aspect-[4/3] w-full object-cover'}
+                  src={
+                    big ? `${base}/${a.sha256}` : `${base}/${a.sha256}?thumb=1`
+                  }
+                  alt={a.caption || "Photo"}
+                  loading={big ? "eager" : "lazy"}
+                  className={
+                    big
+                      ? "max-h-96 w-full object-cover"
+                      : "aspect-[4/3] w-full object-cover"
+                  }
                 />
               ) : (
                 <span className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-2 text-ink-3">
                   <Icon name="note" className="h-8 w-8" />
-                  <span className="px-2 text-center text-xs">{a.originalName || 'Document'}</span>
+                  <span className="px-2 text-center text-xs">
+                    {a.originalName || "Document"}
+                  </span>
                 </span>
               )}
             </a>
-            {a.caption ? <p className="px-2 py-1.5 text-xs text-ink-2">{a.caption}</p> : null}
+            {a.caption ? (
+              <p className="px-2 py-1.5 text-xs text-ink-2">{a.caption}</p>
+            ) : null}
             {remove ? (
               /* Below the picture, not over it: the question needs more room
                  than a corner of a thumbnail. */
               <div className="flex justify-end p-1">
-                <DeleteButton compact recoverable={false} what="this photo" label="Remove" action={remove.bind(null, a.id)} />
+                <DeleteButton
+                  compact
+                  recoverable={false}
+                  what="this photo"
+                  label="Remove"
+                  action={remove.bind(null, a.id)}
+                />
               </div>
             ) : null}
           </li>
-        )
+        );
       })}
     </ul>
-  )
+  );
 }

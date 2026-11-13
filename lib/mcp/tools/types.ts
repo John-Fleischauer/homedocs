@@ -14,16 +14,16 @@
  * in homedocs, try search" and cannot recover from a stack trace.
  */
 
-import type { z } from 'zod'
-import type { ActorContext, Executor } from '../../core/types'
-import type { Scope } from '../../oauth/config'
-import type { BearerIdentity } from '../../oauth/grants'
+import type { z } from "zod";
+import type { ActorContext, Executor } from "../../core/types";
+import type { Scope } from "../../oauth/config";
+import type { BearerIdentity } from "../../oauth/grants";
 
 export type ToolContext = {
-  exec: Executor
-  actor: ActorContext
-  identity: BearerIdentity
-}
+  exec: Executor;
+  actor: ActorContext;
+  identity: BearerIdentity;
+};
 
 /**
  * A refusal the model should read, rather than an exception the transport turns
@@ -36,29 +36,29 @@ export class ToolRefusal extends Error {
     /** Optional follow-up: what to call instead, or which identifier to supply. */
     readonly hint?: string,
   ) {
-    super(message)
-    this.name = 'ToolRefusal'
+    super(message);
+    this.name = "ToolRefusal";
   }
 }
 
 export type ToolDefinition<Schema extends z.ZodType = z.ZodType> = {
-  name: string
-  title: string
-  description: string
+  name: string;
+  title: string;
+  description: string;
   /** The scope required. Checked at list time for ergonomics and at call time for real. */
-  scope: Scope
-  input: Schema
+  scope: Scope;
+  input: Schema;
   annotations?: {
-    readOnlyHint?: boolean
-    destructiveHint?: boolean
-    idempotentHint?: boolean
-  }
-  handler: (input: z.infer<Schema>, context: ToolContext) => Promise<unknown>
-}
+    readOnlyHint?: boolean;
+    destructiveHint?: boolean;
+    idempotentHint?: boolean;
+  };
+  handler: (input: z.infer<Schema>, context: ToolContext) => Promise<unknown>;
+};
 
 /** Keeps `input` and `handler` inferring together at each definition site. */
 export function defineTool<Schema extends z.ZodType>(
   definition: ToolDefinition<Schema>,
 ): ToolDefinition<z.ZodType> {
-  return definition as unknown as ToolDefinition<z.ZodType>
+  return definition as unknown as ToolDefinition<z.ZodType>;
 }

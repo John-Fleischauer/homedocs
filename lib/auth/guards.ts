@@ -12,18 +12,18 @@
  * wrong answer to a fetch.
  */
 
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
-import { ForbiddenError, roleAtLeast, type Role } from '../core/types'
-import { SESSION_COOKIE, resolveSession, type AuthUser } from './sessions'
-import { needsSetup } from './users'
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { ForbiddenError, roleAtLeast, type Role } from "../core/types";
+import { SESSION_COOKIE, resolveSession, type AuthUser } from "./sessions";
+import { needsSetup } from "./users";
 
-export type { AuthUser }
+export type { AuthUser };
 
 /** The current user, or null. Never redirects — for conditional rendering. */
 export async function getCurrentUser(): Promise<AuthUser | null> {
-  const jar = await cookies()
-  return resolveSession(jar.get(SESSION_COOKIE)?.value)
+  const jar = await cookies();
+  return resolveSession(jar.get(SESSION_COOKIE)?.value);
 }
 
 /**
@@ -31,36 +31,41 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
  * accounts at all, and to /login otherwise.
  */
 export async function requireUser(): Promise<AuthUser> {
-  const user = await getCurrentUser()
-  if (user) return user
+  const user = await getCurrentUser();
+  if (user) return user;
 
-  if (await needsSetup()) redirect('/setup')
-  redirect('/login')
+  if (await needsSetup()) redirect("/setup");
+  redirect("/login");
 }
 
 export async function requireRole(role: Role): Promise<AuthUser> {
-  const user = await requireUser()
+  const user = await requireUser();
   // Not a redirect: they are signed in and simply lack authority.
-  if (!roleAtLeast(user.role, role)) throw new ForbiddenError()
-  return user
+  if (!roleAtLeast(user.role, role)) throw new ForbiddenError();
+  return user;
 }
 
 // ─── API guards ──────────────────────────────────────────────────────────────
 
-export type ApiAuth = { user: AuthUser } | { response: Response }
+export type ApiAuth = { user: AuthUser } | { response: Response };
 
 /** For Route Handlers under app/api/. Returns a 401 rather than redirecting. */
 export async function requireApiUser(): Promise<ApiAuth> {
-  const user = await getCurrentUser()
-  if (user) return { user }
-  return { response: Response.json({ error: 'authentication required' }, { status: 401 }) }
+  const user = await getCurrentUser();
+  if (user) return { user };
+  return {
+    response: Response.json(
+      { error: "authentication required" },
+      { status: 401 },
+    ),
+  };
 }
 
 export async function requireApiRole(role: Role): Promise<ApiAuth> {
-  const auth = await requireApiUser()
-  if ('response' in auth) return auth
+  const auth = await requireApiUser();
+  if ("response" in auth) return auth;
   if (!roleAtLeast(auth.user.role, role)) {
-    return { response: Response.json({ error: 'forbidden' }, { status: 403 }) }
+    return { response: Response.json({ error: "forbidden" }, { status: 403 }) };
   }
-  return auth
+  return auth;
 }

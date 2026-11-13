@@ -1,9 +1,9 @@
-'use client'
+"use client";
 
-import { useEffect, useId, useRef, useState } from 'react'
-import { buttonClass } from './ui/Button'
+import { useEffect, useId, useRef, useState } from "react";
+import { buttonClass } from "./ui/Button";
 
-type Ask = { changes: string[]; then: () => void }
+type Ask = { changes: string[]; then: () => void };
 
 /**
  * The one modal confirm (John's answer to Q12): a write that goes back to a
@@ -14,25 +14,41 @@ type Ask = { changes: string[]; then: () => void }
  * native <dialog>: focus is kept inside it, Escape closes it, and it starts on
  * Cancel.
  */
-export function useSeriesConfirm(): [ask: (changes: string[], then: () => void) => void, dialog: React.ReactNode] {
-  const [asking, setAsking] = useState<Ask | null>(null)
-  return [(changes, then) => setAsking({ changes, then }), <SeriesDialog key="series-confirm" asking={asking} close={() => setAsking(null)} />]
+export function useSeriesConfirm(): [
+  ask: (changes: string[], then: () => void) => void,
+  dialog: React.ReactNode,
+] {
+  const [asking, setAsking] = useState<Ask | null>(null);
+  return [
+    (changes, then) => setAsking({ changes, then }),
+    <SeriesDialog
+      key="series-confirm"
+      asking={asking}
+      close={() => setAsking(null)}
+    />,
+  ];
 }
 
-function SeriesDialog({ asking, close }: { asking: Ask | null; close: () => void }) {
-  const ref = useRef<HTMLDialogElement>(null)
-  const cancelRef = useRef<HTMLButtonElement>(null)
+function SeriesDialog({
+  asking,
+  close,
+}: {
+  asking: Ask | null;
+  close: () => void;
+}) {
+  const ref = useRef<HTMLDialogElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
   /* One of these per list on a project page, so the heading's id is unique. */
-  const titleId = useId()
+  const titleId = useId();
 
   useEffect(() => {
-    const dialog = ref.current
-    if (!dialog) return
+    const dialog = ref.current;
+    if (!dialog) return;
     if (asking && !dialog.open) {
-      dialog.showModal()
-      cancelRef.current?.focus()
-    } else if (!asking && dialog.open) dialog.close()
-  }, [asking])
+      dialog.showModal();
+      cancelRef.current?.focus();
+    } else if (!asking && dialog.open) dialog.close();
+  }, [asking]);
 
   return (
     <dialog
@@ -54,15 +70,20 @@ function SeriesDialog({ asking, close }: { asking: Ask | null; close: () => void
           ))}
         </ul>
         <div className="mt-1 flex flex-wrap justify-end gap-2">
-          <button ref={cancelRef} type="button" className={buttonClass('secondary')} onClick={close}>
+          <button
+            ref={cancelRef}
+            type="button"
+            className={buttonClass("secondary")}
+            onClick={close}
+          >
             Cancel
           </button>
           <button
             type="button"
-            className={buttonClass('primary')}
+            className={buttonClass("primary")}
             onClick={() => {
-              asking?.then()
-              close()
+              asking?.then();
+              close();
             }}
           >
             Update Series
@@ -70,5 +91,5 @@ function SeriesDialog({ asking, close }: { asking: Ask | null; close: () => void
         </div>
       </div>
     </dialog>
-  )
+  );
 }

@@ -29,35 +29,41 @@
  *    requirement (docs/DEPLOYMENT.md).
  */
 
-import { and, eq, isNotNull, sql } from 'drizzle-orm'
-import { recordAudit } from '../core/audit'
-import { inTransaction } from '../core/internal'
-import type { Executor } from '../core/types'
-import { db } from '../db'
-import { users } from '../db/schema'
-import type { OidcClaims } from './oidc'
-import type { AuthUser } from './sessions'
-import { findUserByEmail, insertUser, lockSetup, needsSetup, selfActor } from './users'
+import { and, eq, isNotNull, sql } from "drizzle-orm";
+import { recordAudit } from "../core/audit";
+import { inTransaction } from "../core/internal";
+import type { Executor } from "../core/types";
+import { db } from "../db";
+import { users } from "../db/schema";
+import type { OidcClaims } from "./oidc";
+import type { AuthUser } from "./sessions";
+import {
+  findUserByEmail,
+  insertUser,
+  lockSetup,
+  needsSetup,
+  selfActor,
+} from "./users";
 
 export type OidcRefusal =
   /** The identity, or the address, belongs to an account that was removed. */
-  | 'removed'
+  | "removed"
   /** The address belongs to an account linked to a different identity. */
-  | 'other-identity'
+  | "other-identity"
   /** The address belongs to an account, and the provider has not verified it. */
-  | 'unverified-email'
+  | "unverified-email"
   /** No account matched, and the provider has not verified the address to make one with. */
-  | 'unverified-new-email'
+  | "unverified-new-email"
   /** No account matched, and there is no address to create one with. */
-  | 'no-email'
+  | "no-email"
   /** The account exists but an admin has not let it in yet. */
-  | 'awaiting-placement'
+  | "awaiting-placement"
   /** There are no accounts at all: the first one is made at /setup. */
-  | 'setup'
+  | "setup";
 
 export type OidcResolution =
-  | { kind: 'signed-in'; user: AuthUser; via: 'identity' | 'linked' }
-  | { kind: 'refused'; reason: OidcRefusal }
+  | { kind: "signed-in"; user: AuthUser; via: "identity" | "linked" }
+  | { kind: "refused"; reason: OidcRefusal };
 
 export async function resolveOidcAccount(
   claims: OidcClaims,
@@ -67,45 +73,58 @@ export async function resolveOidcAccount(
   return inTransaction(exec, async (tx) => {
     /* The setup lock, so two first sign-ins cannot both become the admin, and
        two tabs finishing the same first sign-in cannot both create an account. */
-    await lockSetup(tx)
+    await lockSetup(tx);
 
     const [byIdentity] = await tx
       .select()
       .from(users)
-      .where(and(eq(users.oidcIssuer, claims.issuer), eq(users.oidcSubject, claims.subject)))
-      .limit(1)
+      .where(
+        and(
+          eq(users.oidcIssuer, claims.issuer),
+          eq(users.oidcSubject, claims.subject),
+        ),
+      )
+      .limit(1);
     if (byIdentity) {
-      if (byIdentity.deletedAt) return { kind: 'refused', reason: 'removed' }
-      if (byIdentity.awaitingPlacement) return { kind: 'refused', reason: 'awaiting-placement' }
-      return { kind: 'signed-in', via: 'identity', user: authUser(byIdentity) }
+      if (byIdentity.deletedAt) return { kind: "refused", reason: "removed" };
+      if (byIdentity.awaitingPlacement)
+        return { kind: "refused", reason: "awaiting-placement" };
+      return { kind: "signed-in", via: "identity", user: authUser(byIdentity) };
     }
 
-    const email = claims.email?.trim().toLowerCase()
-    if (!email || !email.includes('@')) return { kind: 'refused', reason: 'no-email' }
+    const email = claims.email?.trim().toLowerCase();
+    if (!email || !email.includes("@"))
+      return { kind: "refused", reason: "no-email" };
 
-    const byEmail = await findUserByEmail(email, tx)
+    const byEmail = await findUserByEmail(email, tx);
     if (byEmail) {
       if (!claims.emailVerified && !options.trustEmail) {
-        return { kind: 'refused', reason: 'unverified-email' }
+        return { kind: "refused", reason: "unverified-email" };
       }
-      if (byEmail.oidcSubject !== null) return { kind: 'refused', reason: 'other-identity' }
+      if (byEmail.oidcSubject !== null)
+        return { kind: "refused", reason: "other-identity" };
       /* Unreachable today (only sign-on makes an awaiting account, and it always
          carries an identity), but linking must never be a way past placement. */
-      if (byEmail.awaitingPlacement) return { kind: 'refused', reason: 'awaiting-placement' }
+      if (byEmail.awaitingPlacement)
+        return { kind: "refused", reason: "awaiting-placement" };
 
       await tx
         .update(users)
-        .set({ oidcIssuer: claims.issuer, oidcSubject: claims.subject, updatedAt: new Date() })
-        .where(eq(users.id, byEmail.id))
+        .set({
+          oidcIssuer: claims.issuer,
+          oidcSubject: claims.subject,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, byEmail.id));
 
       await recordAudit(tx, selfActor(byEmail.id, byEmail.role), {
-        action: 'update',
-        entityType: 'user',
+        action: "update",
+        entityType: "user",
         entityId: byEmail.id,
         after: { oidcIssuer: claims.issuer },
-      })
+      });
 
-      return { kind: 'signed-in', via: 'linked', user: authUser(byEmail) }
+      return { kind: "signed-in", via: "linked", user: authUser(byEmail) };
     }
 
     /* A removed account with this address and no identity of its own is the
@@ -114,18 +133,21 @@ export async function resolveOidcAccount(
     const [removed] = await tx
       .select({ id: users.id })
       .from(users)
-      .where(and(sql`lower(${users.email}) = ${email}`, isNotNull(users.deletedAt)))
-      .limit(1)
-    if (removed) return { kind: 'refused', reason: 'removed' }
+      .where(
+        and(sql`lower(${users.email}) = ${email}`, isNotNull(users.deletedAt)),
+      )
+      .limit(1);
+    if (removed) return { kind: "refused", reason: "removed" };
 
     /* The first account is made at /setup, never by a sign-in: the person who
        sets the house up chooses to, rather than whoever reaches the provider
        first. */
-    if (await needsSetup(tx)) return { kind: 'refused', reason: 'setup' }
+    if (await needsSetup(tx)) return { kind: "refused", reason: "setup" };
 
     /* Only on an address the provider vouches for (or one the deployment
        trusts): the account's address is what an admin recognises them by. */
-    if (!claims.emailVerified && !options.trustEmail) return { kind: 'refused', reason: 'unverified-new-email' }
+    if (!claims.emailVerified && !options.trustEmail)
+      return { kind: "refused", reason: "unverified-new-email" };
 
     /* `viewer` is only what the row needs to be valid, and the least it could
        mean: an awaiting account gets no session or token, so the role means
@@ -136,22 +158,29 @@ export async function resolveOidcAccount(
         email,
         displayName: displayNameFor(claims, email),
         passwordHash: null,
-        role: 'viewer',
+        role: "viewer",
         awaitingPlacement: true,
         oidcIssuer: claims.issuer,
         oidcSubject: claims.subject,
       },
       null,
-    )
-    return { kind: 'refused', reason: 'awaiting-placement' }
-  })
+    );
+    return { kind: "refused", reason: "awaiting-placement" };
+  });
 }
 
 /** The name a new account starts with. Editable like any other. */
 export function displayNameFor(claims: OidcClaims, email: string): string {
-  return claims.name ?? claims.preferredUsername ?? email.split('@')[0] ?? email
+  return (
+    claims.name ?? claims.preferredUsername ?? email.split("@")[0] ?? email
+  );
 }
 
 function authUser(row: typeof users.$inferSelect): AuthUser {
-  return { id: row.id, email: row.email, displayName: row.displayName, role: row.role }
+  return {
+    id: row.id,
+    email: row.email,
+    displayName: row.displayName,
+    role: row.role,
+  };
 }

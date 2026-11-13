@@ -13,51 +13,51 @@
  */
 
 /** What counts as "on". Lenient, because `=1` and `=yes` are both what people type. */
-const TRUE = new Set(['1', 'true', 'yes', 'on'])
+const TRUE = new Set(["1", "true", "yes", "on"]);
 
 function flag(raw: string | undefined): boolean {
-  return TRUE.has((raw ?? '').trim().toLowerCase())
+  return TRUE.has((raw ?? "").trim().toLowerCase());
 }
 
 export type OidcConfig =
   | { enabled: false }
   | {
-      enabled: true
-      issuer: string
-      clientId: string
-      clientSecret: string
+      enabled: true;
+      issuer: string;
+      clientId: string;
+      clientSecret: string;
       /** The provider's name on the sign-in button. */
-      displayName: string
+      displayName: string;
       /** Hide and refuse password sign-in — but only while SSO actually works. */
-      only: boolean
+      only: boolean;
       /** Accept an unverified `email` claim for linking. For a self-hosted issuer. */
-      trustEmail: boolean
+      trustEmail: boolean;
       /**
        * The role the Family page suggests when an admin lets in an account a
        * sign-on made (it is created with no access, awaiting placement).
        */
-      defaultRole: 'admin' | 'member' | 'viewer'
-    }
+      defaultRole: "admin" | "member" | "viewer";
+    };
 
-type Env = Record<string, string | undefined>
+type Env = Record<string, string | undefined>;
 
 export function readOidcConfig(env: Env = process.env): OidcConfig {
-  const issuer = env.OIDC_ISSUER?.trim() || undefined
-  const clientId = env.OIDC_CLIENT_ID?.trim() || undefined
-  const clientSecret = env.OIDC_CLIENT_SECRET?.trim() || undefined
+  const issuer = env.OIDC_ISSUER?.trim() || undefined;
+  const clientId = env.OIDC_CLIENT_ID?.trim() || undefined;
+  const clientSecret = env.OIDC_CLIENT_SECRET?.trim() || undefined;
 
-  const present = [issuer, clientId, clientSecret].filter(Boolean).length
-  if (present === 0) return { enabled: false }
+  const present = [issuer, clientId, clientSecret].filter(Boolean).length;
+  if (present === 0) return { enabled: false };
   if (present < 3) {
     const missing = [
-      issuer ? null : 'OIDC_ISSUER',
-      clientId ? null : 'OIDC_CLIENT_ID',
-      clientSecret ? null : 'OIDC_CLIENT_SECRET',
-    ].filter(Boolean)
+      issuer ? null : "OIDC_ISSUER",
+      clientId ? null : "OIDC_CLIENT_ID",
+      clientSecret ? null : "OIDC_CLIENT_SECRET",
+    ].filter(Boolean);
     throw new Error(
-      `Single sign-on is partly configured: set ${missing.join(', ')} as well, ` +
-        'or unset all three of OIDC_ISSUER, OIDC_CLIENT_ID and OIDC_CLIENT_SECRET.',
-    )
+      `Single sign-on is partly configured: set ${missing.join(", ")} as well, ` +
+        "or unset all three of OIDC_ISSUER, OIDC_CLIENT_ID and OIDC_CLIENT_SECRET.",
+    );
   }
 
   return {
@@ -65,13 +65,13 @@ export function readOidcConfig(env: Env = process.env): OidcConfig {
     issuer: issuer!,
     clientId: clientId!,
     clientSecret: clientSecret!,
-    displayName: env.OIDC_DISPLAY_NAME?.trim() || 'Pocket ID',
+    displayName: env.OIDC_DISPLAY_NAME?.trim() || "Pocket ID",
     only: flag(env.OIDC_ONLY),
     trustEmail: flag(env.OIDC_TRUST_EMAIL),
     /* Viewer unless told otherwise: a new face should be able to look before
        they can change anything. Only a suggestion now; the admin chooses. */
     defaultRole: readRole(env.OIDC_DEFAULT_ROLE),
-  }
+  };
 }
 
 /**
@@ -82,14 +82,17 @@ export function readOidcConfig(env: Env = process.env): OidcConfig {
  * never leave an instance nobody can sign in to; the password path coming back
  * is the degraded mode, and the discovery failure is logged loudly instead.
  */
-export function passwordSignInAllowed(config: OidcConfig, oidcUsable: boolean): boolean {
-  if (!config.enabled || !config.only) return true
-  return !oidcUsable
+export function passwordSignInAllowed(
+  config: OidcConfig,
+  oidcUsable: boolean,
+): boolean {
+  if (!config.enabled || !config.only) return true;
+  return !oidcUsable;
 }
 
-function readRole(raw: string | undefined): 'admin' | 'member' | 'viewer' {
-  const value = (raw ?? '').trim().toLowerCase()
-  if (value === '' || value === 'viewer') return 'viewer'
-  if (value === 'member') return 'member'
-  throw new Error(`OIDC_DEFAULT_ROLE must be viewer or member, not "${raw}".`)
+function readRole(raw: string | undefined): "admin" | "member" | "viewer" {
+  const value = (raw ?? "").trim().toLowerCase();
+  if (value === "" || value === "viewer") return "viewer";
+  if (value === "member") return "member";
+  throw new Error(`OIDC_DEFAULT_ROLE must be viewer or member, not "${raw}".`);
 }

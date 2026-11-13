@@ -9,18 +9,18 @@
  */
 
 export type OAuthErrorCode =
-  | 'invalid_request'
-  | 'invalid_client'
-  | 'invalid_grant'
-  | 'unauthorized_client'
-  | 'unsupported_grant_type'
-  | 'unsupported_response_type'
-  | 'invalid_scope'
-  | 'invalid_target'
-  | 'access_denied'
-  | 'server_error'
-  | 'invalid_redirect_uri'
-  | 'invalid_client_metadata'
+  | "invalid_request"
+  | "invalid_client"
+  | "invalid_grant"
+  | "unauthorized_client"
+  | "unsupported_grant_type"
+  | "unsupported_response_type"
+  | "invalid_scope"
+  | "invalid_target"
+  | "access_denied"
+  | "server_error"
+  | "invalid_redirect_uri"
+  | "invalid_client_metadata";
 
 export class OAuthError extends Error {
   constructor(
@@ -28,11 +28,11 @@ export class OAuthError extends Error {
     readonly description: string,
     readonly status = 400,
   ) {
-    super(`${code}: ${description}`)
-    this.name = 'OAuthError'
+    super(`${code}: ${description}`);
+    this.name = "OAuthError";
   }
 
   body(): { error: OAuthErrorCode; error_description: string } {
-    return { error: this.code, error_description: this.description }
+    return { error: this.code, error_description: this.description };
   }
 }

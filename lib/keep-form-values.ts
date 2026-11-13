@@ -1,4 +1,4 @@
-import { useCallback, useRef, type FormEvent } from 'react'
+import { useCallback, useRef, type FormEvent } from "react";
 
 /*
  * React 19 resets a `<form action={fn}>` once the action returns, so a form
@@ -14,17 +14,17 @@ import { useCallback, useRef, type FormEvent } from 'react'
  * that should clear after a success uses `useClearOnSuccess` below.
  */
 export function keepFormValues(e: FormEvent<HTMLFormElement>) {
-  e.preventDefault()
+  e.preventDefault();
 }
 
 /** An action result that carries an `error` is a refusal: the form keeps what was typed. */
 export function isRefusal(result: unknown): boolean {
   return (
-    typeof result === 'object' &&
+    typeof result === "object" &&
     result !== null &&
-    'error' in result &&
+    "error" in result &&
     Boolean((result as { error?: unknown }).error)
-  )
+  );
 }
 
 /**
@@ -42,20 +42,20 @@ export function isRefusal(result: unknown): boolean {
 export function useClearOnSuccess<State, Payload>(
   action: (state: Awaited<State>, payload: Payload) => State | Promise<State>,
 ) {
-  const refused = useRef(false)
+  const refused = useRef(false);
   const wrapped = useCallback(
     async (state: Awaited<State>, payload: Payload): Promise<State> => {
       /* Refused until it says otherwise: an action that throws (a dropped
          connection) keeps what was typed too. */
-      refused.current = true
-      const result = await action(state, payload)
-      refused.current = isRefusal(result)
-      return result
+      refused.current = true;
+      const result = await action(state, payload);
+      refused.current = isRefusal(result);
+      return result;
     },
     [action],
-  )
+  );
   const onReset = useCallback((e: FormEvent<HTMLFormElement>) => {
-    if (refused.current) keepFormValues(e)
-  }, [])
-  return { action: wrapped, onReset }
+    if (refused.current) keepFormValues(e);
+  }, []);
+  return { action: wrapped, onReset };
 }

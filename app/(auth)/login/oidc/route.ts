@@ -8,22 +8,27 @@
  * form.
  */
 
-import { NextResponse, type NextRequest } from 'next/server'
-import { oidcProvider } from '@/lib/auth/oidc'
-import { OIDC_FLOW_COOKIE, encodeFlow, oidcFlowCookieOptions } from '@/lib/auth/oidc-flow'
-import { safeNext } from '@/lib/auth/redirects'
-import { loginUrl } from '../login-url'
+import { NextResponse, type NextRequest } from "next/server";
+import { oidcProvider } from "@/lib/auth/oidc";
+import {
+  OIDC_FLOW_COOKIE,
+  encodeFlow,
+  oidcFlowCookieOptions,
+} from "@/lib/auth/oidc-flow";
+import { safeNext } from "@/lib/auth/redirects";
+import { loginUrl } from "../login-url";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  const next = safeNext(request.nextUrl.searchParams.get('next'))
+  const next = safeNext(request.nextUrl.searchParams.get("next"));
 
-  const provider = await oidcProvider()
-  if (!provider) return NextResponse.redirect(loginUrl('sso-unavailable', next), 303)
+  const provider = await oidcProvider();
+  if (!provider)
+    return NextResponse.redirect(loginUrl("sso-unavailable", next), 303);
 
-  const flow = await provider.begin()
-  const response = NextResponse.redirect(flow.authorizationUrl, 303)
+  const flow = await provider.begin();
+  const response = NextResponse.redirect(flow.authorizationUrl, 303);
   response.cookies.set(
     OIDC_FLOW_COOKIE,
     encodeFlow({
@@ -33,7 +38,7 @@ export async function GET(request: NextRequest) {
       next,
     }),
     oidcFlowCookieOptions,
-  )
-  response.headers.set('Cache-Control', 'no-store')
-  return response
+  );
+  response.headers.set("Cache-Control", "no-store");
+  return response;
 }

@@ -6,10 +6,13 @@
  * database read: the db service has its own healthcheck, and a Postgres blip
  * should not restart-loop the app.
  */
-import { NextResponse } from 'next/server'
+import { NextResponse } from "next/server";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 export function GET() {
-  return NextResponse.json({ ok: true, revision: process.env.GIT_REVISION ?? 'dev' })
+  return NextResponse.json({
+    ok: true,
+    revision: process.env.GIT_REVISION ?? "dev",
+  });
 }

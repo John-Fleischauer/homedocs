@@ -11,30 +11,30 @@
  * is an allowlist by construction: a path on this origin, or nothing.
  */
 
-export const DEFAULT_AFTER_LOGIN = '/'
+export const DEFAULT_AFTER_LOGIN = "/";
 
 export function safeNext(raw: string | null | undefined): string {
-  if (!raw) return DEFAULT_AFTER_LOGIN
+  if (!raw) return DEFAULT_AFTER_LOGIN;
   /* Room for a whole /oauth/authorize request (eight parameters of up to 4 KB,
      percent-encoded), and no more. */
-  if (raw.length > 120_000) return DEFAULT_AFTER_LOGIN
+  if (raw.length > 120_000) return DEFAULT_AFTER_LOGIN;
 
   /* Must be a path on this origin. Rejecting anything that does not start with
      a single slash covers the whole family at once: absolute URLs
      (https://evil.example), protocol-relative ones (//evil.example, which a
      browser resolves against the current scheme), and backslash variants that
      some browsers normalize into slashes. */
-  if (!raw.startsWith('/')) return DEFAULT_AFTER_LOGIN
-  if (raw.startsWith('//') || raw.startsWith('/\\')) return DEFAULT_AFTER_LOGIN
+  if (!raw.startsWith("/")) return DEFAULT_AFTER_LOGIN;
+  if (raw.startsWith("//") || raw.startsWith("/\\")) return DEFAULT_AFTER_LOGIN;
 
   /* A control character or newline in a Location header is a response-splitting
      attempt, not a path. Checked by code point rather than by a regex literal,
      because a regex written with raw control characters in the source is
      invisible to review. */
   for (const char of raw) {
-    const code = char.codePointAt(0)!
-    if (code < 0x20 || code === 0x7f) return DEFAULT_AFTER_LOGIN
+    const code = char.codePointAt(0)!;
+    if (code < 0x20 || code === 0x7f) return DEFAULT_AFTER_LOGIN;
   }
 
-  return raw
+  return raw;
 }

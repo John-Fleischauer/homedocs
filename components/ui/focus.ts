@@ -7,5 +7,6 @@
  * calls it once per mount rather than on every render.
  */
 export function focusUnlessTouch(element: HTMLElement | null) {
-  if (element && !window.matchMedia('(pointer: coarse)').matches) element.focus()
+  if (element && !window.matchMedia("(pointer: coarse)").matches)
+    element.focus();
 }

@@ -15,33 +15,37 @@
  * Server-only: never import this from a client component.
  */
 
-import * as client from 'openid-client'
-import { processMap } from '../process-state'
-import { absoluteUrl } from '../web/urls'
-import { passwordSignInAllowed, readOidcConfig, type OidcConfig } from './oidc-config'
+import * as client from "openid-client";
+import { processMap } from "../process-state";
+import { absoluteUrl } from "../web/urls";
+import {
+  passwordSignInAllowed,
+  readOidcConfig,
+  type OidcConfig,
+} from "./oidc-config";
 
 /** The callback path. `<PUBLIC_BASE_URL>/login/oidc/callback` is what gets registered. */
-export const OIDC_CALLBACK_PATH = '/login/oidc/callback'
+export const OIDC_CALLBACK_PATH = "/login/oidc/callback";
 
 export type OidcClaims = {
   /** The token's `iss`, which is what an identity is stored against. */
-  issuer: string
-  subject: string
-  email?: string
-  emailVerified: boolean
-  name?: string
-  preferredUsername?: string
-}
+  issuer: string;
+  subject: string;
+  email?: string;
+  emailVerified: boolean;
+  name?: string;
+  preferredUsername?: string;
+};
 
 /** What the callback must be checked against, carried in the flow cookie. */
-export type OidcFlow = { state: string; codeVerifier: string; nonce: string }
+export type OidcFlow = { state: string; codeVerifier: string; nonce: string };
 
 export type OidcProvider = {
-  config: Extract<OidcConfig, { enabled: true }>
-  begin(): Promise<OidcFlow & { authorizationUrl: string }>
+  config: Extract<OidcConfig, { enabled: true }>;
+  begin(): Promise<OidcFlow & { authorizationUrl: string }>;
   /** Throws on anything that fails to verify. */
-  complete(callbackSearch: string, flow: OidcFlow): Promise<OidcClaims>
-}
+  complete(callbackSearch: string, flow: OidcFlow): Promise<OidcClaims>;
+};
 
 /*
  * Discovery runs on first use rather than at import — `next build` evaluates
@@ -58,22 +62,28 @@ export type OidcProvider = {
  * layer has its own copy of the library, and a `Configuration` built by one is
  * refused by the other's `instanceof` check — which is how this was found.
  */
-const RETRY_AFTER_FAILURE_MS = 60_000
-const DISCOVERY_TIMEOUT_SECONDS = 5
+const RETRY_AFTER_FAILURE_MS = 60_000;
+const DISCOVERY_TIMEOUT_SECONDS = 5;
 
-type Discovered = { result: Promise<client.ServerMetadata | null> }
-const discoveries = processMap<Discovered>('oidc-discovery')
+type Discovered = { result: Promise<client.ServerMetadata | null> };
+const discoveries = processMap<Discovered>("oidc-discovery");
 
 function discover(config: Extract<OidcConfig, { enabled: true }>) {
-  const key = `${config.issuer}\n${config.clientId}`
-  const cached = discoveries.get(key)
-  if (cached) return cached
+  const key = `${config.issuer}\n${config.clientId}`;
+  const cached = discoveries.get(key);
+  if (cached) return cached;
 
   const entry: Discovered = {
     result: client
-      .discovery(new URL(config.issuer), config.clientId, config.clientSecret, undefined, {
-        timeout: DISCOVERY_TIMEOUT_SECONDS,
-      })
+      .discovery(
+        new URL(config.issuer),
+        config.clientId,
+        config.clientSecret,
+        undefined,
+        {
+          timeout: DISCOVERY_TIMEOUT_SECONDS,
+        },
+      )
       .then((configuration) => configuration.serverMetadata())
       .catch((error: unknown) => {
         console.error(
@@ -81,15 +91,15 @@ function discover(config: Extract<OidcConfig, { enabled: true }>) {
             `password sign-in stays available until it succeeds: ${
               error instanceof Error ? error.message : String(error)
             }`,
-        )
+        );
         setTimeout(() => {
-          if (discoveries.get(key) === entry) discoveries.delete(key)
-        }, RETRY_AFTER_FAILURE_MS).unref?.()
-        return null
+          if (discoveries.get(key) === entry) discoveries.delete(key);
+        }, RETRY_AFTER_FAILURE_MS).unref?.();
+        return null;
       }),
-  }
-  discoveries.set(key, entry)
-  return entry
+  };
+  discoveries.set(key, entry);
+  return entry;
 }
 
 /*
@@ -97,19 +107,26 @@ function discover(config: Extract<OidcConfig, { enabled: true }>) {
  * it is derived from what processMap holds, so a copy per layer is the point,
  * and keeping it lets the library reuse the JWKS it fetched across sign-ins.
  */
-const configurations = new WeakMap<client.ServerMetadata, client.Configuration>()
+const configurations = new WeakMap<
+  client.ServerMetadata,
+  client.Configuration
+>();
 
 function configurationFor(
   metadata: client.ServerMetadata,
   config: Extract<OidcConfig, { enabled: true }>,
 ): client.Configuration {
-  let configuration = configurations.get(metadata)
+  let configuration = configurations.get(metadata);
   if (!configuration) {
-    configuration = new client.Configuration(metadata, config.clientId, config.clientSecret)
-    configuration.timeout = DISCOVERY_TIMEOUT_SECONDS * 2
-    configurations.set(metadata, configuration)
+    configuration = new client.Configuration(
+      metadata,
+      config.clientId,
+      config.clientSecret,
+    );
+    configuration.timeout = DISCOVERY_TIMEOUT_SECONDS * 2;
+    configurations.set(metadata, configuration);
   }
-  return configuration
+  return configuration;
 }
 
 /*
@@ -119,10 +136,12 @@ function configurationFor(
  */
 function configOrOff(): OidcConfig {
   try {
-    return readOidcConfig()
+    return readOidcConfig();
   } catch (error) {
-    console.error(`[oidc] ${error instanceof Error ? error.message : String(error)}`)
-    return { enabled: false }
+    console.error(
+      `[oidc] ${error instanceof Error ? error.message : String(error)}`,
+    );
+    return { enabled: false };
   }
 }
 
@@ -133,33 +152,33 @@ function configOrOff(): OidcConfig {
  * the login page — not awaited, since it is no reason to delay serving.
  */
 export function checkOidcAtBoot(): void {
-  const config = configOrOff()
-  if (config.enabled) void discover(config).result
+  const config = configOrOff();
+  if (config.enabled) void discover(config).result;
 }
 
 export type SignInOptions = {
   /** Set when the sign-on button is offered. */
-  sso: { name: string } | null
+  sso: { name: string } | null;
   /** Whether the password form is offered — and accepted, in the action. */
-  password: boolean
-}
+  password: boolean;
+};
 
 /** What the login page offers, and what the login action accepts. */
 export async function signInOptions(): Promise<SignInOptions> {
-  const config = configOrOff()
-  if (!config.enabled) return { sso: null, password: true }
+  const config = configOrOff();
+  if (!config.enabled) return { sso: null, password: true };
 
-  const usable = (await discover(config).result) !== null
+  const usable = (await discover(config).result) !== null;
   return {
     sso: usable ? { name: config.displayName } : null,
     password: passwordSignInAllowed(config, usable),
-  }
+  };
 }
 
 /** For the Family page: the role it suggests when letting in an awaiting account. */
-export function placementRole(): 'admin' | 'member' | 'viewer' {
-  const config = configOrOff()
-  return config.enabled ? config.defaultRole : 'viewer'
+export function placementRole(): "admin" | "member" | "viewer" {
+  const config = configOrOff();
+  return config.enabled ? config.defaultRole : "viewer";
 }
 
 /**
@@ -167,8 +186,8 @@ export function placementRole(): 'admin' | 'member' | 'viewer' {
  * when the provider says the address is verified (see `oidc-accounts.ts`).
  */
 export function ssoLinkNeedsVerifiedEmail(): boolean {
-  const config = configOrOff()
-  return config.enabled && !config.trustEmail
+  const config = configOrOff();
+  return config.enabled && !config.trustEmail;
 }
 
 /**
@@ -176,31 +195,36 @@ export function ssoLinkNeedsVerifiedEmail(): boolean {
  * issuer could not be discovered.
  */
 export async function oidcProvider(): Promise<OidcProvider | null> {
-  const config = configOrOff()
-  if (!config.enabled) return null
+  const config = configOrOff();
+  if (!config.enabled) return null;
 
-  const metadata = await discover(config).result
-  if (!metadata) return null
-  const discovered = configurationFor(metadata, config)
+  const metadata = await discover(config).result;
+  if (!metadata) return null;
+  const discovered = configurationFor(metadata, config);
 
   return {
     config,
 
     async begin() {
-      const codeVerifier = client.randomPKCECodeVerifier()
-      const state = client.randomState()
-      const nonce = client.randomNonce()
+      const codeVerifier = client.randomPKCECodeVerifier();
+      const state = client.randomState();
+      const nonce = client.randomNonce();
 
       const authorizationUrl = client.buildAuthorizationUrl(discovered, {
         redirect_uri: absoluteUrl(OIDC_CALLBACK_PATH),
-        scope: 'openid profile email',
+        scope: "openid profile email",
         code_challenge: await client.calculatePKCECodeChallenge(codeVerifier),
-        code_challenge_method: 'S256',
+        code_challenge_method: "S256",
         state,
         nonce,
-      })
+      });
 
-      return { authorizationUrl: authorizationUrl.href, state, codeVerifier, nonce }
+      return {
+        authorizationUrl: authorizationUrl.href,
+        state,
+        codeVerifier,
+        nonce,
+      };
     },
 
     async complete(callbackSearch, flow) {
@@ -208,21 +232,28 @@ export async function oidcProvider(): Promise<OidcProvider | null> {
          the proxy the request URL is the container's own address, and the
          library derives the `redirect_uri` it sends to the token endpoint from
          this URL, which has to equal the one the flow started with. */
-      const currentUrl = new URL(absoluteUrl(OIDC_CALLBACK_PATH))
-      currentUrl.search = callbackSearch
+      const currentUrl = new URL(absoluteUrl(OIDC_CALLBACK_PATH));
+      currentUrl.search = callbackSearch;
 
-      const tokens = await client.authorizationCodeGrant(discovered, currentUrl, {
-        pkceCodeVerifier: flow.codeVerifier,
-        expectedState: flow.state,
-        expectedNonce: flow.nonce,
-        idTokenExpected: true,
-      })
+      const tokens = await client.authorizationCodeGrant(
+        discovered,
+        currentUrl,
+        {
+          pkceCodeVerifier: flow.codeVerifier,
+          expectedState: flow.state,
+          expectedNonce: flow.nonce,
+          idTokenExpected: true,
+        },
+      );
 
-      const claims = tokens.claims()
-      if (!claims?.sub) throw new Error('The identity provider returned no subject.')
+      const claims = tokens.claims();
+      if (!claims?.sub)
+        throw new Error("The identity provider returned no subject.");
 
       const text = (value: unknown) =>
-        typeof value === 'string' && value.trim() !== '' ? value.trim() : undefined
+        typeof value === "string" && value.trim() !== ""
+          ? value.trim()
+          : undefined;
 
       return {
         issuer: claims.iss,
@@ -230,10 +261,11 @@ export async function oidcProvider(): Promise<OidcProvider | null> {
         email: text(claims.email),
         /* Some providers send the string "true". Anything else is unverified —
            the safe direction, since unverified is what linking refuses on. */
-        emailVerified: claims.email_verified === true || claims.email_verified === 'true',
+        emailVerified:
+          claims.email_verified === true || claims.email_verified === "true",
         name: text(claims.name),
         preferredUsername: text(claims.preferred_username),
-      }
+      };
     },
-  }
+  };
 }

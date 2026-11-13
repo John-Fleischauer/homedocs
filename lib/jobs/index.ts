@@ -4,29 +4,31 @@
  * container (a debugging copy, say) from running them.
  */
 
-import { sqlClient } from '../db'
-import { processMap } from '../process-state'
+import { sqlClient } from "../db";
+import { processMap } from "../process-state";
 
-type Job = { name: string; everyMs: number; run: () => Promise<void> }
+type Job = { name: string; everyMs: number; run: () => Promise<void> };
 
-const started = processMap<boolean>('jobs')
+const started = processMap<boolean>("jobs");
 
 export function startJobs(): boolean {
-  if (process.env.WORKER === 'off' || started.get('started')) return false
-  started.set('started', true)
+  if (process.env.WORKER === "off" || started.get("started")) return false;
+  started.set("started", true);
 
-  void import('./all').then(({ jobs }) => {
+  void import("./all").then(({ jobs }) => {
     for (const job of jobs) {
       const tick = () =>
         withJobLock(job.name, job.run).catch((err) =>
-          console.error(`[jobs] ${job.name} failed: ${err instanceof Error ? err.message : err}`),
-        )
+          console.error(
+            `[jobs] ${job.name} failed: ${err instanceof Error ? err.message : err}`,
+          ),
+        );
       // A first run shortly after boot, then on the interval.
-      setTimeout(tick, 30_000).unref?.()
-      setInterval(tick, job.everyMs).unref?.()
+      setTimeout(tick, 30_000).unref?.();
+      setInterval(tick, job.everyMs).unref?.();
     }
-  })
-  return true
+  });
+  return true;
 }
 
 /**
@@ -38,21 +40,26 @@ export function startJobs(): boolean {
  * released when it ends whatever happened, and a run that finds it taken is
  * skipped, not queued.
  */
-export async function withJobLock(name: string, run: () => Promise<void>): Promise<boolean> {
-  const conn = await sqlClient().reserve()
-  const key = `homedocs:job:${name}`
+export async function withJobLock(
+  name: string,
+  run: () => Promise<void>,
+): Promise<boolean> {
+  const conn = await sqlClient().reserve();
+  const key = `homedocs:job:${name}`;
   try {
-    const [row] = await conn<{ locked: boolean }[]>`select pg_try_advisory_lock(hashtext(${key})) as locked`
-    if (!row?.locked) return false
+    const [row] = await conn<
+      { locked: boolean }[]
+    >`select pg_try_advisory_lock(hashtext(${key})) as locked`;
+    if (!row?.locked) return false;
     try {
-      await run()
+      await run();
     } finally {
-      await conn`select pg_advisory_unlock(hashtext(${key}))`
+      await conn`select pg_advisory_unlock(hashtext(${key}))`;
     }
-    return true
+    return true;
   } finally {
-    conn.release()
+    conn.release();
   }
 }
 
-export type { Job }
+export type { Job };

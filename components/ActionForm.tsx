@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /*
  * A form bound to a server action, with the refusal shown inline.
@@ -14,48 +14,60 @@
  * after a success.
  */
 
-import { useActionState, useEffect, useRef, type FormEvent, type ReactNode } from 'react'
-import { keepFormValues } from '@/lib/keep-form-values'
-import { FormError } from './ui/Field'
-import type { ActionResult } from '@/lib/web/action'
+import {
+  useActionState,
+  useEffect,
+  useRef,
+  type FormEvent,
+  type ReactNode,
+} from "react";
+import { keepFormValues } from "@/lib/keep-form-values";
+import { FormError } from "./ui/Field";
+import type { ActionResult } from "@/lib/web/action";
 
-export type FormAction = (prev: ActionResult, formData: FormData) => Promise<ActionResult>
+export type FormAction = (
+  prev: ActionResult,
+  formData: FormData,
+) => Promise<ActionResult>;
 
 export function ActionForm({
   action,
   children,
-  className = 'flex flex-col gap-4',
+  className = "flex flex-col gap-4",
   resetOnSuccess = false,
   successText,
   onSuccess,
 }: {
-  action: FormAction
-  children: ReactNode
-  className?: string
-  resetOnSuccess?: boolean
-  successText?: string
-  onSuccess?: (result: ActionResult) => void
+  action: FormAction;
+  children: ReactNode;
+  className?: string;
+  resetOnSuccess?: boolean;
+  successText?: string;
+  onSuccess?: (result: ActionResult) => void;
 }) {
-  const [state, formAction] = useActionState<ActionResult, FormData>(action, {})
-  const ref = useRef<HTMLFormElement>(null)
-  const seen = useRef<ActionResult | null>(null)
-  const clearing = useRef(false)
+  const [state, formAction] = useActionState<ActionResult, FormData>(
+    action,
+    {},
+  );
+  const ref = useRef<HTMLFormElement>(null);
+  const seen = useRef<ActionResult | null>(null);
+  const clearing = useRef(false);
 
   useEffect(() => {
-    if (!state.ok || seen.current === state) return
-    seen.current = state
+    if (!state.ok || seen.current === state) return;
+    seen.current = state;
     if (resetOnSuccess) {
-      clearing.current = true
-      ref.current?.reset()
-      clearing.current = false
+      clearing.current = true;
+      ref.current?.reset();
+      clearing.current = false;
     }
-    onSuccess?.(state)
-  }, [state, resetOnSuccess, onSuccess])
+    onSuccess?.(state);
+  }, [state, resetOnSuccess, onSuccess]);
 
   /* Only our own reset after a success goes through; React's after every action doesn't. */
   const onReset = (e: FormEvent<HTMLFormElement>) => {
-    if (!clearing.current) keepFormValues(e)
-  }
+    if (!clearing.current) keepFormValues(e);
+  };
 
   return (
     <form ref={ref} action={formAction} onReset={onReset} className={className}>
@@ -67,5 +79,5 @@ export function ActionForm({
         </p>
       ) : null}
     </form>
-  )
+  );
 }

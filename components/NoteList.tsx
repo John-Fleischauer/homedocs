@@ -1,6 +1,6 @@
-import { List, Row } from './ui/Card'
-import type { NoteRow } from '@/lib/notes/notes'
-import { formatDay, formatQty } from '@/lib/web/format'
+import { List, Row } from "./ui/Card";
+import type { NoteRow } from "@/lib/notes/notes";
+import { formatDay, formatQty } from "@/lib/web/format";
 
 export function NoteList({ rows }: { rows: NoteRow[] }) {
   return (
@@ -14,12 +14,14 @@ export function NoteList({ rows }: { rows: NoteRow[] }) {
           detail={[
             formatDay(note.happenedOn),
             formatQty(note.quantity, note.unit),
-            note.nextTime ? `Next Time: ${note.nextTime}` : fixtureName ?? supplyName ?? spaceName,
+            note.nextTime
+              ? `Next Time: ${note.nextTime}`
+              : (fixtureName ?? supplyName ?? spaceName),
           ]
             .filter(Boolean)
-            .join(' · ')}
+            .join(" · ")}
         />
       ))}
     </List>
-  )
+  );
 }

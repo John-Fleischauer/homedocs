@@ -13,16 +13,21 @@
  * helped nobody.
  */
 
-import { revalidatePath } from 'next/cache'
-import { unstable_rethrow } from 'next/navigation'
-import type { z } from 'zod'
-import { AppError } from '../core/types'
-import { viewer, type Viewer } from './context'
-import { GONE, formValues, refusalMessage } from './fields'
+import { revalidatePath } from "next/cache";
+import { unstable_rethrow } from "next/navigation";
+import type { z } from "zod";
+import { AppError } from "../core/types";
+import { viewer, type Viewer } from "./context";
+import { GONE, formValues, refusalMessage } from "./fields";
 
-export type ActionResult = { error?: string; ok?: boolean; id?: string; message?: string }
+export type ActionResult = {
+  error?: string;
+  ok?: boolean;
+  id?: string;
+  message?: string;
+};
 
-export const FAILED = 'Something went wrong. Try again.'
+export const FAILED = "Something went wrong. Try again.";
 
 /**
  * Run a server action: authenticate, parse `input` with `schema`, then `work`.
@@ -46,30 +51,38 @@ export const FAILED = 'Something went wrong. Try again.'
 export async function act<S extends z.ZodType>(
   input: unknown,
   schema: S,
-  work: (data: z.output<S>, v: Viewer) => Promise<void | Omit<ActionResult, 'error'>>,
+  work: (
+    data: z.output<S>,
+    v: Viewer,
+  ) => Promise<void | Omit<ActionResult, "error">>,
 ): Promise<ActionResult> {
-  let done: void | Omit<ActionResult, 'error'>
+  let done: void | Omit<ActionResult, "error">;
   try {
     /* First, before the parse. Signed out, it redirects (let through below). */
-    const v = await viewer()
-    const parsed = schema.safeParse(input instanceof FormData ? formValues(input) : input)
-    if (!parsed.success) return { error: refusalMessage(parsed.error) }
-    done = await work(parsed.data, v)
+    const v = await viewer();
+    const parsed = schema.safeParse(
+      input instanceof FormData ? formValues(input) : input,
+    );
+    if (!parsed.success) return { error: refusalMessage(parsed.error) };
+    done = await work(parsed.data, v);
   } catch (err) {
-    unstable_rethrow(err)
-    if (err instanceof AppError) return { error: err.message }
+    unstable_rethrow(err);
+    if (err instanceof AppError) return { error: err.message };
     if (isInvalidUuid(err)) {
       /* Logged too: an id that got past its schema is a gap worth seeing. */
-      console.warn('[action] refused a malformed uuid:', err instanceof Error ? err.message : err)
-      return { error: GONE }
+      console.warn(
+        "[action] refused a malformed uuid:",
+        err instanceof Error ? err.message : err,
+      );
+      return { error: GONE };
     }
-    console.error('[action] failed:', err)
-    return { error: FAILED }
+    console.error("[action] failed:", err);
+    return { error: FAILED };
   }
   // Small pages and a handful of users: refreshing everything is simpler than
   // tracking which lists a record appears in.
-  revalidatePath('/', 'layout')
-  return { ok: true, ...(done ?? {}) }
+  revalidatePath("/", "layout");
+  return { ok: true, ...(done ?? {}) };
 }
 
 /* 22P02 is invalid_text_representation. Only the uuid case reads as gone (a
@@ -77,11 +90,11 @@ export async function act<S extends z.ZodType>(
    json literal is a bug and stays a logged failure. Drizzle wraps the driver's
    error, so the code can be a cause or two down. */
 function isInvalidUuid(err: unknown): boolean {
-  let current: unknown = err
+  let current: unknown = err;
   for (let depth = 0; depth < 5 && current instanceof Error; depth++) {
-    const code = (current as Error & { code?: string }).code
-    if (code === '22P02' && /type uuid/.test(current.message)) return true
-    current = current.cause
+    const code = (current as Error & { code?: string }).code;
+    if (code === "22P02" && /type uuid/.test(current.message)) return true;
+    current = current.cause;
   }
-  return false
+  return false;
 }

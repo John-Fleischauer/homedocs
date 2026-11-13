@@ -1,28 +1,30 @@
-import type { Metadata, Viewport } from 'next'
-import './globals.css'
-import { ServiceWorker } from '@/components/ServiceWorker'
-import { ThemeSync } from '@/components/ui/ThemeSync'
-import { PAGE_COLOR } from '@/lib/design/theme'
+import type { Metadata, Viewport } from "next";
+import "./globals.css";
+import { ServiceWorker } from "@/components/ServiceWorker";
+import { ThemeSync } from "@/components/ui/ThemeSync";
+import { PAGE_COLOR } from "@/lib/design/theme";
 
 export const metadata: Metadata = {
-  title: { default: 'homedocs', template: '%s · homedocs' },
-  applicationName: 'homedocs',
-  appleWebApp: { capable: true, title: 'homedocs', statusBarStyle: 'default' },
+  title: { default: "homedocs", template: "%s · homedocs" },
+  applicationName: "homedocs",
+  appleWebApp: { capable: true, title: "homedocs", statusBarStyle: "default" },
   // Private family data: nothing here belongs in a search engine.
   robots: { index: false, follow: false },
-}
+};
 
 export const viewport: Viewport = {
-  width: 'device-width',
+  width: "device-width",
   initialScale: 1,
-  viewportFit: 'cover',
+  viewportFit: "cover",
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: PAGE_COLOR.light },
-    { media: '(prefers-color-scheme: dark)', color: PAGE_COLOR.dark },
+    { media: "(prefers-color-scheme: light)", color: PAGE_COLOR.light },
+    { media: "(prefers-color-scheme: dark)", color: PAGE_COLOR.dark },
   ],
-}
+};
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     /* suppressHydrationWarning: the theme script sets `data-theme` on this
        element before React hydrates it, on purpose. It covers this element's
@@ -36,5 +38,5 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <ServiceWorker />
       </body>
     </html>
-  )
+  );
 }

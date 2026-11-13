@@ -9,10 +9,13 @@
  * never migrates a database it guessed.
  */
 
-export const LOCAL_DATABASE_URL = 'postgres://homedocs:homedocs@localhost:54330/homedocs'
+export const LOCAL_DATABASE_URL =
+  "postgres://homedocs:homedocs@localhost:54330/homedocs";
 
-export function migrationUrl(env: Record<string, string | undefined>): string | null {
-  const url = env.DATABASE_URL?.trim()
-  if (url) return url
-  return env.NODE_ENV === 'production' ? null : LOCAL_DATABASE_URL
+export function migrationUrl(
+  env: Record<string, string | undefined>,
+): string | null {
+  const url = env.DATABASE_URL?.trim();
+  if (url) return url;
+  return env.NODE_ENV === "production" ? null : LOCAL_DATABASE_URL;
 }

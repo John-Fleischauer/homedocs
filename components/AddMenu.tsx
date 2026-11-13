@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /*
  * The "+" in the top bar: a menu of what can be added, right where the thumb
@@ -6,39 +6,41 @@
  * in where. Without JavaScript the button is a link to /add.
  */
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useEffect, useId, useRef, useState } from 'react'
-import { addItems } from '@/lib/web/add-items'
-import { Icon } from './ui/icons'
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useId, useRef, useState } from "react";
+import { addItems } from "@/lib/web/add-items";
+import { Icon } from "./ui/icons";
 
 export function AddMenu() {
-  const pathname = usePathname() ?? '/'
+  const pathname = usePathname() ?? "/";
   // Remembering where it was opened closes it on any navigation, Back included.
-  const [openAt, setOpenAt] = useState<string | null>(null)
-  const open = openAt === pathname
+  const [openAt, setOpenAt] = useState<string | null>(null);
+  const open = openAt === pathname;
   const setOpen = (next: boolean | ((was: boolean) => boolean)) =>
-    setOpenAt((typeof next === 'function' ? next(open) : next) ? pathname : null)
-  const root = useRef<HTMLDivElement>(null)
-  const menuId = useId()
+    setOpenAt(
+      (typeof next === "function" ? next(open) : next) ? pathname : null,
+    );
+  const root = useRef<HTMLDivElement>(null);
+  const menuId = useId();
 
   // Close on a tap outside, or Escape.
   useEffect(() => {
-    if (!open) return
+    if (!open) return;
     const onDown = (e: PointerEvent) => {
-      if (!root.current?.contains(e.target as Node)) setOpenAt(null)
-    }
+      if (!root.current?.contains(e.target as Node)) setOpenAt(null);
+    };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpenAt(null)
-    }
-    document.addEventListener('pointerdown', onDown)
-    document.addEventListener('keydown', onKey)
-    root.current?.querySelector<HTMLElement>('[role=menuitem]')?.focus()
+      if (e.key === "Escape") setOpenAt(null);
+    };
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    root.current?.querySelector<HTMLElement>("[role=menuitem]")?.focus();
     return () => {
-      document.removeEventListener('pointerdown', onDown)
-      document.removeEventListener('keydown', onKey)
-    }
-  }, [open])
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
   return (
     /* Not positioned on a phone, so the menu hangs from the (sticky) header
@@ -52,12 +54,12 @@ export function AddMenu() {
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
         onClick={(e) => {
-          e.preventDefault()
-          setOpen((o) => !o)
+          e.preventDefault();
+          setOpen((o) => !o);
         }}
         className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-accent-ink hover:bg-accent-strong"
       >
-        <Icon name={open ? 'close' : 'plus'} />
+        <Icon name={open ? "close" : "plus"} />
       </a>
       {open ? (
         <div
@@ -75,10 +77,17 @@ export function AddMenu() {
                   onClick={() => setOpen(false)}
                   className="flex min-h-14 items-center gap-3 px-4 py-2 hover:bg-sunk focus:bg-sunk focus:outline-none"
                 >
-                  <Icon name={item.icon} className="h-5 w-5 shrink-0 text-accent" />
+                  <Icon
+                    name={item.icon}
+                    className="h-5 w-5 shrink-0 text-accent"
+                  />
                   <span className="min-w-0">
-                    <span className="block text-[15px] font-medium text-ink">{item.title}</span>
-                    <span className="block text-xs text-ink-3">{item.detail}</span>
+                    <span className="block text-[15px] font-medium text-ink">
+                      {item.title}
+                    </span>
+                    <span className="block text-xs text-ink-3">
+                      {item.detail}
+                    </span>
                   </span>
                 </Link>
               </li>
@@ -87,5 +96,5 @@ export function AddMenu() {
         </div>
       ) : null}
     </div>
-  )
+  );
 }

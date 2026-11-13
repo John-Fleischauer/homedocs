@@ -6,10 +6,10 @@
  * because dependencies are installed inside the image.
  */
 
-import { hash, verify } from '@node-rs/argon2'
+import { hash, verify } from "@node-rs/argon2";
 
 // Re-exported for server callers; the client imports the policy module directly.
-export { MIN_PASSWORD_LENGTH, passwordProblem } from './password-policy'
+export { MIN_PASSWORD_LENGTH, passwordProblem } from "./password-policy";
 
 /*
  * OWASP's Argon2id baseline: 19 MiB, 2 iterations, 1 degree of parallelism.
@@ -20,20 +20,23 @@ const OPTIONS = {
   memoryCost: 19_456,
   timeCost: 2,
   parallelism: 1,
-} as const
+} as const;
 
 export function hashPassword(password: string): Promise<string> {
-  return hash(password, OPTIONS)
+  return hash(password, OPTIONS);
 }
 
 /**
  * Verify, returning false rather than throwing on a malformed stored hash — a
  * corrupted row should fail the login, not 500 the request.
  */
-export async function verifyPassword(storedHash: string, password: string): Promise<boolean> {
+export async function verifyPassword(
+  storedHash: string,
+  password: string,
+): Promise<boolean> {
   try {
-    return await verify(storedHash, password, OPTIONS)
+    return await verify(storedHash, password, OPTIONS);
   } catch {
-    return false
+    return false;
   }
 }

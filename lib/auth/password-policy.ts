@@ -10,12 +10,12 @@
  * Nothing here touches a hash, so it is safe on both sides.
  */
 
-export const MIN_PASSWORD_LENGTH = 12
+export const MIN_PASSWORD_LENGTH = 12;
 
 /** Returns the problem to show the user, or null when the password is fine. */
 export function passwordProblem(password: string): string | null {
   if (password.length < MIN_PASSWORD_LENGTH) {
-    return `Use at least ${MIN_PASSWORD_LENGTH} characters.`
+    return `Use at least ${MIN_PASSWORD_LENGTH} characters.`;
   }
-  return null
+  return null;
 }
