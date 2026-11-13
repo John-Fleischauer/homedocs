@@ -37,12 +37,12 @@ function Tiles({ tiles }: { tiles: Tile[] }) {
   return (
     <ul className="grid grid-cols-2 gap-2">
       {tiles.map((t) => (
-        <li key={t.id}>
+        <li key={t.id} className="min-w-0">
           <Link
             href={`/places/${t.id}`}
             className="flex min-h-18 flex-col justify-center gap-0.5 rounded-card border border-line bg-card px-3 py-3 hover:bg-sunk"
           >
-            <span className="text-[15px] font-medium leading-tight text-ink">{t.name}</span>
+            <span className="wrap-anywhere text-[15px] font-medium leading-tight text-ink">{t.name}</span>
             <span className="text-xs text-ink-3">{countLine(t.counts)}</span>
           </Link>
         </li>

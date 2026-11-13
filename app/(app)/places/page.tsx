@@ -20,9 +20,9 @@ function Branch({ nodes }: { nodes: SpaceNode[] }) {
             className="flex min-h-13 items-center gap-3 py-3 pr-4 hover:bg-sunk"
             style={{ paddingLeft: `${1 + n.depth * 1.25}rem` }}
           >
-            <Icon name={n.depth === 0 ? 'place' : 'chevron'} className={n.depth === 0 ? 'h-5 w-5 text-accent' : 'h-4 w-4 text-ink-3'} />
-            <span className={`flex-1 text-[15px] ${n.depth === 0 ? 'font-medium' : ''}`}>{n.name}</span>
-            {n.children.length ? <span className="text-xs text-ink-3">{n.children.length} inside</span> : null}
+            <Icon name={n.depth === 0 ? 'place' : 'chevron'} className={n.depth === 0 ? 'h-5 w-5 shrink-0 text-accent' : 'h-4 w-4 shrink-0 text-ink-3'} />
+            <span className={`min-w-0 flex-1 wrap-anywhere text-[15px] ${n.depth === 0 ? 'font-medium' : ''}`}>{n.name}</span>
+            {n.children.length ? <span className="shrink-0 text-xs text-ink-3">{n.children.length} inside</span> : null}
           </Link>
           {n.children.length ? <Branch nodes={n.children} /> : null}
         </li>

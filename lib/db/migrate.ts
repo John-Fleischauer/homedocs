@@ -22,6 +22,7 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 import { checkEnv } from '../env'
+import { migrationUrl } from './migrate-url'
 
 const MIGRATIONS_FOLDER = process.env.MIGRATIONS_FOLDER ?? 'lib/db/migrations'
 
@@ -53,7 +54,7 @@ async function main() {
      while the database is untouched, not migrated and then left behind a server
      that won't start. It also names a missing PGPASSWORD instead of a failed
      query. The image sets NODE_ENV=production; a local `pnpm db:migrate` is not
-     checked. */
+     checked, and without DATABASE_URL it uses the dev database (migrate-url.ts). */
   if (process.env.NODE_ENV === 'production') {
     try {
       checkEnv()
@@ -63,11 +64,14 @@ async function main() {
     }
   }
 
-  const url = process.env.DATABASE_URL
+  const url = migrationUrl(process.env)
   if (!url) {
     console.error('DATABASE_URL is not set')
     process.exit(1)
   }
+  /* Said out loud, since .env.local isn't read: a run meant for another
+     database shows where it went. */
+  if (!process.env.DATABASE_URL?.trim()) console.log(`DATABASE_URL not set: migrating the local dev database (${new URL(url).host})`)
 
   // max: 1 — migrations are serial, and a pool here would outlive the process.
   const sql = postgres(url, { max: 1 })

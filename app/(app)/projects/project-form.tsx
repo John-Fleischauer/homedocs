@@ -2,6 +2,7 @@
 
 import { ActionForm, type FormAction } from '@/components/ActionForm'
 import { Field, Select, SubmitButton, TextArea, TextInput } from '@/components/ui/Field'
+import { focusUnlessTouch } from '@/components/ui/focus'
 
 const STATUSES = [
   ['idea', 'Idea'],
@@ -42,7 +43,7 @@ export function ProjectForm({
       {initial?.updatedAt ? <input type="hidden" name="updatedAt" value={initial.updatedAt} /> : null}
       {initial?.seriesId ? <input type="hidden" name="seriesId" value={initial.seriesId} /> : null}
       <Field label="Title">
-        <TextInput name="title" defaultValue={initial?.title} placeholder="Replace electrical panel" required autoFocus={!initial?.title} />
+        <TextInput name="title" defaultValue={initial?.title} placeholder="Replace electrical panel" required ref={initial?.title ? undefined : focusUnlessTouch} />
       </Field>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Status">

@@ -55,13 +55,13 @@ export async function HomeboxHere({ spaceId, placeName, canEdit }: { spaceId: st
             {here.items.map((item) => (
               <li key={item.externalId} className="flex min-h-14 items-center gap-3 px-4 py-2">
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15px] font-medium text-ink">{item.title}</span>
+                  <span className="block wrap-anywhere text-[15px] font-medium text-ink">{item.title}</span>
                   {item.fixture ? (
-                    <Link href={`/fixtures/${item.fixture.id}`} className="block truncate text-sm text-accent">
+                    <Link href={`/fixtures/${item.fixture.id}`} className="block wrap-anywhere text-sm text-accent">
                       Fixture: {item.fixture.name}
                     </Link>
                   ) : (
-                    <span className="block truncate text-sm text-ink-3">Not in homedocs</span>
+                    <span className="block text-sm text-ink-3">Not in homedocs</span>
                   )}
                 </span>
                 {!item.fixture && canEdit ? (

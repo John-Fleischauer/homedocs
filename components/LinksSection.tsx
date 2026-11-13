@@ -35,9 +35,9 @@ export async function LinksSection({ owner, canEdit }: { owner: Owner; canEdit: 
                 <a href={l.url} target="_blank" rel="noreferrer" className="flex min-w-0 flex-1 items-center gap-3">
                   <LinkThumb src={thumbable.has(l.system) && l.status === 'ok' ? `/api/ext/${l.system}/${l.externalId}/thumb` : null} />
                   <span className="min-w-0">
-                    <span className="block truncate text-[15px] font-medium text-ink">{l.title}</span>
+                    <span className="block wrap-anywhere text-[15px] font-medium text-ink">{l.title}</span>
                     <span className="flex items-center gap-2 text-sm text-ink-3">
-                      {[SYSTEM_LABEL[l.system], l.subtitle].filter(Boolean).join(' · ')}
+                      <span className="min-w-0 wrap-anywhere">{[SYSTEM_LABEL[l.system], l.subtitle].filter(Boolean).join(' · ')}</span>
                       {l.status === 'missing' ? <Pill tone="warn">Missing</Pill> : null}
                       {l.status === 'auth_error' ? <Pill tone="warn">Reconnect</Pill> : null}
                     </span>

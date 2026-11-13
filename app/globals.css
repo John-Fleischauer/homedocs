@@ -48,6 +48,11 @@
 body {
   background: var(--color-page);
   color: var(--color-ink);
+  /* A long unbroken word (a name, a URL) breaks instead of widening the page.
+     `break-word` here leaves min-content sizes alone, so a button in a flex
+     row never shrinks to a letter; a name in a flex or grid row also gets
+     `wrap-anywhere min-w-0` (standards design.md, names wrap). */
+  overflow-wrap: break-word;
 }
 
 /* iOS Safari zooms whenever a focused field renders below 16px and never zooms

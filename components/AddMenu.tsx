@@ -41,7 +41,9 @@ export function AddMenu() {
   }, [open])
 
   return (
-    <div ref={root} className="relative">
+    /* Not positioned on a phone, so the menu hangs from the (sticky) header
+       across the screen, below however many lines the home name takes. */
+    <div ref={root} className="sm:relative">
       <a
         href="/add"
         role="button"
@@ -62,7 +64,7 @@ export function AddMenu() {
           id={menuId}
           role="menu"
           aria-label="Add something"
-          className="fixed inset-x-4 top-14 z-40 mt-1 overflow-hidden rounded-card border border-line bg-card shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:w-80"
+          className="absolute inset-x-4 top-full z-40 mt-1 overflow-hidden rounded-card border border-line bg-card shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:w-80"
         >
           <ul className="divide-y divide-line">
             {addItems(pathname).map((item) => (
@@ -76,7 +78,7 @@ export function AddMenu() {
                   <Icon name={item.icon} className="h-5 w-5 shrink-0 text-accent" />
                   <span className="min-w-0">
                     <span className="block text-[15px] font-medium text-ink">{item.title}</span>
-                    <span className="block truncate text-xs text-ink-3">{item.detail}</span>
+                    <span className="block text-xs text-ink-3">{item.detail}</span>
                   </span>
                 </Link>
               </li>

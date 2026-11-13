@@ -10,6 +10,8 @@ rejected. Newest last. The standards sweep's questions and John's answers are in
 - [No `pull_policy` on the database image](#2026-11-12-no-pull_policy-on-the-database-image)
 - [Client address from `X-Real-IP` (an exception)](#2026-11-12-client-address-from-x-real-ip-an-exception)
 - [CLAUDE.md holds only the rules; the rest lives in `docs/`](#2026-11-12-claudemd-holds-only-the-rules-the-rest-lives-in-docs)
+- [Server actions through `act()` with a zod schema, and forms that say what a reset does: a CLAUDE.md rule](#2026-11-12-server-actions-through-act-with-a-zod-schema-and-forms-that-say-what-a-reset-does-a-claudemd-rule)
+- [`pnpm db:migrate` defaults to the local database outside production](#2026-11-12-pnpm-dbmigrate-defaults-to-the-local-database-outside-production)
 
 ## 2026-11-12: A sign-on that matches nobody gets no access until an admin places it
 
@@ -98,3 +100,22 @@ agent learns go to `docs/claude-candidates.md`, not CLAUDE.md, until John promot
 
 Rejected: keeping the standards' rules in CLAUDE.md as reminders. Two copies drift, and every
 session pays for both.
+
+## 2026-11-12: Server actions through `act()` with a zod schema, and forms that say what a reset does: a CLAUDE.md rule
+
+Promoted from `docs/claude-candidates.md` (Phase 3 (a)) by John (Phase 5 brief). An action is a
+public endpoint, and a form React resets after a refusal loses what was typed;
+`test/action-guards.test.ts` checks both, but an agent that doesn't know the rule writes the
+action first and meets the test last. The exceptions are the actions that start a session and so
+parse first instead: sign-in, setup, join, OAuth consent and the guide's PIN (`NOT_ACT` in that
+test). The Guards rule in CLAUDE.md kept only the page and route halves, which this rule doesn't
+cover.
+
+## 2026-11-12: `pnpm db:migrate` defaults to the local database outside production
+
+The migrator doesn't read `.env.local`, so every local run needed a long `DATABASE_URL=…` prefix.
+Now, when `NODE_ENV` isn't `production` and `DATABASE_URL` is unset, it uses the dev database from
+the README's `docker run` line (`lib/db/migrate-url.ts`, also `drizzle.config.ts`'s default).
+Production has no default: the image sets `NODE_ENV=production`, the migrator runs `checkEnv()`
+first and `lib/env.ts` refuses a missing `DATABASE_URL`, and `migrationUrl()` returns nothing there
+either (`test/migrate-url.test.ts`).

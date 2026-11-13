@@ -9,6 +9,7 @@
 import { useEffect, useState, useTransition } from 'react'
 import { buttonClass } from './ui/Button'
 import { TextInput } from './ui/Field'
+import { focusUnlessTouch } from './ui/focus'
 
 type Hit = { externalId: string; title: string; subtitle: string; hasThumb: boolean }
 
@@ -90,7 +91,7 @@ export function LinkPicker({
     <div className="flex flex-col gap-2 rounded-card border border-line bg-card p-3">
       <div className="flex gap-2">
         <TextInput
-          autoFocus
+          ref={focusUnlessTouch}
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder={PLACEHOLDER[kind ?? system]}

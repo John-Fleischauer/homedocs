@@ -7,6 +7,7 @@ import { Icon } from '@/components/ui/icons'
 import type { TradeGroup } from '@/lib/contacts/trade-labels'
 import { Field, SubmitButton, TextArea, TextInput } from '@/components/ui/Field'
 import { SYSTEM_ICONS, type SystemIcon } from '@/lib/systems/seeds'
+import { focusUnlessTouch } from '@/components/ui/focus'
 
 const ICON_LABEL: Record<SystemIcon, string> = {
   water: 'Water',
@@ -38,7 +39,7 @@ export function SystemForm({
     <ActionForm action={action}>
       {initial?.updatedAt ? <input type="hidden" name="updatedAt" value={initial.updatedAt} /> : null}
       <Field label="Name">
-        <TextInput name="name" defaultValue={initial?.name} placeholder="Pool, Solar, Water softener" required autoFocus={!initial?.name} />
+        <TextInput name="name" defaultValue={initial?.name} placeholder="Pool, Solar, Water softener" required ref={initial?.name ? undefined : focusUnlessTouch} />
       </Field>
 
       <fieldset>

@@ -64,8 +64,8 @@ export function Row({
         </span>
       ) : null}
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[15px] font-medium text-ink">{title}</span>
-        {detail ? <span className="block truncate text-sm text-ink-3">{detail}</span> : null}
+        <span className="block wrap-anywhere text-[15px] font-medium text-ink">{title}</span>
+        {detail ? <span className="block wrap-anywhere text-sm text-ink-3">{detail}</span> : null}
       </span>
       {href && !trailing ? <Icon name="chevron" className="h-4 w-4 shrink-0 text-ink-3" /> : null}
     </>
@@ -103,7 +103,7 @@ export function Facts({ items }: { items: { label: string; value: ReactNode }[] 
         {shown.map((item) => (
           <div key={item.label} className="flex items-baseline justify-between gap-4 px-4 py-3">
             <dt className="shrink-0 text-sm text-ink-3">{item.label}</dt>
-            <dd className="text-right text-[15px] text-ink">{item.value}</dd>
+            <dd className="min-w-0 wrap-anywhere text-right text-[15px] text-ink">{item.value}</dd>
           </div>
         ))}
       </dl>

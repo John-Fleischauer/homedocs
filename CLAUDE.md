@@ -21,8 +21,8 @@ training data: read the guide in `node_modules/next/dist/docs/` before using an 
 - `pnpm e2e`: Playwright at phone width with axe; it starts its own Postgres and `next dev` on
   port 3100.
 - `pnpm db:generate --name <what>` after changing `lib/db/schema.ts`; `pnpm db:drift` checks
-  nothing is missing a migration (CI runs it). `DATABASE_URL=postgres://homedocs:homedocs@localhost:54330/homedocs
-  pnpm db:migrate` applies them locally (it doesn't read `.env.local`).
+  nothing is missing a migration (CI runs it). `pnpm db:migrate` applies them to the local
+  database below unless `DATABASE_URL` says otherwise (it doesn't read `.env.local`).
 - Local database: `docker run -d --name homedocs-dev-db -e POSTGRES_USER=homedocs -e POSTGRES_PASSWORD=homedocs -e POSTGRES_DB=homedocs -p 54330:5432 postgres:18-alpine`
 - `pnpm render:icons` after changing `app/icon.svg`.
 
@@ -46,13 +46,17 @@ training data: read the guide in `node_modules/next/dist/docs/` before using an 
   phone whoever holds it.
 - **The UI's words are Place, System, Fixture, Part, Note, Contact, Project.** The family reads
   them; the tables keep older names (`spaces`, `supplies`, `logs`), mapped in ARCHITECTURE.
-- **Guards.** `app/(app)/` pages are signed in by their layout and take the viewer's scope;
-  server actions are public endpoints and go through `act()` (`lib/web/action.ts`), which signs
-  in and parses the input with zod, except the ones that start a session (sign-in, setup, join,
-  OAuth consent, the guide's PIN: `NOT_ACT` in `test/action-guards.test.ts`, which checks every
-  action), which parse first. Everything outside `app/(app)/` authenticates itself or is public
-  by design, as its row in the guard table in `docs/ARCHITECTURE.md` says; a new route gets a
-  row.
+- **A server action's first statement hands its input to `act()` (`lib/web/action.ts`) with a
+  zod schema, and a form posting to one says what happens on reset** (`keepFormValues`,
+  `useClearOnSuccess`, or `ActionForm`). An action is a public endpoint: the `app/(app)/`
+  layout's sign-in covers the page, not a POST to the action, so without `act()` it runs
+  unauthenticated on unparsed input. React resets a `<form action>` after every action, so a form
+  that doesn't say loses what was typed when the server refuses. The exceptions start a session,
+  so they can't take one first and parse first instead: sign-in, setup, join, OAuth consent and
+  the guide's PIN (`NOT_ACT`). `test/action-guards.test.ts` checks both halves from the source.
+- **Guards.** `app/(app)/` pages are signed in by their layout and take the viewer's scope.
+  Everything outside `app/(app)/` authenticates itself or is public by design, as its row in the
+  guard table in `docs/ARCHITECTURE.md` says; a new route gets a row.
 
 ## Layout
 
