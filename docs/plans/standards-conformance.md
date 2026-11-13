@@ -38,6 +38,8 @@ machine homedocs runs on; "the infrastructure repo" is where its own decisions l
 
 ## Sweep status (2026-11-12)
 
+Final; the outcome is in [Close-out](#close-out-2026-11-13) at the end of this file.
+
 | Phase | PRs | State |
 |---|---|---|
 | 0.5 Advisories | #9 | done |
@@ -439,7 +441,7 @@ Still needed:
 - **`PR_RUNNER`:** delete it while the repo stays public (it routes nothing) (question 7).
 - `pg_dump -Fc` by hand before the Node 24 and Phase 2 deploys (no migration in either, so the
   app's own pre-migration dump won't run); or rely on the sidecar's dump that night, John's call.
-- Stale remote branches (3): listed for John at close-out.
+- Stale remote branches (3): settled at close-out (deleted; each was at its merged PR's head).
 
 ## Proposed scope and PR plan (to agree with John)
 
@@ -537,3 +539,91 @@ merge as well.
 - **Q13:** scope phases 1–5 + Node 24, Phase 6 Prettier only, last.
 - **Q14:** John reconnected the connector (2026-11-12).
 - **Q15:** keep all five candidate rules.
+
+## Close-out (2026-11-13)
+
+The sweep is over. Checked against this plan (standards `v1`) on `main` at `d1e34b1` (#28),
+which is also what production runs (`/api/health` revision, checked by CI's deploy job through
+`APP_HEALTH_URL` and again by hand). homedocs has no `docs/HANDOFF.md`: the Sweep status table
+above tracked the sweep, and this section keeps the record.
+
+### Phases
+
+Scope (John, Q13): phases 1–5 and Node 24; Phase 6 only Prettier.
+
+| Phase | PRs | Status |
+|---|---|---|
+| 0 Audit | this report (committed with #10) | done; John's answers 2026-11-12 (above) |
+| 0.5 Advisories | #9 (Next 16.4.6, sharp 0.35.5, MCP SDK exact; compose pulls the org image) | done; John merged, through the old `deploy.yml` |
+| 1 Pipeline | #10 (`ci.yml` from the template with the arm64 image, PR-only `e2e.yml`, `/api/health` `{ ok, revision }`, Dependabot, PR template, `db:drift`) | done; John merged |
+| Node 24 | #14 | done; John merged |
+| 2 Runtime | #16 (`lib/env.ts` checked at boot, exit 1; compose secret guards; backup sidecar and the database's `pull_policy` dropped; DEPLOYMENT.md) | done |
+| 3 Boundaries | #17 (every server action's input parsed with zod through `act()`; forms keep what was typed), #18 (zod on OAuth, routes and sign-in; upload `Content-Length`; sign-ons that match nobody await an admin; jobs lock; guard-table columns) | done |
+| 4 Agent docs | #19 (CLAUDE.md cut to the rules, DECISIONS with its index and the exceptions, `AGENTS.md`, `.claude/settings.json`, no other repos' names) | done |
+| 5 Design/copy | #20 (names wrap, no autofocus on touch, `db:migrate`'s local default), #21 (standard tokens, contrast test, light/dark/system in Settings), #22 (inline confirms, refusals in place, the series modal), #23 (Title Case stragglers, verbosity), #24 (the phone check in WebKit at 360px; touches `e2e.yml`, John merged) | done |
+| Drift syncs | #25 (`scripts/db-drift.sh` from the template) | done |
+| 6 Stack (Prettier only) | #26 (Prettier, default settings, and `eslint-config-prettier`; the guards test reads directives from the syntax tree), #27 (the formatting alone, in `.git-blame-ignore-revs`), #28 (`lint` runs `prettier --check`) | done, except `.github/workflows/` (Still open) |
+
+### Against the plan
+
+| Area | Then | Now |
+|---|---|---|
+| Workflow | partial | **meets.** Template `ci.yml` (`deploy.yml` gone) on `pull_request`, `main` and `workflow_dispatch`, top-level `permissions:`; jobs on `ubuntu-24.04`, the image on `ubuntu-24.04-arm`; e2e a PR-only job that gates the merge, not the image or deploy; squash only with `PR_TITLE`, branches deleted on merge; `automerge` and `agent-found` labels, merge-on-green, close-issues; PR template; Conventional Commit titles; `PR_RUNNER` deleted (public repo) |
+| Quality | partial | **meets.** `typecheck`, `lint` (ESLint and `prettier --check`), `test` and `db:drift` gate the image; tests on real Postgres 18, no skip path; every server action parses its input with zod through `act()`, the OAuth and ext routes through zod; forms say what a reset does; guard table in the standard's columns (`docs/ARCHITECTURE.md`) checked by `test/action-guards.test.ts`; upload refuses a missing `Content-Length` |
+| Security | conflicts | **meets.** Dependabot (config and alerts); `security` job (`pnpm audit --audit-level=high` clean on `main`: 13 moderate, 3 low, none gating); GitGuardian on the organization; `lib/env.ts` checked at boot, exit 1; `${VAR:?}` guards; sign-ons that match nobody get no access until an admin places them, the first account only at `/setup`; sign-in throttled; non-root container; the public repo names no host or other repo |
+| Deploy | partial | **meets.** Image built in CI for arm64, no `build:`, `pull_policy: always` on the app image; `:main`/`:sha-` tags + revision label; Dockhand webhook with the `success: true` check and the revision check (`APP_HEALTH_URL`); `/api/health` `{ ok, revision }`, no auth, no database; compose pulls the org image; Node 24; DEPLOYMENT.md names the mode, architecture, exposure, backups and client address. The exceptions are below |
+| Stack | close | **meets** the Next.js profile: Node 24 (#14), Prettier with defaults and `eslint-config-prettier` (#26–#28), `format` and `db:drift` scripts, the MCP SDK exact (#9). zod stays on a caret range (not a profile pin) |
+| Design | partial | **meets.** The standard token names (`app/globals.css`) with `test/design/contrast.test.ts` (both themes, AA) and `classes.test.ts` (no translucent fills or fading hovers, no `confirm()`/`alert()`); a light/dark/system choice in Settings, head script, no flash; names wrap (`wrap.test.ts`); no autofocus on touch; date inputs styled; Title Case; confirms in place; phone check in WebKit at 360px |
+| Agent docs | partial | **meets.** CLAUDE.md 90 lines, the five rules John kept and the commands; `docs/DECISIONS.md` with an index; ARCHITECTURE, DEPLOYMENT, ROADMAP and README current; `AGENTS.md`; `docs/claude-candidates.md` (empty); `.claude/settings.json` with the plugin, tracked |
+
+### Recorded exceptions (`docs/DECISIONS.md`, `docs/DEPLOYMENT.md`)
+
+- **Deploy mode A on an arm64 host:** Dockhand applies the stack through its agent on that host;
+  the image is built for `linux/arm64` only, natively on GitHub's arm runner (Q3).
+- **Backups are the host's daily snapshots** (kept 7 days), no backup service in the stack (Q5).
+- **Client address from `X-Real-IP`** (`CLIENT_IP_HEADER=x-real-ip`): the proxy in front sets it
+  on every request (Q9).
+- **No `pull_policy` on the database image:** its major is pinned and upgraded as planned work
+  (Q6).
+- **The Wi-Fi QR code keeps `bg-white`:** a QR code needs a white quiet zone in either theme.
+- **Prettier skips `*.md`**: the docs are hand-wrapped and their tables laid out for diffs
+  (`.prettierignore`). The lockfile, migrations, `tsconfig.json` and `.claude/settings.json` are
+  skipped too, as written by tools.
+- **`.github/workflows/` not yet formatted** (Still open): workflow files change only in John's
+  hand merges.
+
+### Still open
+
+- **`.github/workflows/` isn't Prettier-formatted yet.** A formatting-only PR that John merges
+  by hand (workflow files are his), its squash commit then added to `.git-blame-ignore-revs` and
+  the line dropped from `.prettierignore`. Mixed into a real workflow change, the formatting
+  couldn't be skipped by blame (`/code-review` on #28).
+- **`pnpm lint` stops at an ESLint failure** before `prettier --check` runs, and the check runs
+  without `--cache` (`/code-review` on #28): the script is the standard's word for word, so a
+  change belongs in the standards first.
+- **Dependabot's new schedule** (standards `fc4708b`, after this sweep's Phase 6 began): version
+  updates monthly (a public repo may stay weekly) and a `security` group per ecosystem. homedocs
+  has the `prettier` group (#26) but not the `security` groups; a small sync PR.
+- **Agent decisions in `docs/DECISIONS.md` that John hasn't confirmed:** `pnpm db:migrate`
+  defaulting to the local database outside production (#20), and mapping the missing standard
+  status tokens onto colours already in use, with `accent-strong` as the one app token (#21).
+- `agent-found`: none open.
+- **Open Dependabot alerts, all moderate or low** (`pnpm audit --audit-level=high` passes):
+  `hono` and `@hono/node-server` (through the MCP SDK; Dependabot's security update for `hono`
+  failed), `fast-uri` (MCP SDK), `minimatch`, `@vitest/mocker` (dev), `esbuild` (dev, through
+  drizzle-kit).
+- **Open Dependabot PRs:** #12 (vitest 5.1.0, a major), #13 (postgres 4.1.0, a major), #15 (the
+  minor-and-patch group). Each needs its checks green; the majors want a look first.
+- Leftover remote branches: none. The three stale ones from before the sweep (`feat/project-series`,
+  `fix/photo-upload-paint-label`, `ui-copy-trim`) were each at their merged PR's head (#7, #6, #8)
+  and were deleted with the sweep's own.
+
+### Notes for later work
+
+- A connector change gets the connector check after its deploy: list the tools, one read from
+  claude.ai; no production writes unless John asks.
+- A docs-only merge doesn't redeploy (`ci.yml`'s `paths-ignore` and `skip-dispatch-paths`), so
+  `/api/health` keeps reporting the last code commit.
+- `pnpm lint` fails on an unformatted file; run `pnpm format` before committing.
+- A test that reads source text (guards, design classes) must accept either quote and a line
+  break where Prettier puts one, and should fail if it matches nothing (#26).
