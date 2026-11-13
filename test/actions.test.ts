@@ -37,7 +37,8 @@ const { act, FAILED } = await import('../lib/web/action')
 const { GONE, RELOAD, id, text } = await import('../lib/web/fields')
 const { createPlaceAction, updatePlaceAction, deletePlaceAction } = await import('../app/(app)/places/actions')
 const { deleteFixtureAction } = await import('../app/(app)/fixtures/actions')
-const { setRoleAction } = await import('../app/(app)/family/actions')
+const { inviteAction, revokeInviteAction, setRoleAction } = await import('../app/(app)/family/actions')
+const { listOpenInvites } = await import('../lib/auth/invites')
 const { restoreAction } = await import('../app/(app)/deleted/actions')
 const { saveTradesAction } = await import('../app/(app)/contacts/actions')
 const { createFixture } = await import('../lib/fixtures/fixtures')
@@ -164,7 +165,15 @@ describe('refused before anything is written', () => {
     const [home] = await db.select().from(properties)
     const { user } = await signInAgain()
     const fixture = await createFixture(db, { propertyId: home!.id }, { userId: user.id, role: 'admin', source: 'web', requestId: crypto.randomUUID() }, { name: 'Sink' })
-    for (const back of ['https://elsewhere.example', '//elsewhere.example', '/\\elsewhere.example', '']) {
+    for (const back of [
+      'https://elsewhere.example',
+      '//elsewhere.example',
+      '/\\elsewhere.example',
+      '/\t/elsewhere.example',
+      '/\n/elsewhere.example',
+      '/ /elsewhere.example',
+      '',
+    ]) {
       expect(await deleteFixtureAction(fixture.id, back)).toEqual({ error: RELOAD })
     }
     expect(await redirectedTo(deleteFixtureAction(fixture.id, '/fixtures'))).toBe('/fixtures')
@@ -250,6 +259,17 @@ describe('what comes back', () => {
     const [row] = await allPlaces()
     expect(row).toMatchObject({ name: 'Attic', kind: 'room', notes: 'Hatch in the hall' })
     expect(to).toBe(`/places/${row!.id}`)
+  })
+})
+
+describe('ids that are not uuids', () => {
+  it('an invite is revoked by its token hash', async () => {
+    await signIn()
+    expect((await inviteAction({}, form({ role: 'member', label: 'Mom' }))).ok).toBe(true)
+    const [invite] = await listOpenInvites()
+    expect(await revokeInviteAction(invite!.id)).toMatchObject({ ok: true })
+    expect(await listOpenInvites()).toEqual([])
+    expect(await revokeInviteAction('not a hash!')).toEqual({ error: GONE })
   })
 })
 

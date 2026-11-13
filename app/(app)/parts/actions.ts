@@ -6,7 +6,7 @@ import { db } from '@/lib/db'
 import { addUse, createPart, deletePart, removeUse, updatePart, updateUse } from '@/lib/parts/parts'
 import { TEMPLATES, isCategory } from '@/lib/parts/templates'
 import { act, type ActionResult } from '@/lib/web/action'
-import { id, localPath, optionalId, text, timestamp, withForm } from '@/lib/web/fields'
+import { collect, formValues, id, localPath, optionalId, text, timestamp, withForm } from '@/lib/web/fields'
 
 /*
  * A part's own fields depend on its category, so the form sends them as
@@ -14,11 +14,7 @@ import { id, localPath, optionalId, text, timestamp, withForm } from '@/lib/web/
  * category's own keys are passed on.
  */
 function gather(values: Record<string, unknown>): Record<string, unknown> {
-  const fields: Record<string, unknown> = {}
-  for (const [name, value] of Object.entries(values)) {
-    if (!name.startsWith('f_')) continue
-    Object.defineProperty(fields, name.slice(2), { value, enumerable: true, writable: true, configurable: true })
-  }
+  const fields = collect(Object.entries(values).flatMap(([name, value]) => (name.startsWith('f_') ? [[name.slice(2), value] as [string, unknown]] : [])))
   return { ...values, fields }
 }
 
@@ -66,9 +62,11 @@ function after(where: { fixtureId: string | null; spaceId: string | null }, part
 }
 
 export async function createPartAction(_: ActionResult, fd: FormData): Promise<ActionResult> {
+  /* Where to go once it's done: set by the work, which runs only if act() let
+     it, so redirect() below never runs with it unset. */
   let to = ''
   const r = await act(
-    gather(withForm(fd, {})),
+    gather(formValues(fd)),
     z.object({ ...partFields, ...useFields, fixtureId: optionalId(), spaceId: optionalId() }),
     async (input, { scope, actor }) => {
       const part = await createPart(db, scope, actor, partInput(input))
@@ -104,6 +102,8 @@ export async function deletePartAction(partId: string): Promise<ActionResult> {
 
 /** Link an existing part to a fixture or place. */
 export async function addUseAction(_: ActionResult, fd: FormData): Promise<ActionResult> {
+  /* Where to go once it's done: set by the work, which runs only if act() let
+     it, so redirect() below never runs with it unset. */
   let to = ''
   const r = await act(
     fd,
@@ -125,6 +125,8 @@ export async function addUseAction(_: ActionResult, fd: FormData): Promise<Actio
 
 /** `back` is where the page came from; only a path inside the app. */
 export async function updateUseAction(useId: string, back: string, _: ActionResult, fd: FormData): Promise<ActionResult> {
+  /* Where to go once it's done: set by the work, which runs only if act() let
+     it, so redirect() below never runs with it unset. */
   let to = ''
   const r = await act(
     withForm(fd, { id: useId, back }),
@@ -139,6 +141,8 @@ export async function updateUseAction(useId: string, back: string, _: ActionResu
 }
 
 export async function removeUseAction(useId: string, back: string): Promise<ActionResult> {
+  /* Where to go once it's done: set by the work, which runs only if act() let
+     it, so redirect() below never runs with it unset. */
   let to = ''
   const r = await act({ id: useId, back }, z.object({ id: id(), back: localPath() }), async (input, { scope, actor }) => {
     await removeUse(db, scope, actor, input.id)

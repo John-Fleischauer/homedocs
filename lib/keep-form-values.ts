@@ -45,6 +45,9 @@ export function useClearOnSuccess<State, Payload>(
   const refused = useRef(false)
   const wrapped = useCallback(
     async (state: Awaited<State>, payload: Payload): Promise<State> => {
+      /* Refused until it says otherwise: an action that throws (a dropped
+         connection) keeps what was typed too. */
+      refused.current = true
       const result = await action(state, payload)
       refused.current = isRefusal(result)
       return result

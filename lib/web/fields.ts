@@ -207,9 +207,25 @@ export function timestamp() {
   })
 }
 
-/** A path inside the app to go back to: starts with one slash, never two (no other site). */
+/**
+ * A path inside the app to go back to. Printable ASCII with no spaces or
+ * backslashes (a browser drops tabs and newlines and reads `\` as `/`, which
+ * would turn `/\t/elsewhere` into `//elsewhere`), starting with one slash, and
+ * resolving to this origin.
+ */
 export function localPath() {
-  return text(2_000).refine((value) => /^\/(?![/\\])/.test(value), { error: RELOAD })
+  return text(2_000).refine(
+    (value) => /^\/[\x21-\x7e]*$/.test(value) && !value.includes('\\') && !value.startsWith('//') && sameOrigin(value),
+    { error: RELOAD },
+  )
+}
+
+function sameOrigin(path: string): boolean {
+  try {
+    return new URL(path, 'http://app.invalid').origin === 'http://app.invalid'
+  } catch {
+    return false
+  }
 }
 
 /** A field that carries JSON, parsed and then checked against `schema`. */

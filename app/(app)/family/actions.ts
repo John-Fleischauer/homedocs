@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { createInvite, createReset, revokeInvite } from '@/lib/auth/invites'
 import { addFamilyMember, removeUser, setUserRole } from '@/lib/auth/users'
 import { act, type ActionResult } from '@/lib/web/action'
-import { id, oneOf, raw, text } from '@/lib/web/fields'
+import { GONE, id, oneOf, raw, text } from '@/lib/web/fields'
 
 const role = () => oneOf(['admin', 'member', 'viewer'], 'Pick what they can do.')
 const byUser = z.object({ userId: id() })
@@ -46,8 +46,11 @@ export async function removeUserAction(userId: string): Promise<ActionResult> {
   })
 }
 
-export async function revokeInviteAction(inviteId: string): Promise<ActionResult> {
-  return act({ id: inviteId }, z.object({ id: id() }), async (input, { actor }) => {
+/* An invite's id is the HMAC of its link token (base64url), not a uuid. */
+const inviteId = text(200).refine((value) => /^[A-Za-z0-9_-]+$/.test(value), { error: GONE })
+
+export async function revokeInviteAction(invite: string): Promise<ActionResult> {
+  return act({ id: invite }, z.object({ id: inviteId }), async (input, { actor }) => {
     await revokeInvite(input.id, actor)
   })
 }

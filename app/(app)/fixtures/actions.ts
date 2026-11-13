@@ -40,7 +40,8 @@ export async function updateFixtureAction(fixtureId: string, _: ActionResult, fd
 
 /** `back` is where the page came from; only a path inside the app, so a crafted call can't send anyone off-site. */
 export async function deleteFixtureAction(fixtureId: string, back: string): Promise<ActionResult> {
-  let to = '/fixtures'
+  /* Set by the work once the delete is done (see the parts actions). */
+  let to = ''
   const r = await act({ id: fixtureId, back }, z.object({ id: id(), back: localPath() }), async (input, { scope, actor }) => {
     await deleteFixture(db, scope, actor, input.id)
     to = input.back

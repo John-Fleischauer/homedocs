@@ -26,6 +26,7 @@ import {
 } from '@/lib/projects/materials'
 import { appendLessonToHowTo, createSeriesFromProject } from '@/lib/projects/series'
 import { act, type ActionResult } from '@/lib/web/action'
+import type { Viewer } from '@/lib/web/context'
 import { bool, checked, id, ids, oneOf, optionalId, text, timestamp, withForm } from '@/lib/web/fields'
 
 /* What the project form sends. Status and priority are checked by the domain,
@@ -176,6 +177,17 @@ export async function removeMaterialAction(materialId: string): Promise<ActionRe
 
 // ─── the project's series ────────────────────────────────────────────────────
 
+/* Shared by "send all" and the per-line buttons, so they stay one behaviour. */
+async function sendToSeries(
+  v: Viewer,
+  projectId: string,
+  pick: 'all' | { materials?: string[]; items?: string[] },
+  seenAt: Date | undefined,
+) {
+  const { applied } = await updateSeriesFromProject(db, v.scope, v.actor, projectId, pick, seenAt)
+  return { message: applied === 1 ? 'Series updated.' : `Series updated (${applied} changes).` }
+}
+
 const pickSchema = z.union([
   z.literal('all'),
   z.object({ materials: z.array(id()).max(1_000).optional(), items: z.array(id()).max(1_000).optional() }).strict(),
@@ -190,10 +202,7 @@ export async function updateSeriesAction(
   return act(
     { projectId, pick, seenAt },
     z.object({ projectId: id(), pick: pickSchema, seenAt: timestamp() }),
-    async (input, { scope, actor }) => {
-      const { applied } = await updateSeriesFromProject(db, scope, actor, input.projectId, input.pick, input.seenAt)
-      return { message: applied === 1 ? 'Series updated.' : `Series updated (${applied} changes).` }
-    },
+    (input, v) => sendToSeries(v, input.projectId, input.pick, input.seenAt),
   )
 }
 
@@ -202,11 +211,8 @@ export async function sendLineToSeriesAction(projectId: string, kind: 'material'
   return act(
     { projectId, kind, seenAt, rowId },
     z.object({ projectId: id(), kind: oneOf(['material', 'item']), seenAt: timestamp(), rowId: id() }),
-    async (input, { scope, actor }) => {
-      const pick = input.kind === 'material' ? { materials: [input.rowId] } : { items: [input.rowId] }
-      const { applied } = await updateSeriesFromProject(db, scope, actor, input.projectId, pick, input.seenAt)
-      return { message: applied === 1 ? 'Series updated.' : `Series updated (${applied} changes).` }
-    },
+    (input, v) =>
+      sendToSeries(v, input.projectId, input.kind === 'material' ? { materials: [input.rowId] } : { items: [input.rowId] }, input.seenAt),
   )
 }
 

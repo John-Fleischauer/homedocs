@@ -81,8 +81,9 @@ export function IntegrationForm({
   initial?: { baseUrl: string; lastStatus: string }
 }) {
   const homebox = system === 'homebox'
+  /* Cleared after a save: the token is a secret, and the form shouldn't keep it on screen. */
   return (
-    <ActionForm action={action}>
+    <ActionForm action={action} resetOnSuccess>
       {initial?.lastStatus ? <p className="text-sm text-accent">Connected: {initial.lastStatus}</p> : null}
       <Field label="Address" hint={homebox ? 'E.g. https://homebox.example.com' : 'E.g. https://paperless.example.com'}>
         <TextInput name="baseUrl" type="url" inputMode="url" defaultValue={initial?.baseUrl} required />
