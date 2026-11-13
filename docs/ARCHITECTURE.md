@@ -20,8 +20,8 @@ housesitter.
   follows the device unless someone picks Light or Dark under Settings → You; the choice is per
   device, in `localStorage`, applied by a head script before first paint (`lib/design/theme.ts`).
 - **Tests:** Vitest against a real Postgres via testcontainers (`test/`), and Playwright at phone width
-  with axe (`e2e/`): the journeys in Chromium (a Pixel 7), then every main screen in WebKit at
-  360px, light and dark, failing on a sideways scroll (`e2e/phone.spec.ts`).
+  with axe (`e2e/`): the journeys in Chromium (a Pixel 7), then every main screen and one record
+  of each kind in WebKit at 360px, failing on a sideways scroll (`e2e/phone.spec.ts`).
 
 ## Domain model (`lib/db/schema.ts`)
 
