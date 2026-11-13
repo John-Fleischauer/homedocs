@@ -4,53 +4,12 @@ Choices this repo made that a reader would otherwise question: why, since when, 
 rejected. Newest last. The standards sweep's questions and John's answers are in
 `docs/plans/standards-conformance.md` ("John's decisions"); the entries below cite them as Q1–Q15.
 
+- [A sign-on that matches nobody gets no access until an admin places it](#2026-11-12-a-sign-on-that-matches-nobody-gets-no-access-until-an-admin-places-it)
 - [Deploy mode A on an arm64 host](#2026-11-12-deploy-mode-a-dockhand-git-stack-on-an-arm64-host)
 - [The host's snapshots are the backup; no backup sidecar](#2026-11-12-the-hosts-snapshots-are-the-backup-no-backup-sidecar)
 - [No `pull_policy` on the database image](#2026-11-12-no-pull_policy-on-the-database-image)
 - [Client address from `X-Real-IP` (an exception)](#2026-11-12-client-address-from-x-real-ip-an-exception)
-- [A sign-on that matches nobody gets no access until an admin places it](#2026-11-12-a-sign-on-that-matches-nobody-gets-no-access-until-an-admin-places-it)
 - [CLAUDE.md holds only the rules; the rest lives in `docs/`](#2026-11-12-claudemd-holds-only-the-rules-the-rest-lives-in-docs)
-
-## 2026-11-12: Deploy mode A (Dockhand git stack) on an arm64 host
-
-homedocs runs on an **arm64** Docker host. It stays on deploy mode A as it was: Dockhand tracks
-`compose.yaml` on `main`, applies it on that host through its agent there, and `ci.yml`'s deploy
-job calls the stack's webhook and checks the revision. The image is built for `linux/arm64` only,
-natively on GitHub's `ubuntu-24.04-arm` runner, never under emulation (the standards' `deploy.md`:
-the platform matches the host). John's answer to Q3. Details in `docs/DEPLOYMENT.md`.
-
-## 2026-11-12: The host's snapshots are the backup; no backup sidecar
-
-The backup is the host's daily snapshot, kept 7 days, crash-consistent, covering both volumes
-(`pgdata18` and `files`). That is the approach until a broader backup approach is considered.
-The `backup` sidecar (nightly `pg_dump`, 30 days) was removed: its dumps sat on the same disk as
-the database, so they guarded against a bad write but not against losing the host. The
-pre-migration dump and a dump by hand before a risky deploy stay. John's answer to Q5; details
-and the restore steps in `docs/DEPLOYMENT.md` (Backups).
-
-Rejected: keeping the sidecar for its longer reach back (30 days against 7), which the audit
-recommended for photos and codes with no other copy.
-
-## 2026-11-12: No `pull_policy` on the database image
-
-`postgres:18-alpine` has no `pull_policy`; only the app image keeps `pull_policy: always`. The tag
-pins the major, a major upgrade is a planned dump and restore, and Dockhand's Re-pull images
-already brings minor updates. This follows the standards' 2026-11-11 decision; until then the
-`db` (and `backup`) services had `pull_policy: always`. John's answer to Q6.
-
-## 2026-11-12: Client address from `X-Real-IP` (an exception)
-
-The standard reads the client address from the right of `X-Forwarded-For`, counting trusted
-proxies. Production sets `CLIENT_IP_HEADER=x-real-ip` instead: the proxy in front sets `X-Real-IP`
-to the client address on every request, so a client can't choose it, and it stays right however
-many hops sit in front of that proxy. It decides who the house guide treats as "at home". John's
-answer to Q9.
-
-It holds only while the proxy overwrites `X-Real-IP` on every request and nothing reaches the app
-except through it (no published port). If either changes, unset `CLIENT_IP_HEADER` and set
-`TRUSTED_PROXY_HOPS` (`docs/DEPLOYMENT.md`, Client address).
-
-Rejected: `TRUSTED_PROXY_HOPS` alone, which needs the exact number of hops in front kept right.
 
 ## 2026-11-12: A sign-on that matches nobody gets no access until an admin places it
 
@@ -80,6 +39,52 @@ group restriction.
 **Existing accounts are unaffected:** the column was added with `default false` and nothing was
 backfilled, so every account that existed, including ones an earlier sign-on created with access,
 keeps its role, sessions and connector tokens.
+
+## 2026-11-12: Deploy mode A (Dockhand git stack) on an arm64 host
+
+homedocs runs on an **arm64** Docker host. It stays on deploy mode A as it was: Dockhand tracks
+`compose.yaml` on `main`, applies it on that host through its agent there, and `ci.yml`'s deploy
+job calls the stack's webhook and checks the revision. The image is built for `linux/arm64` only,
+natively on GitHub's `ubuntu-24.04-arm` runner, never under emulation (the standards' `deploy.md`:
+the platform matches the host). John's answer to Q3. Details in `docs/DEPLOYMENT.md`.
+
+Rejected: none weighed. The audit only asked John to confirm the setup that was already running.
+
+## 2026-11-12: The host's snapshots are the backup; no backup sidecar
+
+The backup is the host's daily snapshot, kept 7 days, crash-consistent, covering both volumes
+(`pgdata18` and `files`). That is the approach until a broader backup approach is considered.
+The `backup` sidecar (nightly `pg_dump`, 30 days) was removed: its dumps sat on the same disk as
+the database, so they guarded against a bad write but not against losing the host. The
+pre-migration dump and a dump by hand before a risky deploy stay. John's answer to Q5; details
+and the restore steps in `docs/DEPLOYMENT.md` (Backups).
+
+Rejected: keeping the sidecar for its longer reach back (30 days against 7), which the audit
+recommended for photos and codes with no other copy.
+
+## 2026-11-12: No `pull_policy` on the database image
+
+`postgres:18-alpine` has no `pull_policy`; only the app image keeps `pull_policy: always`. The tag
+pins the major, a major upgrade is a planned dump and restore, and Dockhand's Re-pull images
+already brings minor updates. This follows the standards' 2026-11-11 decision; until then the
+`db` (and `backup`) services had `pull_policy: always`. John's answer to Q6.
+
+Rejected: keeping `pull_policy: always` on `db`, which only suggested that database updates were
+wanted on every deploy.
+
+## 2026-11-12: Client address from `X-Real-IP` (an exception)
+
+The standard reads the client address from the right of `X-Forwarded-For`, counting trusted
+proxies. Production sets `CLIENT_IP_HEADER=x-real-ip` instead: the proxy in front sets `X-Real-IP`
+to the client address on every request, so a client can't choose it, and it stays right however
+many hops sit in front of that proxy. It decides who the house guide treats as "at home". John's
+answer to Q9.
+
+It holds only while the proxy overwrites `X-Real-IP` on every request and nothing reaches the app
+except through it (no published port). If either changes, unset `CLIENT_IP_HEADER` and set
+`TRUSTED_PROXY_HOPS` (`docs/DEPLOYMENT.md`, Client address).
+
+Rejected: `TRUSTED_PROXY_HOPS` alone, which needs the exact number of hops in front kept right.
 
 ## 2026-11-12: CLAUDE.md holds only the rules; the rest lives in `docs/`
 

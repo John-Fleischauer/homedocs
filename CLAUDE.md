@@ -38,7 +38,7 @@ training data: read the guide in `node_modules/next/dist/docs/` before using an 
   search finding the old name.
 - **In a correlated Drizzle subquery, write the outer table name by hand (`supplies.id`).**
   Inside a single-table select Drizzle renders `${table.col}` unqualified, so the inner row is
-  compared with itself. It has bitten here three times; `test/counts.test.ts` pins the counts.
+  compared with itself; `test/counts.test.ts` pins the counts.
 - **Gated guide content (codes, private sections, the address) is decided only in
   `buildGuide()` (`lib/guide/guide.ts`), and nothing gated reaches the offline guide** (it is
   always built with `unlocked: false`). `resolveVisit()` (`lib/guide/viewing.ts`) decides "at home
@@ -63,12 +63,13 @@ training data: read the guide in `node_modules/next/dist/docs/` before using an 
   `liveIn()` · `lib/env.ts` the validated environment · `lib/auth/` sessions, passwords, invites,
   OIDC, route guards (`guards.ts`) · `instrumentation.ts` → `lib/boot.ts` env check, OIDC, jobs
 - Domain modules, the one write path: `lib/places/`, `fixtures/`, `parts/`, `systems/`, `notes/`,
-  `contacts/`, `projects/` (projects, series, materials), `links/`, `files/`, `trash/`,
-  `property/`
-- `lib/guide/` the guide, its location gate, share links, offline copy · `lib/search/` ·
-  `lib/crypto/sealed.ts` codes and tokens sealed under `INTEGRATIONS_KEY` · `lib/integrations/`
+  `contacts/`, `projects/` (projects, series, materials), `guide/`, `links/`, `integrations/`,
+  `files/`, `trash/`, `property/`
+- `lib/guide/` also holds the location gate, share links and the offline copy · `lib/search/` ·
+  `lib/crypto/sealed.ts` codes and tokens sealed under `INTEGRATIONS_KEY` · `lib/integrations/` is
   Homebox and paperless · `lib/mcp/` the MCP server, tools in `tools/` · `lib/oauth/` ·
-  `lib/jobs/` background jobs · `lib/web/` `act()`, field schemas, `clientIp()`, the viewer
+  `lib/jobs/` background jobs · `lib/web/` `act()`, field schemas, `clientIp()`, the viewer, and shared server actions
+  (`*-actions.ts`)
 - `components/ui/` shared primitives · `components/` shared pieces · `app/globals.css` the colour
   tokens
 - `public/` service workers (`g/sw.js` the guide's offline copy), icons
