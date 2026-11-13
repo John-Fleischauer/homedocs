@@ -31,7 +31,7 @@ export function PlaceForm({
         <TextInput name="name" defaultValue={initial?.name} placeholder="Living room, Front flowerbed, Garage" required ref={initial?.name ? undefined : focusUnlessTouch} />
       </Field>
       <Field label="Inside" hint="E.g. a room on a floor">
-        <PlaceSelect name="parentId" defaultValue={initial?.parentId ?? ''} options={places} emptyLabel="Top Level" />
+        <PlaceSelect name="parentId" defaultValue={initial?.parentId ?? ''} options={places} emptyLabel="Top level" />
       </Field>
       <Field label="Kind">
         <Select name="kind" defaultValue={initial?.kind ?? 'room'}>

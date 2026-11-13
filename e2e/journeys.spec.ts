@@ -166,7 +166,7 @@ test('question 4: who is our plumber?', async ({ page }) => {
 })
 
 test('a project with a quote and a to-do list', async ({ page }) => {
-  await create(page, '/projects/new', { title: 'Replace electrical panel' }, 'Add project')
+  await create(page, '/projects/new', { title: 'Replace electrical panel' }, 'Add Project')
   await page.getByRole('textbox', { name: 'New To-Do' }).fill('2 outlets in the garage')
   await page.getByRole('button', { name: 'Add', exact: true }).click()
   await expect(page.getByText('2 outlets in the garage')).toBeVisible()

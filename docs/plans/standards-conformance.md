@@ -275,7 +275,7 @@ kit isn't built yet; `components/ui/` stays until it is.
 - Playwright: the `phone` project is `devices['Pixel 7']` (Chromium, 412px)
   (`playwright.config.ts:28`); `design.md` wants WebKit at 360px.
 - Copy: already Title Case and trimmed (#8) ✓. Stragglers: "Add something", "Add to this place",
-  "Covered by quote", "New to-do". A `ui-verbosity-reduction` pass would change little.
+  "Covered by quote", "New to-do". A `ui-verbosity-reduction` pass would change little. (Fixed in Phase 5, #23.)
 
 ### Agent docs
 

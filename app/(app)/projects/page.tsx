@@ -40,7 +40,7 @@ export default async function ProjectsPage() {
           </List>
         ) : (
           <p className="px-1 text-sm text-ink-3">
-            Recurring jobs, each with the checklist and materials a new project starts from
+            None yet. A series is a recurring job: each new project starts from its checklist and materials
           </p>
         )}
       </Section>
