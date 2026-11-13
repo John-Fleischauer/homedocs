@@ -36,6 +36,19 @@ machine homedocs runs on; "the infrastructure repo" is where its own decisions l
   scratch directory. CI was green on every run (last 2026-10-27, `check`, `e2e`, `image`,
   `deploy`); **no run has started since the move to the organization**.
 
+## Sweep status (2026-11-12)
+
+| Phase | PRs | State |
+|---|---|---|
+| 0.5 Advisories | #9 | done |
+| 1 Pipeline | #10 | done |
+| Node 24 | #14 | done |
+| 2 Runtime | #16 | done |
+| 3 Boundaries | #17, #18 | done |
+| 4 Agent docs | #19 | done |
+| 5 Design/copy | #20 names wrap, no autofocus on touch (plus the `act()` rule, `db:migrate`'s local default, `db-drift.sh` from the template); #21 tokens, contrast test, theme choice in Settings, `accent-strong`, date fields; #22 inline confirms, refusals in place, the series modal; #23 Title Case stragglers and verbosity; #24 the WebKit 360px phone check (touches `e2e.yml`, so John merged it by hand) | done |
+| 6 Prettier | | not started |
+
 ## The claude.ai connector must keep working through every phase
 
 The connector is `<PUBLIC_BASE_URL>/mcp`, 26 tools (16 read, 10 write; no delete tools, no

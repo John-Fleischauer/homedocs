@@ -31,8 +31,9 @@ jobs:
           node-version: '24'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # Chromium only: the phone project in playwright.config.ts is a Pixel 7.
-      - run: pnpm exec playwright install --with-deps chromium
+      # Chromium for the journeys (a Pixel 7), WebKit for the 360px phone check
+      # (playwright.config.ts).
+      - run: pnpm exec playwright install --with-deps chromium webkit
       - run: pnpm e2e
       # Traces and screenshots of the failing tests.
       - if: failure()
