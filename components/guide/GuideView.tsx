@@ -112,7 +112,7 @@ export async function GuideView({
                       <a
                         key={c.id}
                         href={telHref(c.phone)}
-                        className="inline-flex min-h-11 items-center gap-2 rounded-full bg-accent px-4 text-[15px] font-medium text-accent-ink"
+                        className="inline-flex min-h-11 items-center gap-2 rounded-full bg-accent px-4 text-[15px] font-medium text-accent-ink hover:bg-accent-strong"
                       >
                         <Icon name="phone" className="h-4 w-4" />
                         Call {c.name}
@@ -142,7 +142,7 @@ export async function GuideView({
                       <a
                         key={i}
                         href={telHref(ph.value)}
-                        className="inline-flex min-h-11 items-center gap-2 rounded-full bg-accent px-4 text-[15px] font-medium text-accent-ink"
+                        className="inline-flex min-h-11 items-center gap-2 rounded-full bg-accent px-4 text-[15px] font-medium text-accent-ink hover:bg-accent-strong"
                       >
                         <Icon name="phone" className="h-4 w-4" />
                         {ph.value}

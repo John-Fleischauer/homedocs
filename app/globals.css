@@ -1,9 +1,16 @@
 @import "tailwindcss";
 
 /*
- * Colour tokens. Light and dark follow the device (prefers-color-scheme), so
- * there is no toggle to find. Components use these names, never raw palette
- * values, so the two themes cannot drift apart.
+ * Colour tokens, the standard names (standards design.md, Tokens). Components
+ * use these, never raw palette values, so the two themes cannot drift apart.
+ *
+ * Light is the default. Dark follows the device unless someone picked Light or
+ * Dark in Settings: the head script (lib/design/theme.ts) sets `data-theme` on
+ * <html> before first paint, and the two dark blocks below must stay identical
+ * (test/design/contrast.test.ts checks that, and every text pair for AA).
+ *
+ * `accent-strong` is an app token: a filled accent button's hover, a solid
+ * fill so the label's contrast is measured (no alpha under text).
  */
 @theme {
   --color-page: #f6f5f2;
@@ -16,17 +23,27 @@
   --color-accent: #0f6b5c;
   --color-accent-ink: #ffffff;
   --color-accent-soft: #e1f0ec;
+  --color-accent-strong: #0a5246;
+  --color-ok: #0f6b5c;
+  --color-ok-ink: #ffffff;
+  --color-ok-soft: #e1f0ec;
   --color-warn: #8a4b00;
+  --color-warn-ink: #ffffff;
   --color-warn-soft: #fdf1df;
   --color-danger: #b42318;
+  --color-danger-ink: #ffffff;
   --color-danger-soft: #fdecea;
 
   --radius-card: 0.875rem;
   --radius-control: 0.625rem;
 }
 
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     color-scheme: dark;
     --color-page: #141412;
     --color-card: #1e1d1b;
@@ -38,11 +55,41 @@
     --color-accent: #5cc4ae;
     --color-accent-ink: #0b1c18;
     --color-accent-soft: #17332d;
+    --color-accent-strong: #86d6c4;
+    --color-ok: #5cc4ae;
+    --color-ok-ink: #0b1c18;
+    --color-ok-soft: #17332d;
     --color-warn: #f0b45c;
+    --color-warn-ink: #141412;
     --color-warn-soft: #33260f;
     --color-danger: #f28b82;
+    --color-danger-ink: #141412;
     --color-danger-soft: #3a1714;
   }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-page: #141412;
+  --color-card: #1e1d1b;
+  --color-sunk: #262522;
+  --color-line: #35332f;
+  --color-ink: #f2f0ea;
+  --color-ink-2: #cfcbc2;
+  --color-ink-3: #a29d93;
+  --color-accent: #5cc4ae;
+  --color-accent-ink: #0b1c18;
+  --color-accent-soft: #17332d;
+  --color-accent-strong: #86d6c4;
+  --color-ok: #5cc4ae;
+  --color-ok-ink: #0b1c18;
+  --color-ok-soft: #17332d;
+  --color-warn: #f0b45c;
+  --color-warn-ink: #141412;
+  --color-warn-soft: #33260f;
+  --color-danger: #f28b82;
+  --color-danger-ink: #141412;
+  --color-danger-soft: #3a1714;
 }
 
 body {
@@ -63,6 +110,24 @@ body {
   textarea {
     font-size: 16px;
   }
+}
+
+/* iOS Safari gives date and time fields a native minimum width that ignores their container,
+   so they overflow at phone width. Dropping the native appearance lets them shrink; it also lets
+   an empty one collapse on iOS and centres the value, hence the touch-only height and the
+   alignment (standards template). */
+input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"]) {
+  appearance: none;
+  min-width: 0;
+  max-width: 100%;
+}
+@media (pointer: coarse) {
+  input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"]) {
+    min-height: 2.75rem;
+  }
+}
+input::-webkit-date-and-time-value {
+  text-align: start;
 }
 
 /* Room for the bottom tab bar and the iPhone home indicator. */

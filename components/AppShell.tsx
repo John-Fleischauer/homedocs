@@ -43,7 +43,7 @@ export function AppShell({
 
   return (
     <div className="min-h-dvh">
-      <header className="no-print sticky top-0 z-30 border-b border-line bg-card/95 backdrop-blur">
+      <header className="no-print sticky top-0 z-30 border-b border-line bg-card">
         <div className="mx-auto flex min-h-14 max-w-3xl items-center gap-3 px-4 py-2">
           <Link href="/" className="min-w-40 wrap-anywhere text-[17px] leading-snug font-semibold text-ink">
             {homeName}
@@ -79,7 +79,7 @@ export function AppShell({
 
       <nav
         aria-label="Main"
-        className="no-print fixed inset-x-0 bottom-0 z-30 border-t border-line bg-card/95 backdrop-blur md:hidden"
+        className="no-print fixed inset-x-0 bottom-0 z-30 border-t border-line bg-card md:hidden"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <ul className="mx-auto grid max-w-md grid-cols-5">
