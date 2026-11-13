@@ -1,4 +1,7 @@
 version: 2
+# Weekly: homedocs is public, so its Actions minutes are free (the standard for private repos
+# is monthly). Security updates don't wait for the schedule: they open when an advisory lands,
+# grouped into one PR per ecosystem (the `security` groups, first in each).
 updates:
   # Dependabot's `npm` ecosystem also reads pnpm-lock.yaml.
   - package-ecosystem: npm
@@ -10,6 +13,9 @@ updates:
       prefix: chore
       include: scope
     groups:
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
       # Prettier can change its output in any release, and `lint` runs `prettier --check`,
       # so its bump gets its own PR: a red one there doesn't hold back the group below.
       # Fix it with `pnpm format` on the branch. A dependency joins the first group it
@@ -46,6 +52,9 @@ updates:
       prefix: chore
       include: scope
     groups:
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
       minor-and-patch:
         update-types: [minor, patch]
     ignore:
@@ -61,6 +70,9 @@ updates:
       prefix: chore
       include: scope
     groups:
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
       minor-and-patch:
         update-types: [minor, patch]
     ignore:
@@ -77,6 +89,9 @@ updates:
       include: scope
     # Action updates are low-risk and arrive together, majors included: one PR for all.
     groups:
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
       actions:
         update-types: [major, minor, patch]
     ignore:
