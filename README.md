@@ -30,7 +30,7 @@ pnpm dev                     # http://localhost:3000 → /setup
 database and server.
 
 `pnpm format` rewrites files with Prettier (default settings; `.prettierignore` says what it
-skips).
+skips); `pnpm lint` fails on a file it would change.
 
 ## Docs
 
