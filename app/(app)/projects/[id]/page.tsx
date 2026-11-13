@@ -270,7 +270,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
 
       <LinksSection owner={{ kind: 'project', id }} canEdit={canEdit} />
 
-      {canEdit && !project.series ? <MakeSeriesButton title={project.title} make={makeSeriesAction.bind(null, id)} /> : null}
+      {canEdit && !project.series ? <MakeSeriesButton make={makeSeriesAction.bind(null, id)} /> : null}
 
       <p className="mt-8 px-1 text-xs text-ink-3">{edited}</p>
     </>

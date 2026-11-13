@@ -1,6 +1,7 @@
 'use client'
 
-import { useActionState, useState, useTransition } from 'react'
+import { ConfirmInline } from '@/components/ConfirmInline'
+import { useActionState, useState } from 'react'
 import { CopyButton } from '@/components/CopyButton'
 import type { FormAction } from '@/components/ActionForm'
 import { buttonClass } from '@/components/ui/Button'
@@ -65,17 +66,13 @@ export function ShareForm({ action, places }: { action: FormAction; places: { id
 }
 
 export function RevokeLink({ action }: { action: () => Promise<unknown> }) {
-  const [pending, start] = useTransition()
   return (
-    <button
-      type="button"
-      disabled={pending}
-      className={buttonClass('danger', 'min-h-9 px-3 text-sm')}
-      onClick={() => {
-        if (confirm('Turn this link off now? Anyone using it will lose access.')) start(async () => void (await action()))
-      }}
-    >
-      Turn Off
-    </button>
+    <ConfirmInline
+      action={action}
+      verb="Turn Off"
+      subject="this link"
+      triggerClass={buttonClass('danger', 'min-h-9 px-3 text-sm')}
+      note="Anyone using it loses access"
+    />
   )
 }

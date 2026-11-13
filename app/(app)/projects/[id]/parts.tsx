@@ -5,10 +5,11 @@ import { ActionForm, type FormAction } from '@/components/ActionForm'
 import { DeleteButton } from '@/components/DeleteButton'
 import { buttonClass } from '@/components/ui/Button'
 import { Pill } from '@/components/ui/Card'
-import { Checkbox, Field, Select, SubmitButton, TextArea, TextInput } from '@/components/ui/Field'
+import { Checkbox, Field, FormError, Select, SubmitButton, TextArea, TextInput } from '@/components/ui/Field'
 import { Icon } from '@/components/ui/icons'
 import type { ActionResult } from '@/lib/web/action'
-import { confirmSeries } from '../materials'
+import { useRun } from '../materials'
+import { useSeriesConfirm } from '@/components/SeriesConfirm'
 import type { ItemView, MissingView } from '../series-view'
 
 const FLOW = [
@@ -90,13 +91,9 @@ export function Checklist({
   copyHere?: (seriesRowId: string) => Promise<ActionResult>
   dropFromSeries?: (seriesRowId: string) => Promise<ActionResult>
 }) {
-  const [pending, start] = useTransition()
+  const [pending, run, error] = useRun()
+  const [ask, dialog] = useSeriesConfirm()
   const [details, setDetails] = useState(false)
-  const run = (fn: () => Promise<ActionResult>) =>
-    start(async () => {
-      const result = await fn()
-      if (result?.error) alert(result.error)
-    })
   const link = 'inline-flex min-h-11 items-center text-sm font-medium text-accent'
   return (
     <div className="flex flex-col gap-3">
@@ -113,7 +110,10 @@ export function Checklist({
                       checked={item.done}
                       disabled={!canEdit}
                       aria-label={item.text}
-                      onChange={(e) => start(async () => void (await toggle(item.id, e.target.checked)))}
+                      onChange={(e) => {
+                        const done = e.target.checked
+                        run(async () => (await toggle(item.id, done)) as ActionResult)
+                      }}
                       className="h-6 w-6 shrink-0 accent-[var(--color-accent)]"
                     />
                   ) : null}
@@ -133,7 +133,7 @@ export function Checklist({
                 {canEdit && (differs || item.oneOff) ? (
                   <div className="flex flex-wrap gap-x-4 pl-9">
                     {differs && sendToSeries ? (
-                      <button type="button" disabled={pending} className={link} onClick={() => confirmSeries([item.change!]) && run(() => sendToSeries(item.id))}>
+                      <button type="button" disabled={pending} className={link} onClick={() => ask([item.change!], () => run(() => sendToSeries(item.id)))}>
                         Update Series
                       </button>
                     ) : null}
@@ -163,7 +163,7 @@ export function Checklist({
                   <button type="button" disabled={pending} className={link} onClick={() => run(() => copyHere(m.id))}>
                     Add Here
                   </button>
-                  <button type="button" disabled={pending} className={link} onClick={() => confirmSeries([m.change]) && run(() => dropFromSeries(m.id))}>
+                  <button type="button" disabled={pending} className={link} onClick={() => ask([m.change], () => run(() => dropFromSeries(m.id)))}>
                     Remove from Series
                   </button>
                 </div>
@@ -207,6 +207,8 @@ export function Checklist({
           )}
         </ActionForm>
       ) : null}
+      <FormError>{error}</FormError>
+      {dialog}
     </div>
   )
 }

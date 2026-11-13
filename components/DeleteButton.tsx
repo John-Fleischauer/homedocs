@@ -1,10 +1,10 @@
 'use client'
 
-import { useTransition } from 'react'
+import { ConfirmInline } from './ConfirmInline'
 import { buttonClass, type Variant } from './ui/Button'
 import { Icon } from './ui/icons'
 
-/* Asks first, then runs the action. Deletes are recoverable from "Recently deleted". */
+/* Asks in place, then runs the action. Deletes are recoverable from Recently Deleted. */
 export function DeleteButton({
   action,
   what,
@@ -18,26 +18,24 @@ export function DeleteButton({
   label?: string
   variant?: Variant
   compact?: boolean
-  /** False when there is no "Recently deleted" to bring it back from. */
+  /** False when there is no Recently Deleted to bring it back from. */
   recoverable?: boolean
 }) {
-  const [pending, start] = useTransition()
   return (
-    <button
-      type="button"
-      disabled={pending}
-      aria-label={compact ? `${label} ${what}` : undefined}
-      className={compact ? 'flex h-10 w-10 items-center justify-center rounded-full text-ink-3 hover:bg-sunk hover:text-danger' : buttonClass(variant)}
-      onClick={() => {
-        const note = recoverable ? ' You can bring it back from “Recently deleted”.' : ''
-        if (!confirm(`${label} ${what}?${note}`)) return
-        start(async () => {
-          const result = (await action()) as { error?: string } | undefined
-          if (result?.error) alert(result.error)
-        })
-      }}
-    >
-      {compact ? <Icon name="trash" className="h-[18px] w-[18px]" /> : pending ? 'Deleting…' : label}
-    </button>
+    <ConfirmInline
+      action={action}
+      verb={label}
+      subject={what}
+      variant="danger"
+      note={recoverable ? 'Restorable from Recently Deleted' : undefined}
+      pendingText={compact ? undefined : 'Deleting…'}
+      trigger={compact ? <Icon name="trash" className="h-[18px] w-[18px]" /> : undefined}
+      triggerLabel={compact ? `${label} ${what}` : undefined}
+      triggerClass={
+        compact
+          ? 'flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink-3 hover:bg-sunk hover:text-danger'
+          : buttonClass(variant)
+      }
+    />
   )
 }

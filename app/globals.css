@@ -134,6 +134,11 @@ input::-webkit-date-and-time-value {
   text-align: start;
 }
 
+/* The scrim behind a modal: no text sits on it, so alpha is fine. */
+dialog::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+
 /* Room for the bottom tab bar and the iPhone home indicator. */
 .pb-tabs {
   padding-bottom: calc(5rem + env(safe-area-inset-bottom));
