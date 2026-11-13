@@ -27,6 +27,17 @@ export default defineConfig({
       name: 'phone',
       use: { ...devices['Pixel 7'], storageState: AUTH_FILE },
       dependencies: ['setup'],
+      testIgnore: /phone\.spec\.ts/,
+    },
+    {
+      // The standards' phone check (design.md): WebKit at 360px, because Chromium misses
+      // layout differences WebKit shares with Safari (a native date field's width). After
+      // the journeys, so the screens have something in them. Playwright's WebKit is not
+      // iOS Safari: iOS's own controls still need a look on a phone.
+      name: 'webkit-phone',
+      use: { ...devices['iPhone 13'], viewport: { width: 360, height: 780 }, storageState: AUTH_FILE },
+      dependencies: ['phone'],
+      testMatch: /phone\.spec\.ts/,
     },
   ],
   webServer: {

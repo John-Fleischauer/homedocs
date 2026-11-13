@@ -18,8 +18,9 @@ training data: read the guide in `node_modules/next/dist/docs/` before using an 
 - `pnpm typecheck && pnpm lint && pnpm test`: all three pass before anything is called done,
   and `pnpm db:drift` too after a schema change. CI also runs `pnpm e2e` on the PR, and it gates
   the merge. `pnpm test` runs Vitest on a real Postgres through Testcontainers (Docker running).
-- `pnpm e2e`: Playwright at phone width with axe; it starts its own Postgres and `next dev` on
-  port 3100.
+- `pnpm e2e`: Playwright at phone width with axe (the journeys in Chromium, then the 360px
+  sideways-scroll check in WebKit; `pnpm exec playwright install chromium webkit` once); it starts
+  its own Postgres and `next dev` on port 3100.
 - `pnpm db:generate --name <what>` after changing `lib/db/schema.ts`; `pnpm db:drift` checks
   nothing is missing a migration (CI runs it). `pnpm db:migrate` applies them to the local
   database below unless `DATABASE_URL` says otherwise (it doesn't read `.env.local`).
