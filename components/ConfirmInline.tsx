@@ -21,7 +21,6 @@ export function ConfirmInline({
   variant = 'danger',
   note,
   pendingText,
-  openClass = '',
 }: {
   action: () => Promise<unknown>
   /** The verb, on the question and the confirm button ("Delete", "Turn Off"). */
@@ -38,8 +37,6 @@ export function ConfirmInline({
   /** One line under the question: what can or can't be had back. */
   note?: string
   pendingText?: string
-  /** Extra classes on the open question, e.g. a surface where it overlays a photo. */
-  openClass?: string
 }) {
   const [pending, start] = useTransition()
   const [open, setOpen] = useState(false)
@@ -111,7 +108,7 @@ export function ConfirmInline({
       ref={groupRef}
       role="group"
       aria-label={subject ? `${verb} ${subject}?` : `${verb}?`}
-      className={`inline-flex max-w-full flex-wrap items-center justify-end gap-2 ${openClass}`}
+      className="inline-flex max-w-full flex-wrap items-center justify-end gap-2"
       onKeyDown={(event) => {
         if (event.key === 'Escape') setOpen(false)
       }}

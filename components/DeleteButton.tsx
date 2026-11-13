@@ -12,7 +12,6 @@ export function DeleteButton({
   variant = 'danger',
   compact = false,
   recoverable = true,
-  openClass,
   className = '',
 }: {
   action: () => Promise<unknown>
@@ -22,7 +21,6 @@ export function DeleteButton({
   compact?: boolean
   /** False when there is no Recently Deleted to bring it back from. */
   recoverable?: boolean
-  openClass?: string
   /** Extra classes on the trigger. */
   className?: string
 }) {
@@ -31,7 +29,6 @@ export function DeleteButton({
       action={action}
       verb={label}
       subject={what}
-      openClass={openClass}
       variant="danger"
       note={recoverable ? 'Restorable from Recently Deleted' : undefined}
       pendingText={compact ? undefined : 'Deleting…'}

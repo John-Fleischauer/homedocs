@@ -46,16 +46,10 @@ export function Photos({
             </a>
             {a.caption ? <p className="px-2 py-1.5 text-xs text-ink-2">{a.caption}</p> : null}
             {remove ? (
-              <div className="absolute inset-x-1 top-1 flex justify-end">
-                <DeleteButton
-                  compact
-                  recoverable={false}
-                  what="this photo"
-                  label="Remove"
-                  action={remove.bind(null, a.id)}
-                  className="bg-card"
-                  openClass="rounded-card border border-line bg-card p-2 shadow-lg"
-                />
+              /* Below the picture, not over it: the question needs more room
+                 than a corner of a thumbnail. */
+              <div className="flex justify-end p-1">
+                <DeleteButton compact recoverable={false} what="this photo" label="Remove" action={remove.bind(null, a.id)} />
               </div>
             ) : null}
           </li>
