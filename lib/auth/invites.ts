@@ -62,7 +62,9 @@ export async function createReset(
   const [target] = await exec
     .select({ id: users.id, displayName: users.displayName, role: users.role })
     .from(users)
-    .where(and(eq(users.id, userId), isNull(users.deletedAt)))
+    /* Not for an account awaiting placement: a password would be a way in that
+       skips the admin letting them in. */
+    .where(and(eq(users.id, userId), isNull(users.deletedAt), eq(users.awaitingPlacement, false)))
   if (!target) throw new ValidationError('No such person.')
 
   const token = generateToken()
@@ -122,7 +124,7 @@ export async function redeemInvite(
       const [user] = await tx
         .select({ id: users.id, email: users.email, displayName: users.displayName, role: users.role })
         .from(users)
-        .where(and(eq(users.id, invite.userId!), isNull(users.deletedAt)))
+        .where(and(eq(users.id, invite.userId!), isNull(users.deletedAt), eq(users.awaitingPlacement, false)))
       if (!user) throw new ValidationError('This account no longer exists.')
       await claim(tx, invite.id, user.id)
       await setPassword(user.id, input.password, { userId: user.id, role: user.role, source: 'web', requestId: crypto.randomUUID() }, tx)

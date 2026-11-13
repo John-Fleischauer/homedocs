@@ -142,6 +142,8 @@ export async function resolveBearer(
         // sessions do. A join that forgot this would leave a deactivated
         // account with a live connector for up to an hour.
         isNull(users.deletedAt),
+        // An account awaiting placement has no access, by token or otherwise.
+        eq(users.awaitingPlacement, false),
       ),
     )
     .limit(1)
@@ -193,6 +195,7 @@ export async function rotateRefreshToken(
       expiresAt: oauthTokens.expiresAt,
       role: users.role,
       deletedAt: users.deletedAt,
+      awaitingPlacement: users.awaitingPlacement,
     })
     .from(oauthTokens)
     .innerJoin(users, eq(users.id, oauthTokens.userId))
@@ -217,6 +220,7 @@ export async function rotateRefreshToken(
     throw new OAuthError('invalid_grant', 'that refresh token has expired — reconnect')
   }
   if (row.deletedAt) throw new OAuthError('invalid_grant', 'that account no longer exists')
+  if (row.awaitingPlacement) throw new OAuthError('invalid_grant', 'that account has not been let in yet')
 
   /*
    * Scope can narrow on refresh but never widen (RFC 6749 §6), and the role is

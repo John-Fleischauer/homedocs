@@ -16,6 +16,11 @@
  * headers would be handing out exactly that ambient authority.
  */
 
+import { z } from 'zod'
+import { readBody } from '../web/body'
+import { collect } from '../web/fields'
+import { OAuthError, type OAuthErrorCode } from './errors'
+
 const CORS_HEADERS: Record<string, string> = {
   'access-control-allow-origin': '*',
   'access-control-allow-methods': 'GET, POST, DELETE, OPTIONS',
@@ -51,4 +56,55 @@ export function oauthJson(body: unknown, init: ResponseInit = {}): Response {
       ...(init.headers as Record<string, string> | undefined),
     },
   })
+}
+
+/* The OAuth endpoints take small bodies: a few parameters, or a registration's
+   metadata. 64 KB is far more than any client sends. */
+export const OAUTH_BODY_MAX = 64 * 1024
+
+/**
+ * An OAuth endpoint's body, capped at OAUTH_BODY_MAX. A refusal is an
+ * OAuthError with `code` (413 over the cap, 400 otherwise) for the route to
+ * answer in its own way.
+ */
+export async function readOAuthBody(
+  request: Request,
+  code: OAuthErrorCode,
+): Promise<{ text: string } | { error: OAuthError }> {
+  const body = await readBody(request, { max: OAUTH_BODY_MAX })
+  if (body.ok) return { text: body.text }
+  return body.status === 413
+    ? { error: new OAuthError(code, 'the request body is too large', 413) }
+    : { error: new OAuthError(code, 'the request body could not be read', 400) }
+}
+
+/**
+ * A form-encoded body as one value per name, for a zod schema. A name sent
+ * twice becomes an array, which the schema refuses: RFC 6749 §3.2 says a
+ * parameter must not be sent more than once.
+ */
+export function formFields(text: string): Record<string, string | string[]> {
+  return collect(new URLSearchParams(text))
+}
+
+/** One OAuth parameter: text, sent at most once, of a sane length. */
+export function oauthParam(name: string) {
+  return z
+    .string({ error: `${name} must be sent once, as text` })
+    .max(4_096, { error: `${name} is too long` })
+    .optional()
+}
+
+/** The first refusal a schema found, as the description of an `invalid_request`. */
+export function firstIssue(error: z.ZodError): string {
+  return error.issues[0]?.message ?? 'the request could not be read'
+}
+
+/**
+ * The answer to a failure nobody planned for: logged in full, and the client
+ * gets the specification's `server_error` instead of Next's HTML 500 page.
+ */
+export function serverError(where: string, err: unknown): Response {
+  console.error(`[oauth] ${where} failed:`, err)
+  return oauthJson({ error: 'server_error', error_description: 'something went wrong — try again' }, { status: 500 })
 }

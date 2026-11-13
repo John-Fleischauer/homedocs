@@ -32,7 +32,10 @@ export type OidcConfig =
       only: boolean
       /** Accept an unverified `email` claim for linking. For a self-hosted issuer. */
       trustEmail: boolean
-      /** The role a sign-on that matches no account is created with. */
+      /**
+       * The role the Family page suggests when an admin lets in an account a
+       * sign-on made (it is created with no access, awaiting placement).
+       */
       defaultRole: 'admin' | 'member' | 'viewer'
     }
 
@@ -65,8 +68,8 @@ export function readOidcConfig(env: Env = process.env): OidcConfig {
     displayName: env.OIDC_DISPLAY_NAME?.trim() || 'Pocket ID',
     only: flag(env.OIDC_ONLY),
     trustEmail: flag(env.OIDC_TRUST_EMAIL),
-    /* Viewer unless told otherwise: the provider decides who may sign in, and a
-       new face should be able to look before they can change anything. */
+    /* Viewer unless told otherwise: a new face should be able to look before
+       they can change anything. Only a suggestion now; the admin chooses. */
     defaultRole: readRole(env.OIDC_DEFAULT_ROLE),
   }
 }

@@ -20,18 +20,25 @@ import {
 } from '@/lib/guide/share-links'
 import { clientIp } from '@/lib/web/client-ip'
 import { pinLimiter } from '@/lib/web/limits'
+import { formValues, text } from '@/lib/web/fields'
+import { z } from 'zod'
 
 export type UnlockState = { error?: string }
 
+/* The link token as findShareLink accepts it, and a PIN of no more than a few digits' worth. */
+const unlockForm = z.object({ token: z.string().regex(/^[A-Za-z0-9_-]{1,100}$/), pin: text(100) })
+
 export async function unlockAction(token: string, _: UnlockState, fd: FormData): Promise<UnlockState> {
+  const parsed = unlockForm.safeParse({ ...formValues(fd), token })
+  if (!parsed.success) return { error: 'That PIN isn’t right.' }
   const h = await headers()
   const ip = clientIp(h)
   if (!pinLimiter.take(ip ?? 'unknown')) return { error: 'Too many tries. Wait ten minutes and try again.' }
 
-  const state = await findShareLink(db, token)
-  if (!state.ok) redirect(`/g/${token}`)
+  const state = await findShareLink(db, parsed.data.token)
+  if (!state.ok) redirect(`/g/${parsed.data.token}`)
   const link = state.link
-  const result = await checkPin(db, link, String(fd.get('pin') ?? ''))
+  const result = await checkPin(db, link, parsed.data.pin)
   const meta = { ip, userAgent: h.get('user-agent'), atHome: false }
 
   if (result === 'locked') {
@@ -54,5 +61,5 @@ export async function unlockAction(token: string, _: UnlockState, fd: FormData):
     path: `/g/${token}`,
     maxAge: cookie.maxAge,
   })
-  redirect(`/g/${token}`)
+  redirect(`/g/${parsed.data.token}`)
 }

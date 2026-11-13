@@ -14,30 +14,42 @@
 
 import { OAuthError } from '@/lib/oauth/errors'
 import { revokeToken } from '@/lib/oauth/grants'
-import { corsHeaders, oauthJson, preflight } from '@/lib/oauth/http'
+import { corsHeaders, firstIssue, formFields, oauthJson, oauthParam, preflight, readOAuthBody, serverError } from '@/lib/oauth/http'
+import { z } from 'zod'
 import { db } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(request: Request) {
-  let form: URLSearchParams
-  try {
-    form = new URLSearchParams(await request.text())
-  } catch {
-    return oauthJson(new OAuthError('invalid_request', 'the request body could not be read').body(), {
-      status: 400,
-    })
-  }
+/* `token_type_hint` is read only so that sending it twice is refused like any
+   other parameter; its value is ignored (below). Anything else (claude.ai sends
+   `client_id`) is ignored. */
+const revokeRequest = z.object({
+  token: oauthParam('token'),
+  token_type_hint: oauthParam('token_type_hint'),
+})
 
-  const token = form.get('token')
-  if (!token) {
-    return oauthJson(new OAuthError('invalid_request', 'token is required').body(), { status: 400 })
-  }
+function refuse(err: OAuthError): Response {
+  return oauthJson(err.body(), { status: err.status })
+}
+
+export async function POST(request: Request) {
+  const body = await readOAuthBody(request, 'invalid_request')
+  if ('error' in body) return refuse(body.error)
+
+  const parsed = revokeRequest.safeParse(formFields(body.text))
+  if (!parsed.success) return refuse(new OAuthError('invalid_request', firstIssue(parsed.error)))
+
+  const token = parsed.data.token
+  if (!token) return refuse(new OAuthError('invalid_request', 'token is required'))
 
   /* token_type_hint is advisory and deliberately ignored: the hash lookup finds
      the row whatever kind it is, and a wrong hint must not cause a real token to
      survive revocation (§2.1). */
-  await revokeToken(db, token)
+  try {
+    await revokeToken(db, token)
+  } catch (err) {
+    return serverError('revoke', err)
+  }
 
   return new Response(null, { status: 200, headers: corsHeaders() })
 }

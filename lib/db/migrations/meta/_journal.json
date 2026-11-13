@@ -50,6 +50,13 @@
       "when": 1792977488219,
       "tag": "0006_project_series",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794529541954,
+      "tag": "0007_awaiting_placement",
+      "breakpoints": true
     }
   ]
 }

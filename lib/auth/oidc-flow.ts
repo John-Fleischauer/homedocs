@@ -61,6 +61,7 @@ export const SIGN_IN_ERRORS = [
   'other-identity',
   'unverified-email',
   'no-email',
+  'awaiting-placement',
 ] as const
 
 export type SignInError = (typeof SIGN_IN_ERRORS)[number]
@@ -86,5 +87,7 @@ export function signInErrorMessage(code: SignInError, provider: string): string 
       return `An account uses that email address, and ${provider} has not verified it.`
     case 'no-email':
       return `${provider} did not share an email address.`
+    case 'awaiting-placement':
+      return 'Your account is waiting for an admin to let you in. Ask them to look at Family.'
   }
 }

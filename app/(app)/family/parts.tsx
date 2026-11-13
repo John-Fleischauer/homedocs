@@ -2,7 +2,7 @@
 
 import { useActionState, useTransition } from 'react'
 import { CopyButton } from '@/components/CopyButton'
-import type { FormAction } from '@/components/ActionForm'
+import { ActionForm, type FormAction } from '@/components/ActionForm'
 import { buttonClass } from '@/components/ui/Button'
 import { Field, Select, SubmitButton, TextInput } from '@/components/ui/Field'
 import type { ActionResult } from '@/lib/web/action'
@@ -162,3 +162,19 @@ export function RevokeButton({ action }: { action: () => Promise<unknown> }) {
   )
 }
 
+
+/* Letting in an account a single sign-on made: pick what they can do, then Let In. */
+export function PlaceForm({ action, suggested }: { action: FormAction; suggested: string }) {
+  return (
+    <ActionForm action={action} className="flex items-center gap-2">
+      <Select name="role" aria-label="Role" defaultValue={suggested} className="max-w-32 shrink-0">
+        <option value="admin">Admin</option>
+        <option value="member">Member</option>
+        <option value="viewer">Viewer</option>
+      </Select>
+      <SubmitButton variant="secondary" pendingText="Letting in…">
+        Let In
+      </SubmitButton>
+    </ActionForm>
+  )
+}

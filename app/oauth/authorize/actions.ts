@@ -6,12 +6,14 @@ import {
   AuthorizeFatal,
   AuthorizeRedirect,
   type RawAuthorizeParams,
+  parseAuthorizeParams,
   resolveTarget,
   validateRequest,
 } from '@/lib/oauth/authorize'
 import { issueAuthorizationCode } from '@/lib/oauth/codes'
 import { touchClient } from '@/lib/oauth/clients'
 import { db } from '@/lib/db'
+import { formValues } from '@/lib/web/fields'
 
 /*
  * Approve and deny.
@@ -27,21 +29,16 @@ import { db } from '@/lib/db'
  * cannot drive this form on a logged-in user's behalf.
  */
 
+/*
+ * The hidden fields, parsed with zod before anything else is read
+ * (parseAuthorizeParams, the same parse the page runs on its query). A form
+ * that doesn't parse goes back to the consent screen, which refuses it there:
+ * there is no proven address to send an error to.
+ */
 function params(form: FormData): RawAuthorizeParams {
-  const read = (key: string) => {
-    const value = form.get(key)
-    return typeof value === 'string' && value !== '' ? value : undefined
-  }
-  return {
-    client_id: read('client_id'),
-    redirect_uri: read('redirect_uri'),
-    response_type: read('response_type'),
-    scope: read('scope'),
-    state: read('state'),
-    code_challenge: read('code_challenge'),
-    code_challenge_method: read('code_challenge_method'),
-    resource: read('resource'),
-  }
+  const parsed = parseAuthorizeParams(formValues(form))
+  if (parsed) return parsed
+  redirect('/oauth/authorize')
 }
 
 export async function approveAction(form: FormData): Promise<void> {
@@ -93,7 +90,8 @@ export async function denyAction(form: FormData): Promise<void> {
    * and returning it means claude.ai says "you declined" rather than timing out
    * on a window that never came back.
    */
-  let location = '/library'
+  /* Back to the app's home when there's nowhere provable to send the refusal. */
+  let location = '/'
   try {
     const target = await resolveTarget(db, raw)
     location = new AuthorizeRedirect(

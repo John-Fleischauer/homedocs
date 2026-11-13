@@ -42,7 +42,7 @@ services:
       OIDC_DISPLAY_NAME: ${OIDC_DISPLAY_NAME:-}
       OIDC_ONLY: ${OIDC_ONLY:-}
       OIDC_TRUST_EMAIL: ${OIDC_TRUST_EMAIL:-}
-      # Role for a sign-on that matches no account: viewer (default) or member.
+      # The role Family suggests when letting in someone a sign-on left waiting: viewer (default) or member.
       OIDC_DEFAULT_ROLE: ${OIDC_DEFAULT_ROLE:-}
       TZ: ${TZ:-America/New_York}
     volumes:

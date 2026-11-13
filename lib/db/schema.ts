@@ -107,6 +107,12 @@ export const users = pgTable(
     role: userRole('role').notNull().default('member'),
     oidcIssuer: text('oidc_issuer'),
     oidcSubject: text('oidc_subject'),
+    /**
+     * Made by a single sign-on that matched nobody: no session, token or access
+     * until an admin places them from the Family page. False for every account
+     * that existed before this column, and for every other way in.
+     */
+    awaitingPlacement: boolean('awaiting_placement').notNull().default(false),
     ...timestamps,
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },

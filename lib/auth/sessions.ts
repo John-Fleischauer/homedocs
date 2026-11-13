@@ -74,7 +74,9 @@ export async function resolveSession(
     })
     .from(sessions)
     .innerJoin(users, eq(users.id, sessions.userId))
-    .where(and(eq(sessions.id, id), gt(sessions.expiresAt, now), isNull(users.deletedAt)))
+    /* Nor does an account awaiting placement resolve: it has no access until an
+       admin lets it in, whatever session might exist for it. */
+    .where(and(eq(sessions.id, id), gt(sessions.expiresAt, now), isNull(users.deletedAt), eq(users.awaitingPlacement, false)))
     .limit(1)
 
   if (!row) return null
