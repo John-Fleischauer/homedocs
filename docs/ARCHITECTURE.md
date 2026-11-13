@@ -76,22 +76,28 @@ while someone was a member stops writing the moment they become a viewer.
 
 A page under `app/(app)/` is authenticated by its layout. Everything else authenticates itself:
 
-| Route | Guard |
-|---|---|
-| `app/(app)/**` | layout → `viewer()` → `requireUser()`; admin pages also call `requireRole('admin')` |
-| server actions | `act()` → `viewer()`, then a zod schema over the form and bound arguments (every action is a public endpoint) |
-| `GET /api/health` | none (returns `{ ok: true, revision }` only, no database call) |
-| `POST /api/files` | `requireApiRole('member')`; the property comes from the owning record |
-| `GET /api/files/[sha]` | `requireApiUser()`, and the sha must belong to a live attachment |
-| `GET /api/ext/search` | `requireApiRole('member')`; `kind=location` searches Homebox locations, `kind=tag` / `kind=correspondent` paperless tags or correspondents (an empty query lists them all) |
-| `GET /api/ext/[system]/[id]/thumb` | `requireApiUser()`, plus a strict id format and a live `external_refs` row, or for paperless a document filed (asked of paperless) under a linked tag or correspondent (cannot browse paperless) |
-| `GET /g/[token]` | share-link token; rate limited per IP; preview bots get a stub |
-| `POST` unlock (server action) | link token + PIN; per-IP limit; 10 failures lock the link in the DB |
-| `GET /g/[token]/files/[sha]` | link token, and the sha must be a photo on a record this guide shows |
-| `GET /g/[token]/offline` | link token; always built with `unlocked: false` |
-| `/mcp` | OAuth bearer (`lib/oauth/grants.ts`), then scope ∩ role per tool |
-| `/oauth/*`, `/.well-known/*` | public by design (OAuth 2.1 + PKCE, dynamic client registration, rate limited) |
-| `/login`, `/login/oidc`, `/sso`, `/setup`, `/join/[token]` | public; setup disables itself once a user exists; invites are single-use HMAC tokens; admins can also add someone directly from Family (no password, for single sign-on); `/sso` is Pocket ID's launch URL and only redirects |
+Every way in that resolves a person (a session cookie, an MCP bearer token, a refresh token)
+refuses a removed account and one **awaiting placement** (a sign-on that matched nobody; it has no
+access until an admin lets it in from Family).
+
+| Routes | Authentication | Authorization and scope | Input parsing |
+|---|---|---|---|
+| `app/(app)/**` pages | layout → `viewer()` → `requireUser()` | admin pages also call `requireRole('admin')`; every query takes the viewer's `PropertyScope` | route params passed to the domain, which looks them up within the scope |
+| server actions under `app/(app)/`, `lib/web/*-actions.ts` | `act()` → `viewer()` first (every action is a public endpoint) | the domain modules: `assertCanEdit` / `assertAdmin`, scoped by property | zod in `act()`, over the form and bound arguments (`lib/web/fields.ts`); `test/action-guards.test.ts` checks every action |
+| `GET /api/health` | none | none: returns `{ ok: true, revision }` only, no database call | none |
+| `POST /api/files` | `requireApiUser()` via `requireApiRole('member')` | member or admin; the property comes from the owning record | `owner` parsed (`kind:uuid`); body needs `Content-Length` (411), capped at 25 MB + 64 KB (413), one `file` and a text `caption` (zod) |
+| `GET /api/files/[sha]` | `requireApiUser()` | the sha must belong to a live attachment | sha must be 64 hex characters |
+| `GET /api/ext/search` | `requireApiRole('member')` | member or admin; the home's own integration token, never sent to the browser | zod over the query: `system` one of two, `q` ≤ 500, `kind` (`location` for Homebox, `tag` / `correspondent` for paperless); each once |
+| `GET /api/ext/[system]/[id]/thumb` | `requireApiUser()` | a live `external_refs` row, or for paperless a document under a linked tag or correspondent (can't browse paperless) | `system` one of two, strict id format |
+| `GET /g/[token]`, `/g/[token]/files/[sha]`, `/g/[token]/offline` | the share-link token (HMAC lookup, expiring, revocable); rate limited per IP; preview bots get a stub | gated content (codes, address) only at home or after the PIN, decided in `buildGuide()`; files only if on a record this guide shows; offline always `unlocked: false` | token `[A-Za-z0-9_-]` ≤ 100; sha 64 hex |
+| PIN unlock (server action) | link token + PIN | per-IP limit; 10 failures lock the link in the DB | zod first: token shape, PIN text |
+| `/mcp` | OAuth bearer (`lib/oauth/grants.ts`) | scope ∩ live role per tool; no codes or passwords in any tool | zod per tool (MCP SDK) |
+| `POST /oauth/register` | none, by design (registration grants nothing) | rate limited per address (10/hour); total clients capped | body ≤ 64 KB (413); zod: `redirect_uris` (1–5, allowlisted in `lib/oauth/clients.ts`), `client_name`, `logo_uri`; other fields ignored |
+| `POST /oauth/token`, `POST /oauth/revoke` | PKCE verifier or refresh token (no client secrets) | refresh re-checks the live role and refuses removed and awaiting accounts | body ≤ 64 KB (413); zod: each parameter once, ≤ 4 KB; unknown ones (`resource`, `client_id` on revoke) ignored |
+| `/oauth/authorize` page and its approve / deny actions | session; signed out goes through `/login?next=` and back | client and redirect URI must be registered; scope ∩ role | `parseAuthorizeParams` (zod) for the query and the form alike; a repeated parameter is refused |
+| `/.well-known/*` | none | public documents | none |
+| `/login`, `/setup`, `/join/[token]` (and their actions) | none: they start a session | setup disables itself once a user exists; invites are single-use HMAC tokens; password sign-in throttled per address and per email | zod first; email ≤ 320, password ≤ 1,000, `next` through `safeNext` |
+| `/login/oidc`, `/login/oidc/callback`, `/sso` | none: they start a session | matching rules in `lib/auth/oidc-accounts.ts`; a sign-on that matches nobody gets an account awaiting placement and no session; none on an empty house (→ `/setup`) | `next` through `safeNext`; callback query parsed (zod, each parameter once) |
 
 ## Search
 

@@ -22,7 +22,7 @@ const ROOT = new URL('../', import.meta.url).pathname
 
 /* Sign-in, setup, joining, sign-out, the OAuth consent screen and the share
    link's PIN start or end a session (or stand in for one), so they can't take
-   one first. They are the trust-boundary work of the next change. */
+   one first. They parse first instead (below). */
 const NOT_ACT = new Set(['app/(auth)/actions.ts', 'app/oauth/authorize/actions.ts', 'app/g/[token]/actions.ts'])
 
 function files(dir: string, ext: RegExp): string[] {
@@ -116,9 +116,22 @@ describe('server actions', () => {
     expect(offenders).toEqual([])
   })
 
+  it('the session-starting actions parse their input before anything else', () => {
+    /* Their first statement is the zod parse (or, for sign-out, reading the
+       cookie that is its only input; for consent, the shared parse of the
+       authorize parameters). */
+    const offenders = [...NOT_ACT]
+      .flatMap(exportedFunctions)
+      .filter((action) => {
+        const first = action.body.statements[0]?.getText() ?? ''
+        return !/\.safeParse\(|= params\(form\)|await cookies\(\)/.test(first)
+      })
+      .map((action) => `${action.file}: ${action.name}`)
+    expect(offenders).toEqual([])
+  })
+
   it('no action reads FormData itself', () => {
     const offenders = serverModules
-      .filter((file) => !NOT_ACT.has(file))
       .filter((file) => /\b(fd|form|formData|data)\.(get|getAll|has|entries)\(/.test(readFileSync(join(ROOT, file), 'utf8')))
     expect(offenders).toEqual([])
   })

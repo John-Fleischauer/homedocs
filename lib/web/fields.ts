@@ -241,3 +241,15 @@ export function json<S extends z.ZodType>(schema: S, max = 500_000) {
     })
     .pipe(schema)
 }
+
+/**
+ * One parameter of a query or form-encoded body read with `collect`: text, sent
+ * at most once (a repeat is an array, refused), at most 4 KB. For the OAuth and
+ * sign-on parameters, where a repeated `state` or `code` is a malformed request.
+ */
+export function queryParam(messages: { once?: string; long?: string } = {}) {
+  return z
+    .string({ error: messages.once ?? RELOAD })
+    .max(4_096, { error: messages.long ?? RELOAD })
+    .optional()
+}

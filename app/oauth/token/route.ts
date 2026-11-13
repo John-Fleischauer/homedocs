@@ -16,22 +16,40 @@ import { findClient } from '@/lib/oauth/clients'
 import { parseScope } from '@/lib/oauth/config'
 import { OAuthError } from '@/lib/oauth/errors'
 import { issueTokenPair, revokeGrant, rotateRefreshToken } from '@/lib/oauth/grants'
-import { corsHeaders, oauthJson, preflight } from '@/lib/oauth/http'
+import { corsHeaders, firstIssue, oauthError, formFields, oauthJson, oauthParam, preflight, readOAuthBody, serverError } from '@/lib/oauth/http'
+import { z } from 'zod'
 import { db } from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(request: Request) {
-  let form: URLSearchParams
-  try {
-    const raw = await request.text()
-    form = new URLSearchParams(raw)
-  } catch {
-    return fail(new OAuthError('invalid_request', 'the request body could not be read'))
-  }
+/* Every parameter either grant reads; anything else a client sends (claude.ai
+   adds `resource`) is ignored, as before: the resource a token is for is the one
+   the authorization code carried. Which ones a grant needs is checked below, in
+   the words a client already acts on. */
+const tokenRequest = z.object({
+  grant_type: oauthParam('grant_type'),
+  client_id: oauthParam('client_id'),
+  code: oauthParam('code'),
+  redirect_uri: oauthParam('redirect_uri'),
+  code_verifier: oauthParam('code_verifier'),
+  refresh_token: oauthParam('refresh_token'),
+  scope: oauthParam('scope'),
+})
 
-  const grantType = form.get('grant_type') ?? ''
-  const clientId = form.get('client_id') ?? ''
+type TokenRequest = z.output<typeof tokenRequest>
+
+export async function POST(request: Request) {
+  /* Capped: a route handler gets no body limit from Next, and this one is
+     reachable by anyone. */
+  const body = await readOAuthBody(request, 'invalid_request')
+  if ('error' in body) return fail(body.error)
+
+  const parsed = tokenRequest.safeParse(formFields(body.text))
+  if (!parsed.success) return fail(new OAuthError('invalid_request', firstIssue(parsed.error)))
+  const form = parsed.data
+
+  const grantType = form.grant_type ?? ''
+  const clientId = form.client_id ?? ''
 
   try {
     /*
@@ -61,14 +79,14 @@ export async function POST(request: Request) {
       return fail(err)
     }
     if (err instanceof OAuthError) return fail(err)
-    throw err
+    return serverError('token', err)
   }
 }
 
-async function exchangeCode(form: URLSearchParams, clientId: string): Promise<Response> {
-  const code = form.get('code') ?? ''
-  const redirectUri = form.get('redirect_uri') ?? ''
-  const codeVerifier = form.get('code_verifier') ?? ''
+async function exchangeCode(form: TokenRequest, clientId: string): Promise<Response> {
+  const code = form.code ?? ''
+  const redirectUri = form.redirect_uri ?? ''
+  const codeVerifier = form.code_verifier ?? ''
 
   if (!redirectUri) {
     throw new OAuthError('invalid_request', 'redirect_uri is required')
@@ -103,11 +121,11 @@ async function exchangeCode(form: URLSearchParams, clientId: string): Promise<Re
   return tokenResponse(pair)
 }
 
-async function exchangeRefresh(form: URLSearchParams, clientId: string): Promise<Response> {
-  const refreshToken = form.get('refresh_token') ?? ''
+async function exchangeRefresh(form: TokenRequest, clientId: string): Promise<Response> {
+  const refreshToken = form.refresh_token ?? ''
   if (!refreshToken) throw new OAuthError('invalid_request', 'refresh_token is required')
 
-  const requested = form.get('scope')
+  const requested = form.scope ?? null
   const { scopes, unknown } = parseScope(requested)
   if (requested && unknown.length > 0) {
     throw new OAuthError('invalid_scope', `unknown scope: ${unknown.join(', ')}`)
@@ -139,9 +157,7 @@ function tokenResponse(pair: {
   })
 }
 
-function fail(err: OAuthError): Response {
-  return oauthJson(err.body(), { status: err.status })
-}
+const fail = oauthError
 
 export async function OPTIONS() {
   return preflight()

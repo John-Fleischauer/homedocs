@@ -21,6 +21,7 @@ import { seedSystems } from '../systems/systems'
 import { hashPassword } from './password'
 import { passwordProblem } from './password-policy'
 import { revokeAllSessions, type AuthUser } from './sessions'
+import { liveAccount } from './live'
 
 export type CreateUserInput = {
   email: string
@@ -52,7 +53,7 @@ export async function getUser(id: string, exec: Executor = db): Promise<AuthUser
   const [row] = await exec
     .select({ id: users.id, email: users.email, displayName: users.displayName, role: users.role })
     .from(users)
-    .where(and(eq(users.id, id), isNull(users.deletedAt)))
+    .where(and(eq(users.id, id), liveAccount()))
     .limit(1)
   return row
 }
@@ -69,7 +70,7 @@ export async function listUsers(exec: Executor = db) {
       createdAt: users.createdAt,
     })
     .from(users)
-    .where(isNull(users.deletedAt))
+    .where(liveAccount())
     .orderBy(asc(users.displayName))
 }
 
@@ -122,7 +123,11 @@ export async function addFamilyMember(
   const passwordHash = password ? await hashPassword(password) : null
 
   return inTransaction(exec, async (tx) => {
-    if (await findUserByEmail(email, tx)) throw new ValidationError('Someone already signs in with that email address.')
+    const holder = await findUserByEmail(email, tx)
+    if (holder?.awaitingPlacement) {
+      throw new ValidationError('They’re already waiting under Awaiting Placement. Let them in from there.')
+    }
+    if (holder) throw new ValidationError('Someone already signs in with that email address.')
     /* A removed account keeps its address: re-adding them is a restore, not a second account. */
     const [removed] = await tx
       .select({ id: users.id })
@@ -132,7 +137,17 @@ export async function addFamilyMember(
     if (removed) {
       await tx
         .update(users)
-        .set({ deletedAt: null, displayName, role: input.role, passwordHash, oidcIssuer: null, oidcSubject: null, updatedAt: new Date() })
+        .set({
+          deletedAt: null,
+          displayName,
+          role: input.role,
+          passwordHash,
+          oidcIssuer: null,
+          oidcSubject: null,
+          /* An admin adding them is the placement. */
+          awaitingPlacement: false,
+          updatedAt: new Date(),
+        })
         .where(eq(users.id, removed.id))
       await recordAudit(tx, actor, { action: 'restore', entityType: 'user', entityId: removed.id, after: { email, role: input.role } })
       return { id: removed.id, email, displayName, role: input.role }
@@ -154,6 +169,7 @@ export async function insertUser(
     role: Role
     oidcIssuer?: string
     oidcSubject?: string
+    awaitingPlacement?: boolean
   },
   actor: ActorContext | null,
 ): Promise<AuthUser> {
@@ -163,7 +179,12 @@ export async function insertUser(
     action: 'create',
     entityType: 'user',
     entityId: user!.id,
-    after: { email: user!.email, role: user!.role, ...(values.oidcIssuer ? { sso: true } : {}) },
+    after: {
+      email: user!.email,
+      role: user!.role,
+      ...(values.oidcIssuer ? { sso: true } : {}),
+      ...(values.awaitingPlacement ? { awaitingPlacement: true } : {}),
+    },
   })
 
   return { id: user!.id, email: user!.email, displayName: user!.displayName, role: user!.role }
@@ -232,6 +253,7 @@ export async function setUserRole(
       .where(and(eq(users.id, userId), isNull(users.deletedAt)))
       .limit(1)
     if (!current) throw new ValidationError('No such person.')
+    if (current.awaitingPlacement) throw new ValidationError('They’re waiting to be let in. Use Let In under Awaiting Placement.')
     if (current.role === role) return
 
     // Demoting the last admin would lock everyone out of the Family page.
@@ -304,5 +326,81 @@ export async function setDisplayName(userId: string, name: string, actor: ActorC
   await inTransaction(exec, async (tx) => {
     await tx.update(users).set({ displayName, updatedAt: new Date() }).where(eq(users.id, userId))
     await recordAudit(tx, actor, { action: 'update', entityType: 'user', entityId: userId, after: { displayName } })
+  })
+}
+
+// ─── placement ──────────────────────────────────────────────────────────────
+//
+// A single sign-on that matched nobody makes an account awaiting placement
+// (oidc-accounts.ts, docs/DECISIONS.md). It has no session, token or access
+// until an admin lets it in here, from the Family page.
+
+export type AwaitingAccount = { id: string; email: string; displayName: string; createdAt: Date }
+
+/** Accounts single sign-on created, waiting for an admin; oldest first. */
+export async function listAwaitingPlacement(exec: Executor = db): Promise<AwaitingAccount[]> {
+  return exec
+    .select({ id: users.id, email: users.email, displayName: users.displayName, createdAt: users.createdAt })
+    .from(users)
+    .where(and(eq(users.awaitingPlacement, true), isNull(users.deletedAt)))
+    .orderBy(asc(users.createdAt))
+}
+
+/** How many are waiting, for the More page. */
+export async function countAwaitingPlacement(exec: Executor = db): Promise<number> {
+  const [row] = await exec
+    .select({ n: count() })
+    .from(users)
+    .where(and(eq(users.awaitingPlacement, true), isNull(users.deletedAt)))
+  return Number(row?.n ?? 0)
+}
+
+/* Locked until the transaction ends, so two admins acting on one account at
+   once can't both pass this check: the second waits, then finds it placed or
+   removed. */
+async function awaitingRow(tx: Executor, userId: string) {
+  const [row] = await tx
+    .select()
+    .from(users)
+    .where(and(eq(users.id, userId), isNull(users.deletedAt), eq(users.awaitingPlacement, true)))
+    .limit(1)
+    .for('update')
+  if (!row) throw new ValidationError('They’re no longer waiting. Reload the page.')
+  return row
+}
+
+/**
+ * Let an awaiting account in, with the role the admin chose. Their next
+ * sign-on starts a session; until then nothing changes for them.
+ */
+export async function placeUser(userId: string, role: Role, actor: ActorContext, exec: Executor = db): Promise<void> {
+  assertAdmin(actor)
+  return inTransaction(exec, async (tx) => {
+    const row = await awaitingRow(tx, userId)
+    await tx.update(users).set({ role, awaitingPlacement: false, updatedAt: new Date() }).where(eq(users.id, userId))
+    await recordAudit(tx, actor, {
+      action: 'update',
+      entityType: 'user',
+      entityId: userId,
+      before: { awaitingPlacement: true, role: row.role },
+      after: { awaitingPlacement: false, role },
+    })
+  })
+}
+
+/**
+ * Turn an awaiting account away. A soft delete, so the identity and address
+ * stay on the removed row and the next sign-on is refused as removed instead of
+ * making the account again. An admin can still add them later (Add Person),
+ * which restores the row.
+ */
+export async function removeAwaitingUser(userId: string, actor: ActorContext, exec: Executor = db): Promise<void> {
+  assertAdmin(actor)
+  return inTransaction(exec, async (tx) => {
+    await awaitingRow(tx, userId)
+    const now = new Date()
+    await tx.update(users).set({ deletedAt: now, updatedAt: now }).where(eq(users.id, userId))
+    await revokeAllSessions(userId, tx)
+    await recordAudit(tx, actor, { action: 'delete', entityType: 'user', entityId: userId, before: { awaitingPlacement: true } })
   })
 }

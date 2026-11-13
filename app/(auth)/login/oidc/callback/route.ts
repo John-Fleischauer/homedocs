@@ -15,9 +15,14 @@ import { safeNext } from '@/lib/auth/redirects'
 import { SESSION_COOKIE, cookieOptions, createSession } from '@/lib/auth/sessions'
 import { absoluteUrl } from '@/lib/web/urls'
 import { clientIp } from '@/lib/web/client-ip'
+import { collect, queryParam } from '@/lib/web/fields'
+import { z } from 'zod'
 import { loginUrl } from '../../login-url'
 
 export const dynamic = 'force-dynamic'
+
+const once = queryParam()
+const callbackQuery = z.object({ code: once, state: once, error: once, error_description: once, iss: once, session_state: once })
 
 export async function GET(request: NextRequest) {
   const flow = decodeFlow(request.cookies.get(OIDC_FLOW_COOKIE)?.value)
@@ -31,8 +36,17 @@ export async function GET(request: NextRequest) {
     return response
   }
 
+  /* The provider's answer, parsed before anything reads it: each of these at
+     most once, as text of a sane length. A repeated `state` or `code` is not a
+     sign-in to finish. The library checks the values themselves. */
+  const query = callbackQuery.safeParse(collect(request.nextUrl.searchParams))
+  if (!query.success) {
+    console.warn('[oidc] the callback query did not parse')
+    return respond(loginUrl('sso-failed', next))
+  }
+
   // Cancelled at the provider, or refused there (a group restriction, say).
-  const providerError = request.nextUrl.searchParams.get('error')
+  const providerError = query.data.error
   if (providerError) {
     console.warn(`[oidc] the provider answered ${providerError}`)
     return respond(loginUrl('sso-failed', next))
@@ -53,15 +67,17 @@ export async function GET(request: NextRequest) {
     return respond(loginUrl('sso-failed', next))
   }
 
-  const result = await resolveOidcAccount(claims, { trustEmail: provider.config.trustEmail, defaultRole: provider.config.defaultRole })
+  const result = await resolveOidcAccount(claims, { trustEmail: provider.config.trustEmail })
   if (result.kind === 'refused') {
-    console.warn(`[oidc] sign-in refused (${result.reason}) for subject ${claims.subject}`)
-    return respond(loginUrl(result.reason, next))
+    const { reason } = result
+    /* No accounts yet: the first one is made at /setup, never by a sign-on. */
+    if (reason === 'setup') return respond(absoluteUrl('/setup'))
+    console.warn(`[oidc] sign-in refused (${reason}) for subject ${claims.subject}`)
+    return respond(loginUrl(reason, next))
   }
 
   const session = await createSession(result.user.id, {
     userAgent: request.headers.get('user-agent'),
-    
     ip: clientIp(request.headers),
   })
 

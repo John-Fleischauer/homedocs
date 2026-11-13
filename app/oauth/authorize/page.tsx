@@ -16,7 +16,7 @@ import {
   AuthorizeFatal,
   AuthorizeRedirect,
   SCOPE_DESCRIPTIONS,
-  type RawAuthorizeParams,
+  parseAuthorizeParams,
   resolveTarget,
   validateRequest,
 } from '@/lib/oauth/authorize'
@@ -31,17 +31,11 @@ export const metadata = { title: 'Authorize Connector — homedocs' }
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>
 
-/** Repeated parameters are a malformed request, not a list. Take the first. */
-function single(raw: Record<string, string | string[] | undefined>): RawAuthorizeParams {
-  const out: RawAuthorizeParams = {}
-  for (const [key, value] of Object.entries(raw)) {
-    out[key] = Array.isArray(value) ? value[0] : value
-  }
-  return out
-}
-
 export default async function AuthorizePage({ searchParams }: { searchParams: SearchParams }) {
-  const raw = single(await searchParams)
+  /* Parsed with zod (parseAuthorizeParams), the same parse the approve and deny
+     form runs. A parameter sent twice is malformed, not a list. */
+  const raw = parseAuthorizeParams(await searchParams)
+  if (!raw) return <Refusal title="This request can’t be read" detail="A parameter was sent twice, or isn’t text. Start connecting again from the app that sent you here." />
 
   let target
   try {

@@ -20,6 +20,8 @@
  *              carrying `state` so the client can match it to its request.
  */
 
+import { z } from 'zod'
+import { queryParam } from '../web/fields'
 import type { RegisteredClient } from './clients'
 import { findClient, redirectUriRegistered } from './clients'
 import { assertUsableChallenge } from './codes'
@@ -60,6 +62,44 @@ export class AuthorizeRedirect extends Error {
 }
 
 export type RawAuthorizeParams = Record<string, string | undefined>
+
+const AUTHORIZE_PARAMS = [
+  'client_id',
+  'redirect_uri',
+  'response_type',
+  'scope',
+  'state',
+  'code_challenge',
+  'code_challenge_method',
+  'resource',
+] as const
+
+/* RFC 6749 §3.1: a parameter sent twice is a malformed request, refused like
+   any other that doesn't parse. Empty reads as absent, as the form's `read`
+   did. */
+const param = z.preprocess((value) => (value === '' ? undefined : value), queryParam())
+
+const authorizeParams = z.object(
+  Object.fromEntries(AUTHORIZE_PARAMS.map((key) => [key, param])) as Record<(typeof AUTHORIZE_PARAMS)[number], typeof param>,
+)
+
+/**
+ * The request's parameters, parsed: from the consent page's query, or from the
+ * form that approves or denies it, so both read it the same way. Null when it
+ * doesn't parse (a parameter sent twice, not text, or absurdly long): there is
+ * then nowhere proven to send an error, so the caller shows one. Unknown
+ * parameters are dropped; the known ones keep the order they arrived in, so the
+ * way back through sign-in is the same URL.
+ */
+export function parseAuthorizeParams(raw: Record<string, unknown>): RawAuthorizeParams | null {
+  const parsed = authorizeParams.safeParse(raw)
+  if (!parsed.success) return null
+  const values: RawAuthorizeParams = parsed.data
+  const known = new Set<string>(AUTHORIZE_PARAMS)
+  return Object.fromEntries(
+    Object.keys(raw).flatMap((key) => (known.has(key) && values[key] !== undefined ? [[key, values[key]] as const] : [])),
+  )
+}
 
 export type ResolvedTarget = { client: RegisteredClient; redirectUri: string; state: string | null }
 

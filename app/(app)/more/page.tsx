@@ -3,12 +3,15 @@ import { PageHeader } from '@/components/ui/PageHeader'
 import { logoutAction } from '@/app/(auth)/actions'
 import { buttonClass } from '@/components/ui/Button'
 import { viewer } from '@/lib/web/context'
+import { countAwaitingPlacement } from '@/lib/auth/users'
 
 export const metadata = { title: 'More' }
 
 export default async function MorePage() {
   const { user } = await viewer()
   const admin = user.role === 'admin'
+  /* Someone a sign-on left waiting has no way in until an admin notices. */
+  const waiting = admin ? await countAwaitingPlacement() : 0
   return (
     <>
       <PageHeader title="More" subtitle={`Signed in as ${user.displayName}`} />
@@ -22,7 +25,7 @@ export default async function MorePage() {
       <Section title="Settings">
         <List>
           {admin ? <Row href="/share" icon="link" title="Share Links" detail="Send house guide" /> : null}
-          {admin ? <Row href="/family" icon="contact" title="Family" /> : null}
+          {admin ? <Row href="/family" icon="contact" title="Family" detail={waiting ? `${waiting} waiting to be let in` : undefined} /> : null}
           <Row href="/deleted" icon="trash" title="Recently Deleted" />
           <Row href="/settings" icon="edit" title="Settings" />
         </List>

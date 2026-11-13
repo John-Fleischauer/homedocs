@@ -19,6 +19,7 @@ import { and, desc, eq, gt, isNull, lt, sql } from 'drizzle-orm'
 import { generateToken, hashToken } from '../auth/tokens'
 import type { Executor, Role } from '../core/types'
 import { oauthClients, oauthTokens, users } from '../db/schema'
+import { liveAccount } from '../auth/live'
 import {
   ACCESS_TOKEN_TTL_SECONDS,
   REFRESH_TOKEN_TTL_SECONDS,
@@ -141,7 +142,8 @@ export async function resolveBearer(
         // A soft-deleted user's tokens stop working at once, exactly as their
         // sessions do. A join that forgot this would leave a deactivated
         // account with a live connector for up to an hour.
-        isNull(users.deletedAt),
+        // And one awaiting placement has no access, by token or otherwise.
+        liveAccount(),
       ),
     )
     .limit(1)
@@ -193,6 +195,7 @@ export async function rotateRefreshToken(
       expiresAt: oauthTokens.expiresAt,
       role: users.role,
       deletedAt: users.deletedAt,
+      awaitingPlacement: users.awaitingPlacement,
     })
     .from(oauthTokens)
     .innerJoin(users, eq(users.id, oauthTokens.userId))
@@ -217,6 +220,7 @@ export async function rotateRefreshToken(
     throw new OAuthError('invalid_grant', 'that refresh token has expired — reconnect')
   }
   if (row.deletedAt) throw new OAuthError('invalid_grant', 'that account no longer exists')
+  if (row.awaitingPlacement) throw new OAuthError('invalid_grant', 'that account has not been let in yet')
 
   /*
    * Scope can narrow on refresh but never widen (RFC 6749 §6), and the role is

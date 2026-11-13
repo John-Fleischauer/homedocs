@@ -14,9 +14,10 @@
  * /oauth/authorize.
  */
 
-import { registerClient, registrationResponse } from '@/lib/oauth/clients'
+import { z } from 'zod'
+import { MAX_REDIRECT_URIS, registerClient, registrationResponse } from '@/lib/oauth/clients'
 import { OAuthError } from '@/lib/oauth/errors'
-import { corsHeaders, oauthJson, preflight } from '@/lib/oauth/http'
+import { corsHeaders, oauthError, oauthJson, preflight, readOAuthBody, serverError } from '@/lib/oauth/http'
 import { clientAddress, fixedWindow } from '@/lib/oauth/rate-limit'
 import { db } from '@/lib/db'
 
@@ -31,6 +32,28 @@ export const dynamic = 'force-dynamic'
  */
 const limiter = fixedWindow(10, 60 * 60 * 1000)
 
+/*
+ * The metadata this server reads (RFC 7591 §2); anything else a client sends
+ * (grant_types, response_types, token_endpoint_auth_method, scope …) is
+ * ignored, as before. The shape is checked here; what is acceptable (which
+ * redirect targets, how long a name) stays in registerClient. Optional fields
+ * may be null, which some clients send.
+ */
+const URIS_REQUIRED = 'redirect_uris is required and must be an array'
+const registration = z.object(
+  {
+    client_name: z.string({ error: 'client_name must be text' }).max(10_000, { error: 'client_name is too long' }).nullish(),
+    redirect_uris: z
+      .array(z.string({ error: 'each redirect_uri must be text' }).max(2_048, { error: 'a redirect_uri is too long' }), {
+        error: URIS_REQUIRED,
+      })
+      .min(1, { error: URIS_REQUIRED })
+      .max(MAX_REDIRECT_URIS, { error: `at most ${MAX_REDIRECT_URIS} redirect_uris may be registered` }),
+    logo_uri: z.string({ error: 'logo_uri must be text' }).max(2_048, { error: 'logo_uri is too long' }).nullish(),
+  },
+  { error: 'the request body must be a JSON object' },
+)
+
 export async function POST(request: Request) {
   if (!limiter.take(clientAddress(request))) {
     return oauthJson(
@@ -42,9 +65,13 @@ export async function POST(request: Request) {
     )
   }
 
+  /* Capped before it is read: this is the one write anybody can reach. */
+  const body = await readOAuthBody(request, 'invalid_client_metadata')
+  if ('error' in body) return refused(body.error, undefined)
+
   let payload: unknown
   try {
-    payload = await request.json()
+    payload = JSON.parse(body.text)
   } catch {
     return oauthJson(
       { error: 'invalid_client_metadata', error_description: 'the request body must be JSON' },
@@ -52,38 +79,47 @@ export async function POST(request: Request) {
     )
   }
 
-  const body = (payload ?? {}) as Record<string, unknown>
+  const parsed = registration.safeParse(payload)
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0]
+    const code = issue?.path[0] === 'redirect_uris' ? 'invalid_redirect_uri' : 'invalid_client_metadata'
+    return refused(new OAuthError(code, issue?.message ?? 'the registration could not be read'), payload)
+  }
 
   try {
     const client = await registerClient(db, {
-      clientName: body.client_name,
-      redirectUris: body.redirect_uris,
-      logoUri: body.logo_uri,
+      clientName: parsed.data.client_name ?? undefined,
+      redirectUris: parsed.data.redirect_uris,
+      logoUri: parsed.data.logo_uri ?? undefined,
     })
     return oauthJson(registrationResponse(client), { status: 201 })
   } catch (err) {
-    if (err instanceof OAuthError) {
-      /*
-       * Logged because the refusal is invisible from the other end. A client
-       * that cannot register shows its user "couldn't connect" and swallows the
-       * body, so without this line the only way to find out *what* was refused
-       * is to guess at payloads — which is exactly how the first connection
-       * attempt against this deployment was debugged.
-       *
-       * The redirect_uris are the whole point of logging it: they are what gets
-       * refused, they are not a secret, and they are the one field a person can
-       * compare against the allowlist.
-       */
-      console.warn('[oauth] registration refused', {
-        error: err.code,
-        description: err.description,
-        clientName: typeof body.client_name === 'string' ? body.client_name : null,
-        redirectUris: body.redirect_uris,
-      })
-      return oauthJson(err.body(), { status: err.status })
-    }
-    throw err
+    if (err instanceof OAuthError) return refused(err, payload)
+    return serverError('registration', err)
   }
+}
+
+/*
+ * Logged because the refusal is invisible from the other end. A client that
+ * cannot register shows its user "couldn't connect" and swallows the body, so
+ * without this line the only way to find out *what* was refused is to guess at
+ * payloads — which is exactly how the first connection attempt against this
+ * deployment was debugged.
+ *
+ * The redirect_uris are the whole point of logging it: they are what gets
+ * refused, they are not a secret, and they are the one field a person can
+ * compare against the allowlist. Capped, so a refusal can't fill the log.
+ */
+function refused(err: OAuthError, payload: unknown): Response {
+  const body = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : {}
+  const uris = Array.isArray(body.redirect_uris) ? body.redirect_uris.slice(0, 10) : undefined
+  console.warn('[oauth] registration refused', {
+    error: err.code,
+    description: err.description,
+    clientName: typeof body.client_name === 'string' ? body.client_name.slice(0, 200) : null,
+    redirectUris: uris?.map((uri) => (typeof uri === 'string' ? uri.slice(0, 300) : typeof uri)),
+  })
+  return oauthError(err)
 }
 
 export async function OPTIONS() {

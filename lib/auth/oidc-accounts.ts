@@ -10,7 +10,8 @@
  * 1. **By identity** — the token's `(iss, sub)`. The only key that stays right
  *    when somebody changes their address at the provider. A *removed* account
  *    holding the identity refuses rather than falling through, or removing
- *    somebody would only last until their next sign-in.
+ *    somebody would only last until their next sign-in. An account still
+ *    awaiting placement refuses too: it has no access yet.
  * 2. **By email, once, to link.** An account made with a password has no
  *    identity yet; the first sign-on attaches one. Only on an address the
  *    provider says is verified, or one the deployment trusts
@@ -19,21 +20,24 @@
  *    account already carrying a different identity is never re-linked: two
  *    identities claiming one account is a provider reissuing subjects or a
  *    takeover attempt, and neither is for a sign-in to settle.
- * 3. **Otherwise, a new account.** `OIDC_DEFAULT_ROLE` (viewer unless set), or the admin when there are no
- *    accounts at all — the same rule as /setup, so an `OIDC_ONLY` deployment
- *    can bootstrap. Who may get this far is the provider's to decide: a group
- *    restriction on the client is how a deployment limits it.
+ * 3. **Otherwise, a new account with no access** (docs/DECISIONS.md, the
+ *    standards' security.md). Never the first one: with no accounts at all the
+ *    person is sent to /setup. The account is created awaiting placement and
+ *    audited, no session is started, and it waits on the Family page for an
+ *    admin to let it in or remove it. Who may get this far at all is the
+ *    provider's to decide: a group restriction on the client is a deployment
+ *    requirement (docs/DEPLOYMENT.md).
  */
 
 import { and, eq, isNotNull, sql } from 'drizzle-orm'
 import { recordAudit } from '../core/audit'
 import { inTransaction } from '../core/internal'
-import type { Executor, Role } from '../core/types'
+import type { Executor } from '../core/types'
 import { db } from '../db'
 import { users } from '../db/schema'
 import type { OidcClaims } from './oidc'
 import type { AuthUser } from './sessions'
-import { ensureProperty, findUserByEmail, insertUser, lockSetup, needsSetup, selfActor } from './users'
+import { findUserByEmail, insertUser, lockSetup, needsSetup, selfActor } from './users'
 
 export type OidcRefusal =
   /** The identity, or the address, belongs to an account that was removed. */
@@ -42,16 +46,22 @@ export type OidcRefusal =
   | 'other-identity'
   /** The address belongs to an account, and the provider has not verified it. */
   | 'unverified-email'
+  /** No account matched, and the provider has not verified the address to make one with. */
+  | 'unverified-new-email'
   /** No account matched, and there is no address to create one with. */
   | 'no-email'
+  /** The account exists but an admin has not let it in yet. */
+  | 'awaiting-placement'
+  /** There are no accounts at all: the first one is made at /setup. */
+  | 'setup'
 
 export type OidcResolution =
-  | { kind: 'signed-in'; user: AuthUser; via: 'identity' | 'linked' | 'created' }
+  | { kind: 'signed-in'; user: AuthUser; via: 'identity' | 'linked' }
   | { kind: 'refused'; reason: OidcRefusal }
 
 export async function resolveOidcAccount(
   claims: OidcClaims,
-  options: { trustEmail: boolean; defaultRole: Role },
+  options: { trustEmail: boolean },
   exec: Executor = db,
 ): Promise<OidcResolution> {
   return inTransaction(exec, async (tx) => {
@@ -66,6 +76,7 @@ export async function resolveOidcAccount(
       .limit(1)
     if (byIdentity) {
       if (byIdentity.deletedAt) return { kind: 'refused', reason: 'removed' }
+      if (byIdentity.awaitingPlacement) return { kind: 'refused', reason: 'awaiting-placement' }
       return { kind: 'signed-in', via: 'identity', user: authUser(byIdentity) }
     }
 
@@ -78,6 +89,9 @@ export async function resolveOidcAccount(
         return { kind: 'refused', reason: 'unverified-email' }
       }
       if (byEmail.oidcSubject !== null) return { kind: 'refused', reason: 'other-identity' }
+      /* Unreachable today (only sign-on makes an awaiting account, and it always
+         carries an identity), but linking must never be a way past placement. */
+      if (byEmail.awaitingPlacement) return { kind: 'refused', reason: 'awaiting-placement' }
 
       await tx
         .update(users)
@@ -104,22 +118,32 @@ export async function resolveOidcAccount(
       .limit(1)
     if (removed) return { kind: 'refused', reason: 'removed' }
 
-    const first = await needsSetup(tx)
-    const role = first ? 'admin' : options.defaultRole
-    const user = await insertUser(
+    /* The first account is made at /setup, never by a sign-in: the person who
+       sets the house up chooses to, rather than whoever reaches the provider
+       first. */
+    if (await needsSetup(tx)) return { kind: 'refused', reason: 'setup' }
+
+    /* Only on an address the provider vouches for (or one the deployment
+       trusts): the account's address is what an admin recognises them by. */
+    if (!claims.emailVerified && !options.trustEmail) return { kind: 'refused', reason: 'unverified-new-email' }
+
+    /* `viewer` is only what the row needs to be valid, and the least it could
+       mean: an awaiting account gets no session or token, so the role means
+       nothing until an admin chooses one (`placeUser`). */
+    await insertUser(
       tx,
       {
         email,
         displayName: displayNameFor(claims, email),
         passwordHash: null,
-        role,
+        role: 'viewer',
+        awaitingPlacement: true,
         oidcIssuer: claims.issuer,
         oidcSubject: claims.subject,
       },
       null,
     )
-    if (first) await ensureProperty(tx, '', user.id)
-    return { kind: 'signed-in', via: 'created', user }
+    return { kind: 'refused', reason: 'awaiting-placement' }
   })
 }
 

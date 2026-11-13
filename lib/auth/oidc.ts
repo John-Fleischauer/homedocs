@@ -156,6 +156,12 @@ export async function signInOptions(): Promise<SignInOptions> {
   }
 }
 
+/** For the Family page: the role it suggests when letting in an awaiting account. */
+export function placementRole(): 'admin' | 'member' | 'viewer' {
+  const config = configOrOff()
+  return config.enabled ? config.defaultRole : 'viewer'
+}
+
 /**
  * For the Family page: whether a pre-made account links on first sign-on only
  * when the provider says the address is verified (see `oidc-accounts.ts`).

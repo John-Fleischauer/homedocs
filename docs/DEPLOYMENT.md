@@ -93,7 +93,7 @@ value counts as unset. Locally, `.env.local` from `.env.example`.
 | `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` | | Single sign-on: all three or none; the issuer an http(s) URL. Redirect URI: `<PUBLIC_BASE_URL>/login/oidc/callback`. |
 | `OIDC_DISPLAY_NAME`, `OIDC_ONLY` | | The button's name; `OIDC_ONLY` hides the password form while sign-on works. |
 | `OIDC_TRUST_EMAIL` | | Link a sign-on to an existing account by email even when the provider doesn't mark the address verified. Safe for an identity provider you run yourself. |
-| `OIDC_DEFAULT_ROLE` | default `viewer` | `viewer` or `member`: the role for a sign-on that matches no account. |
+| `OIDC_DEFAULT_ROLE` | default `viewer` | `viewer` or `member`: the role the Family page suggests when you let in someone waiting (below). A sign-on that matches no account gets no access until then. |
 | `TZ` | default `America/New_York` | An IANA time zone. |
 | `WORKER` | | `on` or `off`; `off` keeps a container from running the background jobs. Not passed by compose. |
 
@@ -105,12 +105,21 @@ value counts as unset. Locally, `.env.local` from `.env.example`.
 In Pocket ID, set the client's **Launch URL** to `<PUBLIC_BASE_URL>/sso`. Tapping homedocs there
 opens it signed in: straight in if a session exists, otherwise through a sign-on round trip.
 
+**Restrict the client to your family's group in Pocket ID.** It decides who can get onto the
+waiting list below at all.
 
 On the Family page, **Add someone** with their name, the email address they have in Pocket ID, and a
 role. Leave the password blank. Their first Pocket ID sign-in finds the account by that address and
 links to it, keeping the role you picked. After that, the link is by Pocket ID identity, so a later
 email change there doesn't matter. Linking needs Pocket ID to mark the address verified, or
 `OIDC_TRUST_EMAIL=true`. Invite links still work for anyone who'd rather set their own password.
+
+Someone who signs on without being added first gets an account with **no access**: the login page
+tells them they're waiting, and they appear under **Awaiting Placement** on the Family page. Pick
+their role and **Let In** (their next sign-on starts a session), or **Remove** (their next sign-on is
+refused; Add Person can still bring them in later). The house's first account is only ever made at
+`/setup`, never by a sign-on; under `OIDC_ONLY`, set it up with a password there, then sign on with
+the same address to link it (docs/DECISIONS.md).
 
 ## Connecting paperless
 

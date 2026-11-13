@@ -2,9 +2,9 @@
 
 import { z } from 'zod'
 import { createInvite, createReset, revokeInvite } from '@/lib/auth/invites'
-import { addFamilyMember, removeUser, setUserRole } from '@/lib/auth/users'
+import { addFamilyMember, placeUser, removeAwaitingUser, removeUser, setUserRole } from '@/lib/auth/users'
 import { act, type ActionResult } from '@/lib/web/action'
-import { GONE, id, oneOf, raw, text } from '@/lib/web/fields'
+import { GONE, id, oneOf, raw, text, withForm } from '@/lib/web/fields'
 
 const role = () => oneOf(['admin', 'member', 'viewer'], 'Pick what they can do.')
 const byUser = z.object({ userId: id() })
@@ -52,5 +52,19 @@ const inviteId = text(200).refine((value) => /^[A-Za-z0-9_-]+$/.test(value), { e
 export async function revokeInviteAction(invite: string): Promise<ActionResult> {
   return act({ id: invite }, z.object({ id: inviteId }), async (input, { actor }) => {
     await revokeInvite(input.id, actor)
+  })
+}
+
+/* An account a single sign-on made, waiting on this page: let it in with a role, or turn it away. */
+export async function placeAction(userId: string, _: ActionResult, fd: FormData): Promise<ActionResult> {
+  return act(withForm(fd, { userId }), z.object({ userId: id(), role: role() }), async (input, { actor }) => {
+    await placeUser(input.userId, input.role, actor)
+    return { message: 'Let in.' }
+  })
+}
+
+export async function removeAwaitingAction(userId: string): Promise<ActionResult> {
+  return act({ userId }, byUser, async (input, { actor }) => {
+    await removeAwaitingUser(input.userId, actor)
   })
 }
