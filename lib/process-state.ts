@@ -32,9 +32,9 @@
  * it. Anything that must survive a restart belongs in Postgres.
  */
 
-type Registry = Map<string, unknown>
+type Registry = Map<string, unknown>;
 
-const holder = globalThis as unknown as { __homedocs_process_state?: Registry }
+const holder = globalThis as unknown as { __homedocs_process_state?: Registry };
 
 /**
  * The process-wide Map registered under `name`, created on first ask.
@@ -44,12 +44,12 @@ const holder = globalThis as unknown as { __homedocs_process_state?: Registry }
  * the same one.
  */
 export function processMap<V>(name: string): Map<string, V> {
-  const registry = (holder.__homedocs_process_state ??= new Map())
+  const registry = (holder.__homedocs_process_state ??= new Map());
 
-  const existing = registry.get(name)
-  if (existing) return existing as Map<string, V>
+  const existing = registry.get(name);
+  if (existing) return existing as Map<string, V>;
 
-  const created = new Map<string, V>()
-  registry.set(name, created)
-  return created
+  const created = new Map<string, V>();
+  registry.set(name, created);
+  return created;
 }

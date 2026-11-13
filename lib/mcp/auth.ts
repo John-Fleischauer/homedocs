@@ -13,24 +13,24 @@
  * and log in, here is where".
  */
 
-import { randomUUID } from 'node:crypto'
-import type { ActorContext } from '../core/types'
-import type { BearerIdentity } from '../oauth/grants'
-import { MCP_PATH, absoluteUrl } from '../oauth/config'
-import { corsHeaders } from '../oauth/http'
+import { randomUUID } from "node:crypto";
+import type { ActorContext } from "../core/types";
+import type { BearerIdentity } from "../oauth/grants";
+import { MCP_PATH, absoluteUrl } from "../oauth/config";
+import { corsHeaders } from "../oauth/http";
 
 export function bearerFrom(request: Request): string | undefined {
-  const header = request.headers.get('authorization')
-  if (!header) return undefined
+  const header = request.headers.get("authorization");
+  if (!header) return undefined;
 
   /* Case-insensitively, because the scheme is a token in the HTTP grammar and
      clients do send "bearer". Split on the first space only — a base64url token
      never contains one, but a header with trailing junk should fail to resolve
      rather than be silently trimmed into something that works. */
-  const [scheme, ...rest] = header.split(' ')
-  if (!scheme || scheme.toLowerCase() !== 'bearer') return undefined
-  const value = rest.join(' ').trim()
-  return value || undefined
+  const [scheme, ...rest] = header.split(" ");
+  if (!scheme || scheme.toLowerCase() !== "bearer") return undefined;
+  const value = rest.join(" ").trim();
+  return value || undefined;
 }
 
 /**
@@ -41,16 +41,16 @@ export function bearerFrom(request: Request): string | undefined {
  * the part a client acts on.
  */
 export function unauthorized(
-  description = 'authorization is required to reach homedocs',
+  description = "authorization is required to reach homedocs",
 ): Response {
-  const metadata = `${absoluteUrl('/.well-known/oauth-protected-resource')}${MCP_PATH}`
+  const metadata = `${absoluteUrl("/.well-known/oauth-protected-resource")}${MCP_PATH}`;
 
   return Response.json(
     {
       /* JSON-RPC shaped as well as HTTP shaped: a client that reads the body
          before the status gets something it can parse rather than HTML. -32001
          is the conventional "unauthorized" in the server-defined range. */
-      jsonrpc: '2.0',
+      jsonrpc: "2.0",
       error: { code: -32001, message: description },
       id: null,
     },
@@ -58,13 +58,13 @@ export function unauthorized(
       status: 401,
       headers: {
         ...corsHeaders(),
-        'www-authenticate':
+        "www-authenticate":
           `Bearer resource_metadata="${metadata}", ` +
           `error="invalid_token", error_description="${description}"`,
-        'cache-control': 'no-store',
+        "cache-control": "no-store",
       },
     },
-  )
+  );
 }
 
 /**
@@ -80,8 +80,8 @@ export function actorFor(identity: BearerIdentity): ActorContext {
   return {
     userId: identity.userId,
     role: identity.role,
-    source: 'mcp',
+    source: "mcp",
     clientId: identity.clientId,
     requestId: randomUUID(),
-  }
+  };
 }

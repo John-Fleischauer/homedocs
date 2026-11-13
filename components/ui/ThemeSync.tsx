@@ -1,8 +1,13 @@
-'use client'
+"use client";
 
-import { usePathname, useServerInsertedHTML } from 'next/navigation'
-import { useEffect, useRef } from 'react'
-import { applyTheme, PAGE_COLOR, readTheme, themeInitScript } from '@/lib/design/theme'
+import { usePathname, useServerInsertedHTML } from "next/navigation";
+import { useEffect, useRef } from "react";
+import {
+  applyTheme,
+  PAGE_COLOR,
+  readTheme,
+  themeInitScript,
+} from "@/lib/design/theme";
 
 /**
  * The theme's two moments on the page.
@@ -19,16 +24,16 @@ import { applyTheme, PAGE_COLOR, readTheme, themeInitScript } from '@/lib/design
  * an explicit choice is first again. Renders nothing.
  */
 export function ThemeSync() {
-  const inserted = useRef(false)
+  const inserted = useRef(false);
   useServerInsertedHTML(() => {
-    if (inserted.current) return null
-    inserted.current = true
-    return <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-  })
+    if (inserted.current) return null;
+    inserted.current = true;
+    return <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />;
+  });
 
-  const pathname = usePathname()
+  const pathname = usePathname();
   useEffect(() => {
-    applyTheme(readTheme(), PAGE_COLOR.light, PAGE_COLOR.dark)
-  }, [pathname])
-  return null
+    applyTheme(readTheme(), PAGE_COLOR.light, PAGE_COLOR.dark);
+  }, [pathname]);
+  return null;
 }

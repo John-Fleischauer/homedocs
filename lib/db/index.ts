@@ -1,8 +1,8 @@
-import { drizzle } from 'drizzle-orm/postgres-js'
-import postgres from 'postgres'
-import * as schema from './schema'
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import * as schema from "./schema";
 
-type Db = ReturnType<typeof drizzle<typeof schema>>
+type Db = ReturnType<typeof drizzle<typeof schema>>;
 
 /*
  * One instance, one writer, so a process-wide pool is the right shape — but it
@@ -20,18 +20,20 @@ type Db = ReturnType<typeof drizzle<typeof schema>>
  * arrives at sixty. See lib/process-state.ts; this predates that helper and has
  * its own shape, since what it holds is a connection rather than a Map.
  */
-const globalForDb = globalThis as unknown as { homedocs?: { sql: postgres.Sql; db: Db } }
+const globalForDb = globalThis as unknown as {
+  homedocs?: { sql: postgres.Sql; db: Db };
+};
 
 function connect(): { sql: postgres.Sql; db: Db } {
-  const url = process.env.DATABASE_URL
-  if (!url) throw new Error('DATABASE_URL is not set')
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL is not set");
 
-  const sql = postgres(url, { max: 10 })
-  return { sql, db: drizzle(sql, { schema }) }
+  const sql = postgres(url, { max: 10 });
+  return { sql, db: drizzle(sql, { schema }) };
 }
 
 function instance(): { sql: postgres.Sql; db: Db } {
-  return (globalForDb.homedocs ??= connect())
+  return (globalForDb.homedocs ??= connect());
 }
 
 /*
@@ -42,12 +44,12 @@ function instance(): { sql: postgres.Sql; db: Db } {
  */
 export const db: Db = new Proxy({} as Db, {
   get(_target, property) {
-    const value = Reflect.get(instance().db, property)
-    return typeof value === 'function' ? value.bind(instance().db) : value
+    const value = Reflect.get(instance().db, property);
+    return typeof value === "function" ? value.bind(instance().db) : value;
   },
-})
+});
 
 /** The raw client, for the rare query drizzle should not shape. */
 export function sqlClient(): postgres.Sql {
-  return instance().sql
+  return instance().sql;
 }

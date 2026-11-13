@@ -19,18 +19,24 @@
  * header — but a LAN client *is* at home, so nothing is gained.
  */
 
-type HeaderBag = { get(name: string): string | null }
+type HeaderBag = { get(name: string): string | null };
 
-export function clientIp(headers: HeaderBag, env: Record<string, string | undefined> = process.env): string | null {
-  const special = env.CLIENT_IP_HEADER?.trim().toLowerCase()
-  if (special) return headers.get(special)?.trim() || null
+export function clientIp(
+  headers: HeaderBag,
+  env: Record<string, string | undefined> = process.env,
+): string | null {
+  const special = env.CLIENT_IP_HEADER?.trim().toLowerCase();
+  if (special) return headers.get(special)?.trim() || null;
 
-  const hops = Math.max(1, Number.parseInt(env.TRUSTED_PROXY_HOPS ?? '1', 10) || 1)
-  const chain = (headers.get('x-forwarded-for') ?? '')
-    .split(',')
+  const hops = Math.max(
+    1,
+    Number.parseInt(env.TRUSTED_PROXY_HOPS ?? "1", 10) || 1,
+  );
+  const chain = (headers.get("x-forwarded-for") ?? "")
+    .split(",")
     .map((s) => s.trim())
-    .filter(Boolean)
-  if (chain.length >= hops) return chain[chain.length - hops]!
+    .filter(Boolean);
+  if (chain.length >= hops) return chain[chain.length - hops]!;
   // Fewer entries than proxies: the request did not come through them all.
-  return headers.get('x-real-ip')?.trim() || null
+  return headers.get("x-real-ip")?.trim() || null;
 }

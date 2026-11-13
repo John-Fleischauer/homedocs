@@ -6,28 +6,47 @@
  * typos ("plumer"). Results are ranked across types in one list.
  */
 
-import { sql } from 'drizzle-orm'
-import type { Executor, PropertyScope } from '../core/types'
+import { sql } from "drizzle-orm";
+import type { Executor, PropertyScope } from "../core/types";
 
-export type SearchKind = 'place' | 'system' | 'fixture' | 'part' | 'note' | 'contact' | 'project' | 'series'
+export type SearchKind =
+  | "place"
+  | "system"
+  | "fixture"
+  | "part"
+  | "note"
+  | "contact"
+  | "project"
+  | "series";
 
-export type SearchHit = { kind: SearchKind; id: string; title: string; detail: string; rank: number }
+export type SearchHit = {
+  kind: SearchKind;
+  id: string;
+  title: string;
+  detail: string;
+  rank: number;
+};
 
 /** "living rm bulb" → "living:* & rm:* & bulb:*", with anything but letters and digits removed. */
 export function prefixQuery(q: string): string | null {
   const words = q
     .toLowerCase()
     .split(/\s+/)
-    .map((w) => w.replace(/[^\p{L}\p{N}]/gu, ''))
+    .map((w) => w.replace(/[^\p{L}\p{N}]/gu, ""))
     .filter(Boolean)
-    .slice(0, 8)
-  return words.length ? words.map((w) => `${w}:*`).join(' & ') : null
+    .slice(0, 8);
+  return words.length ? words.map((w) => `${w}:*`).join(" & ") : null;
 }
 
-export async function search(exec: Executor, scope: PropertyScope, q: string, limit = 30): Promise<SearchHit[]> {
-  const tsq = prefixQuery(q)
-  if (!tsq) return []
-  const p = scope.propertyId
+export async function search(
+  exec: Executor,
+  scope: PropertyScope,
+  q: string,
+  limit = 30,
+): Promise<SearchHit[]> {
+  const tsq = prefixQuery(q);
+  if (!tsq) return [];
+  const p = scope.propertyId;
 
   const rows = await exec.execute<SearchHit>(sql`
     with q as (select to_tsquery('english', ${tsq}) as query)
@@ -58,12 +77,12 @@ export async function search(exec: Executor, scope: PropertyScope, q: string, li
         from project_series se, q where se.property_id = ${p} and se.deleted_at is null and se.search_doc @@ q.query
     ) hits
     order by rank desc, title
-    limit ${limit}`)
-  const hits = [...rows]
-  if (hits.length > 0) return hits
+    limit ${limit}`);
+  const hits = [...rows];
+  if (hits.length > 0) return hits;
 
   // Nothing matched as words: try names that look like what was typed.
-  const typed = q.trim()
+  const typed = q.trim();
   const fuzzy = await exec.execute<SearchHit>(sql`
     select * from (
       select 'place' as kind, id, name as title, kind::text as detail, similarity(name, ${typed}) as rank
@@ -82,17 +101,17 @@ export async function search(exec: Executor, scope: PropertyScope, q: string, li
         where property_id = ${p} and deleted_at is null and name % ${typed}
     ) hits
     order by rank desc
-    limit ${limit}`)
-  return [...fuzzy]
+    limit ${limit}`);
+  return [...fuzzy];
 }
 
 export const KIND_PATH: Record<SearchKind, string> = {
-  place: '/places',
-  system: '/systems',
-  fixture: '/fixtures',
-  part: '/parts',
-  note: '/notes',
-  contact: '/contacts',
-  project: '/projects',
-  series: '/projects/series',
-}
+  place: "/places",
+  system: "/systems",
+  fixture: "/fixtures",
+  part: "/parts",
+  note: "/notes",
+  contact: "/contacts",
+  project: "/projects",
+  series: "/projects/series",
+};

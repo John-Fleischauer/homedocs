@@ -13,21 +13,21 @@
  * a discovery failure that reports itself as a 404 with nothing to act on.
  */
 
-import { MCP_PATH, SCOPES, absoluteUrl, baseUrl } from '@/lib/oauth/config'
-import { oauthJson, preflight } from '@/lib/oauth/http'
+import { MCP_PATH, SCOPES, absoluteUrl, baseUrl } from "@/lib/oauth/config";
+import { oauthJson, preflight } from "@/lib/oauth/http";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   return oauthJson({
     resource: absoluteUrl(MCP_PATH),
     authorization_servers: [baseUrl()],
     scopes_supported: [...SCOPES],
-    bearer_methods_supported: ['header'],
-    resource_documentation: absoluteUrl('/settings/connectors'),
-  })
+    bearer_methods_supported: ["header"],
+    resource_documentation: absoluteUrl("/settings/connectors"),
+  });
 }
 
 export async function OPTIONS() {
-  return preflight()
+  return preflight();
 }

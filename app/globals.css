@@ -120,13 +120,25 @@ body {
    so they overflow at phone width. Dropping the native appearance lets them shrink; it also lets
    an empty one collapse on iOS and centres the value, hence the touch-only height and the
    alignment (standards template). */
-input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"]) {
+input:is(
+  [type="date"],
+  [type="time"],
+  [type="datetime-local"],
+  [type="month"],
+  [type="week"]
+) {
   appearance: none;
   min-width: 0;
   max-width: 100%;
 }
 @media (pointer: coarse) {
-  input:is([type="date"], [type="time"], [type="datetime-local"], [type="month"], [type="week"]) {
+  input:is(
+    [type="date"],
+    [type="time"],
+    [type="datetime-local"],
+    [type="month"],
+    [type="week"]
+  ) {
     min-height: 2.75rem;
   }
 }

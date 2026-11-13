@@ -1,28 +1,28 @@
-'use client'
+"use client";
 
-import { ConfirmInline } from './ConfirmInline'
-import { buttonClass, type Variant } from './ui/Button'
-import { Icon } from './ui/icons'
+import { ConfirmInline } from "./ConfirmInline";
+import { buttonClass, type Variant } from "./ui/Button";
+import { Icon } from "./ui/icons";
 
 /* Asks in place, then runs the action. Deletes are recoverable from Recently Deleted. */
 export function DeleteButton({
   action,
   what,
-  label = 'Delete',
-  variant = 'danger',
+  label = "Delete",
+  variant = "danger",
   compact = false,
   recoverable = true,
-  className = '',
+  className = "",
 }: {
-  action: () => Promise<unknown>
-  what: string
-  label?: string
-  variant?: Variant
-  compact?: boolean
+  action: () => Promise<unknown>;
+  what: string;
+  label?: string;
+  variant?: Variant;
+  compact?: boolean;
   /** False when there is no Recently Deleted to bring it back from. */
-  recoverable?: boolean
+  recoverable?: boolean;
   /** Extra classes on the trigger. */
-  className?: string
+  className?: string;
 }) {
   return (
     <ConfirmInline
@@ -30,15 +30,20 @@ export function DeleteButton({
       verb={label}
       subject={what}
       variant="danger"
-      note={recoverable ? 'Restorable from Recently Deleted' : undefined}
-      pendingText={compact ? undefined : 'Deleting…'}
-      trigger={compact ? <Icon name="trash" className="h-[18px] w-[18px]" /> : undefined}
+      note={recoverable ? "Restorable from Recently Deleted" : undefined}
+      pendingText={compact ? undefined : "Deleting…"}
+      trigger={
+        compact ? (
+          <Icon name="trash" className="h-[18px] w-[18px]" />
+        ) : undefined
+      }
       triggerLabel={compact ? `${label} ${what}` : undefined}
       triggerClass={
         compact
-          ? 'flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink-3 hover:bg-sunk hover:text-danger ' + className
+          ? "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink-3 hover:bg-sunk hover:text-danger " +
+            className
           : buttonClass(variant, className)
       }
     />
-  )
+  );
 }

@@ -14,50 +14,53 @@
  * which is the thing the container does at boot.
  */
 
-import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql'
-import { drizzle } from 'drizzle-orm/postgres-js'
-import { migrate } from 'drizzle-orm/postgres-js/migrator'
-import postgres from 'postgres'
-import type { TestProject } from 'vitest/node'
+import {
+  PostgreSqlContainer,
+  type StartedPostgreSqlContainer,
+} from "@testcontainers/postgresql";
+import { drizzle } from "drizzle-orm/postgres-js";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
+import postgres from "postgres";
+import type { TestProject } from "vitest/node";
 
-export const TEMPLATE_DB = 'homedocs_template'
+export const TEMPLATE_DB = "homedocs_template";
 
-let container: StartedPostgreSqlContainer
+let container: StartedPostgreSqlContainer;
 
 export async function setup(project: TestProject) {
-  container = await new PostgreSqlContainer('postgres:18-alpine').start()
-  const adminUrl = container.getConnectionUri()
+  container = await new PostgreSqlContainer("postgres:18-alpine").start();
+  const adminUrl = container.getConnectionUri();
 
-  const admin = postgres(adminUrl, { max: 1 })
+  const admin = postgres(adminUrl, { max: 1 });
   try {
-    await admin.unsafe(`create database "${TEMPLATE_DB}"`)
+    await admin.unsafe(`create database "${TEMPLATE_DB}"`);
   } finally {
-    await admin.end()
+    await admin.end();
   }
 
-  const templateUrl = new URL(adminUrl)
-  templateUrl.pathname = `/${TEMPLATE_DB}`
+  const templateUrl = new URL(adminUrl);
+  templateUrl.pathname = `/${TEMPLATE_DB}`;
 
-  const sql = postgres(templateUrl.toString(), { max: 1 })
+  const sql = postgres(templateUrl.toString(), { max: 1 });
   try {
-    await migrate(drizzle(sql), { migrationsFolder: 'lib/db/migrations' })
+    await migrate(drizzle(sql), { migrationsFolder: "lib/db/migrations" });
   } finally {
     // The connection has to be closed before anything can clone the template:
     // CREATE DATABASE ... TEMPLATE refuses while another session is attached.
-    await sql.end()
+    await sql.end();
   }
 
   // globalSetup runs in its own process, so mutating process.env would not reach
   // the test workers. provide/inject is the supported channel.
-  project.provide('adminDatabaseUrl', adminUrl)
+  project.provide("adminDatabaseUrl", adminUrl);
 }
 
 export async function teardown() {
-  await container?.stop()
+  await container?.stop();
 }
 
-declare module 'vitest' {
+declare module "vitest" {
   interface ProvidedContext {
-    adminDatabaseUrl: string
+    adminDatabaseUrl: string;
   }
 }

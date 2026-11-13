@@ -3,4 +3,4 @@
  * (lib/env.ts) and again at first use by the readers. Its own module so the
  * readers don't load the env schema to read one number.
  */
-export const MIN_SECRET_LENGTH = 32
+export const MIN_SECRET_LENGTH = 32;

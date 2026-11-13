@@ -8,11 +8,14 @@
  */
 
 export function baseUrl(): string {
-  const raw = process.env.PUBLIC_BASE_URL
-  if (!raw) throw new Error('PUBLIC_BASE_URL must be set — share links and OAuth are built from it')
-  return raw.replace(/\/+$/, '')
+  const raw = process.env.PUBLIC_BASE_URL;
+  if (!raw)
+    throw new Error(
+      "PUBLIC_BASE_URL must be set — share links and OAuth are built from it",
+    );
+  return raw.replace(/\/+$/, "");
 }
 
 export function absoluteUrl(path: string): string {
-  return `${baseUrl()}${path.startsWith('/') ? path : `/${path}`}`
+  return `${baseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
 }

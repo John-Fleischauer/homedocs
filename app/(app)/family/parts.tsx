@@ -1,36 +1,47 @@
-'use client'
+"use client";
 
-import { useActionState, useState, useTransition } from 'react'
-import { InlineError } from '@/components/useRun'
-import { CopyButton } from '@/components/CopyButton'
-import { ActionForm, type FormAction } from '@/components/ActionForm'
-import { buttonClass } from '@/components/ui/Button'
-import { Field, Select, SubmitButton, TextInput } from '@/components/ui/Field'
-import type { ActionResult } from '@/lib/web/action'
-import { keepFormValues, useClearOnSuccess } from '@/lib/keep-form-values'
+import { useActionState, useState, useTransition } from "react";
+import { InlineError } from "@/components/useRun";
+import { CopyButton } from "@/components/CopyButton";
+import { ActionForm, type FormAction } from "@/components/ActionForm";
+import { buttonClass } from "@/components/ui/Button";
+import { Field, Select, SubmitButton, TextInput } from "@/components/ui/Field";
+import type { ActionResult } from "@/lib/web/action";
+import { keepFormValues, useClearOnSuccess } from "@/lib/keep-form-values";
 
 export const ROLE_HELP = {
-  admin: 'Admin — can change anything, invite people, share the guide',
-  member: 'Member — can look things up, add and change them',
-  viewer: 'Viewer — can look things up',
-} as const
+  admin: "Admin — can change anything, invite people, share the guide",
+  member: "Member — can look things up, add and change them",
+  viewer: "Viewer — can look things up",
+} as const;
 
 /* A made link is shown once, with a copy button: it is not stored anywhere readable. */
 function MadeLink({ url, kind }: { url: string; kind: string }) {
   return (
     <div className="flex flex-col gap-2 rounded-control bg-accent-soft p-3">
-      <p className="text-sm text-accent">Send this {kind} link — it works once, for 7 days:</p>
-      <code className="break-all rounded bg-card px-2 py-1.5 text-xs text-ink">{url}</code>
+      <p className="text-sm text-accent">
+        Send this {kind} link — it works once, for 7 days:
+      </p>
+      <code className="break-all rounded bg-card px-2 py-1.5 text-xs text-ink">
+        {url}
+      </code>
       <CopyButton text={url} />
     </div>
-  )
+  );
 }
 
 export function InviteForm({ action }: { action: FormAction }) {
-  const form = useClearOnSuccess(action)
-  const [state, formAction] = useActionState<ActionResult, FormData>(form.action, {})
+  const form = useClearOnSuccess(action);
+  const [state, formAction] = useActionState<ActionResult, FormData>(
+    form.action,
+    {},
+  );
   return (
-    <form action={formAction} onReset={form.onReset} className="flex flex-col gap-3">
+    <form
+      action={formAction}
+      onReset={form.onReset}
+      className="flex flex-col gap-3"
+    >
       <Field label="Name">
         <TextInput name="label" placeholder="Mom" />
       </Field>
@@ -43,11 +54,13 @@ export function InviteForm({ action }: { action: FormAction }) {
           ))}
         </Select>
       </Field>
-      {state.error ? <p className="text-sm text-danger">{state.error}</p> : null}
+      {state.error ? (
+        <p className="text-sm text-danger">{state.error}</p>
+      ) : null}
       {state.message ? <MadeLink url={state.message} kind="invite" /> : null}
       <SubmitButton pendingText="Making link…">Make Invite Link</SubmitButton>
     </form>
-  )
+  );
 }
 
 export function AddMemberForm({
@@ -56,15 +69,22 @@ export function AddMemberForm({
   password,
   needsVerifiedEmail,
 }: {
-  action: FormAction
-  sso: string | null
-  password: boolean
-  needsVerifiedEmail: boolean
+  action: FormAction;
+  sso: string | null;
+  password: boolean;
+  needsVerifiedEmail: boolean;
 }) {
-  const form = useClearOnSuccess(action)
-  const [state, formAction] = useActionState<ActionResult, FormData>(form.action, {})
+  const form = useClearOnSuccess(action);
+  const [state, formAction] = useActionState<ActionResult, FormData>(
+    form.action,
+    {},
+  );
   return (
-    <form action={formAction} onReset={form.onReset} className="flex flex-col gap-3">
+    <form
+      action={formAction}
+      onReset={form.onReset}
+      className="flex flex-col gap-3"
+    >
       <Field label="Name">
         <TextInput name="displayName" required placeholder="Mom" />
       </Field>
@@ -72,7 +92,8 @@ export function AddMemberForm({
         label="Email"
         hint={
           sso
-            ? `The one they use with ${sso}` + (needsVerifiedEmail ? `; ${sso} must show it as verified` : '')
+            ? `The one they use with ${sso}` +
+              (needsVerifiedEmail ? `; ${sso} must show it as verified` : "")
             : undefined
         }
       >
@@ -93,32 +114,61 @@ export function AddMemberForm({
           hint={
             sso
               ? `Blank if they use ${sso}`
-              : 'Or leave blank and send a password link'
+              : "Or leave blank and send a password link"
           }
         >
           <TextInput name="password" type="password" minLength={8} />
         </Field>
       ) : null}
-      {state.error ? <p role="alert" className="text-sm text-danger">{state.error}</p> : null}
-      {state.message ? <p role="status" className="text-sm text-accent">{state.message}</p> : null}
+      {state.error ? (
+        <p role="alert" className="text-sm text-danger">
+          {state.error}
+        </p>
+      ) : null}
+      {state.message ? (
+        <p role="status" className="text-sm text-accent">
+          {state.message}
+        </p>
+      ) : null}
       <SubmitButton pendingText="Adding…">Add Person</SubmitButton>
     </form>
-  )
+  );
 }
 
-export function ResetLink({ action, label = 'Make Password Reset Link' }: { action: FormAction; label?: string }) {
-  const [state, formAction] = useActionState<ActionResult, FormData>(action, {})
+export function ResetLink({
+  action,
+  label = "Make Password Reset Link",
+}: {
+  action: FormAction;
+  label?: string;
+}) {
+  const [state, formAction] = useActionState<ActionResult, FormData>(
+    action,
+    {},
+  );
   return (
-    <form action={formAction} onReset={keepFormValues} className="flex flex-col gap-2">
-      {state.message ? <MadeLink url={state.message} kind="password reset" /> : null}
-      {state.error ? <p className="text-sm text-danger">{state.error}</p> : null}
+    <form
+      action={formAction}
+      onReset={keepFormValues}
+      className="flex flex-col gap-2"
+    >
+      {state.message ? (
+        <MadeLink url={state.message} kind="password reset" />
+      ) : null}
+      {state.error ? (
+        <p className="text-sm text-danger">{state.error}</p>
+      ) : null}
       {!state.message ? (
-        <SubmitButton variant="ghost" className="min-h-9 self-start px-2 text-sm" pendingText="…">
+        <SubmitButton
+          variant="ghost"
+          className="min-h-9 self-start px-2 text-sm"
+          pendingText="…"
+        >
           {label}
         </SubmitButton>
       ) : null}
     </form>
-  )
+  );
 }
 
 export function RoleSelect({
@@ -126,19 +176,19 @@ export function RoleSelect({
   setRole,
   disabled,
 }: {
-  role: string
-  setRole: (r: string) => Promise<ActionResult>
-  disabled?: boolean
+  role: string;
+  setRole: (r: string) => Promise<ActionResult>;
+  disabled?: boolean;
 }) {
-  const [pending, start] = useTransition()
-  const [error, setError] = useState<string | null>(null)
+  const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
   /* Controlled, so a refused change snaps back to the role that stands, and
      follows the role when a revalidation brings a new one. */
-  const [shown, setShown] = useState(role)
-  const [was, setWas] = useState(role)
+  const [shown, setShown] = useState(role);
+  const [was, setWas] = useState(role);
   if (role !== was) {
-    setWas(role)
-    setShown(role)
+    setWas(role);
+    setShown(role);
   }
   return (
     <span className="flex shrink-0 flex-col items-end gap-1">
@@ -147,16 +197,16 @@ export function RoleSelect({
         value={shown}
         disabled={disabled || pending}
         onChange={(e) => {
-          const next = e.target.value
-          setShown(next)
+          const next = e.target.value;
+          setShown(next);
           start(async () => {
-            setError(null)
-            const r = await setRole(next)
+            setError(null);
+            const r = await setRole(next);
             if (r.error) {
-              setError(r.error)
-              setShown(role)
+              setError(r.error);
+              setShown(role);
             }
-          })
+          });
         }}
         className="max-w-32"
       >
@@ -166,24 +216,39 @@ export function RoleSelect({
       </Select>
       <InlineError className="max-w-56 text-right">{error}</InlineError>
     </span>
-  )
+  );
 }
 
 export function RevokeButton({ action }: { action: () => Promise<unknown> }) {
-  const [pending, start] = useTransition()
+  const [pending, start] = useTransition();
   return (
-    <button type="button" disabled={pending} className={buttonClass('ghost', 'min-h-9 px-2 text-sm')} onClick={() => start(async () => void (await action()))}>
+    <button
+      type="button"
+      disabled={pending}
+      className={buttonClass("ghost", "min-h-9 px-2 text-sm")}
+      onClick={() => start(async () => void (await action()))}
+    >
       Cancel Link
     </button>
-  )
+  );
 }
 
-
 /* Letting in an account a single sign-on made: pick what they can do, then Let In. */
-export function PlaceForm({ action, suggested }: { action: FormAction; suggested: string }) {
+export function PlaceForm({
+  action,
+  suggested,
+}: {
+  action: FormAction;
+  suggested: string;
+}) {
   return (
     <ActionForm action={action} className="flex items-center gap-2">
-      <Select name="role" aria-label="Role" defaultValue={suggested} className="max-w-32 shrink-0">
+      <Select
+        name="role"
+        aria-label="Role"
+        defaultValue={suggested}
+        className="max-w-32 shrink-0"
+      >
         <option value="admin">Admin</option>
         <option value="member">Member</option>
         <option value="viewer">Viewer</option>
@@ -192,5 +257,5 @@ export function PlaceForm({ action, suggested }: { action: FormAction; suggested
         Let In
       </SubmitButton>
     </ActionForm>
-  )
+  );
 }

@@ -1,11 +1,11 @@
-import Link from 'next/link'
-import type { NoteRow } from '@/lib/notes/notes'
-import { formatDay } from '@/lib/web/format'
-import { Icon } from './ui/icons'
+import Link from "next/link";
+import type { NoteRow } from "@/lib/notes/notes";
+import { formatDay } from "@/lib/web/format";
+import { Icon } from "./ui/icons";
 
 /* "Next time" lessons, shown prominently at the top of a record. */
 export function Lessons({ rows }: { rows: NoteRow[] }) {
-  if (rows.length === 0) return null
+  if (rows.length === 0) return null;
   return (
     <div className="mt-4 flex flex-col gap-2">
       {rows.map(({ note }) => (
@@ -24,5 +24,5 @@ export function Lessons({ rows }: { rows: NoteRow[] }) {
         </Link>
       ))}
     </div>
-  )
+  );
 }

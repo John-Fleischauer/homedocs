@@ -5,9 +5,9 @@
  * rule is in one place: sessions, MCP bearer tokens, password resets.
  */
 
-import { and, eq, isNull } from 'drizzle-orm'
-import { users } from '../db/schema'
+import { and, eq, isNull } from "drizzle-orm";
+import { users } from "../db/schema";
 
 export function liveAccount() {
-  return and(isNull(users.deletedAt), eq(users.awaitingPlacement, false))!
+  return and(isNull(users.deletedAt), eq(users.awaitingPlacement, false))!;
 }

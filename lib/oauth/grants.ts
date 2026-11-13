@@ -15,11 +15,11 @@
  * has already been spent.
  */
 
-import { and, desc, eq, gt, isNull, lt, sql } from 'drizzle-orm'
-import { generateToken, hashToken } from '../auth/tokens'
-import type { Executor, Role } from '../core/types'
-import { oauthClients, oauthTokens, users } from '../db/schema'
-import { liveAccount } from '../auth/live'
+import { and, desc, eq, gt, isNull, lt, sql } from "drizzle-orm";
+import { generateToken, hashToken } from "../auth/tokens";
+import type { Executor, Role } from "../core/types";
+import { oauthClients, oauthTokens, users } from "../db/schema";
+import { liveAccount } from "../auth/live";
 import {
   ACCESS_TOKEN_TTL_SECONDS,
   REFRESH_TOKEN_TTL_SECONDS,
@@ -27,78 +27,76 @@ import {
   formatScope,
   parseScope,
   scopesForRole,
-} from './config'
-import { OAuthError } from './errors'
+} from "./config";
+import { OAuthError } from "./errors";
 
 export type TokenPair = {
-  accessToken: string
-  refreshToken: string
-  expiresIn: number
-  scopes: Scope[]
-}
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  scopes: Scope[];
+};
 
 export async function issueTokenPair(
   exec: Executor,
   input: {
-    clientId: string
-    userId: string
-    scopes: readonly Scope[]
-    resource: string | null
+    clientId: string;
+    userId: string;
+    scopes: readonly Scope[];
+    resource: string | null;
     /** The refresh token this pair replaces, for the rotation chain. */
-    parentId?: string | null
-    now?: Date
+    parentId?: string | null;
+    now?: Date;
   },
 ): Promise<TokenPair> {
-  const now = input.now ?? new Date()
-  const scope = formatScope(input.scopes)
-  const accessToken = generateToken()
-  const refreshToken = generateToken()
+  const now = input.now ?? new Date();
+  const scope = formatScope(input.scopes);
+  const accessToken = generateToken();
+  const refreshToken = generateToken();
 
-  await exec
-    .insert(oauthTokens)
-    .values([
-      {
-        tokenHash: hashToken(accessToken),
-        kind: 'access',
-        clientId: input.clientId,
-        userId: input.userId,
-        scope,
-        resource: input.resource,
-        issuedAt: now,
-        expiresAt: new Date(now.getTime() + ACCESS_TOKEN_TTL_SECONDS * 1000),
-      },
-      {
-        tokenHash: hashToken(refreshToken),
-        kind: 'refresh',
-        clientId: input.clientId,
-        userId: input.userId,
-        scope,
-        resource: input.resource,
-        parentId: input.parentId ?? null,
-        issuedAt: now,
-        expiresAt: new Date(now.getTime() + REFRESH_TOKEN_TTL_SECONDS * 1000),
-      },
-    ])
+  await exec.insert(oauthTokens).values([
+    {
+      tokenHash: hashToken(accessToken),
+      kind: "access",
+      clientId: input.clientId,
+      userId: input.userId,
+      scope,
+      resource: input.resource,
+      issuedAt: now,
+      expiresAt: new Date(now.getTime() + ACCESS_TOKEN_TTL_SECONDS * 1000),
+    },
+    {
+      tokenHash: hashToken(refreshToken),
+      kind: "refresh",
+      clientId: input.clientId,
+      userId: input.userId,
+      scope,
+      resource: input.resource,
+      parentId: input.parentId ?? null,
+      issuedAt: now,
+      expiresAt: new Date(now.getTime() + REFRESH_TOKEN_TTL_SECONDS * 1000),
+    },
+  ]);
 
   return {
     accessToken,
     refreshToken,
     expiresIn: ACCESS_TOKEN_TTL_SECONDS,
     scopes: [...input.scopes],
-  }
+  };
 }
 
 // ─── verification ────────────────────────────────────────────────────────────
 
 export type BearerIdentity = {
-  userId: string
-  role: Role
-  clientId: string
-  clientName: string
+  userId: string;
+  role: Role;
+  clientId: string;
+  clientName: string;
   /** Granted scopes, already intersected with what the role can carry. */
-  scopes: Scope[]
-  resource: string | null
-}
+  scopes: Scope[];
+  resource: string | null;
+};
 
 /**
  * Resolve a bearer token to who is calling and what they may ask for.
@@ -118,7 +116,7 @@ export async function resolveBearer(
   token: string | undefined,
   now = new Date(),
 ): Promise<BearerIdentity | null> {
-  if (!token) return null
+  if (!token) return null;
 
   const [row] = await exec
     .select({
@@ -136,7 +134,7 @@ export async function resolveBearer(
     .where(
       and(
         eq(oauthTokens.tokenHash, hashToken(token)),
-        eq(oauthTokens.kind, 'access'),
+        eq(oauthTokens.kind, "access"),
         isNull(oauthTokens.revokedAt),
         gt(oauthTokens.expiresAt, now),
         // A soft-deleted user's tokens stop working at once, exactly as their
@@ -146,16 +144,22 @@ export async function resolveBearer(
         liveAccount(),
       ),
     )
-    .limit(1)
+    .limit(1);
 
-  if (!row) return null
+  if (!row) return null;
 
-  const granted = parseScope(row.scope).scopes
-  const carriable = scopesForRole(row.role)
-  const scopes = granted.filter((scope) => carriable.includes(scope))
+  const granted = parseScope(row.scope).scopes;
+  const carriable = scopesForRole(row.role);
+  const scopes = granted.filter((scope) => carriable.includes(scope));
 
-  await exec.update(oauthTokens).set({ lastUsedAt: now }).where(eq(oauthTokens.id, row.id))
-  await exec.update(oauthClients).set({ lastUsedAt: now }).where(eq(oauthClients.id, row.clientId))
+  await exec
+    .update(oauthTokens)
+    .set({ lastUsedAt: now })
+    .where(eq(oauthTokens.id, row.id));
+  await exec
+    .update(oauthClients)
+    .set({ lastUsedAt: now })
+    .where(eq(oauthClients.id, row.clientId));
 
   return {
     userId: row.userId,
@@ -164,7 +168,7 @@ export async function resolveBearer(
     clientName: row.clientName,
     scopes,
     resource: row.resource,
-  }
+  };
 }
 
 // ─── rotation ────────────────────────────────────────────────────────────────
@@ -180,9 +184,14 @@ export async function resolveBearer(
  */
 export async function rotateRefreshToken(
   exec: Executor,
-  input: { refreshToken: string; clientId: string; scopes?: readonly Scope[]; now?: Date },
+  input: {
+    refreshToken: string;
+    clientId: string;
+    scopes?: readonly Scope[];
+    now?: Date;
+  },
 ): Promise<TokenPair> {
-  const now = input.now ?? new Date()
+  const now = input.now ?? new Date();
 
   const [row] = await exec
     .select({
@@ -199,28 +208,49 @@ export async function rotateRefreshToken(
     })
     .from(oauthTokens)
     .innerJoin(users, eq(users.id, oauthTokens.userId))
-    .where(and(eq(oauthTokens.tokenHash, hashToken(input.refreshToken)), eq(oauthTokens.kind, 'refresh')))
-    .limit(1)
+    .where(
+      and(
+        eq(oauthTokens.tokenHash, hashToken(input.refreshToken)),
+        eq(oauthTokens.kind, "refresh"),
+      ),
+    )
+    .limit(1);
 
-  if (!row) throw new OAuthError('invalid_grant', 'that refresh token is not valid')
+  if (!row)
+    throw new OAuthError("invalid_grant", "that refresh token is not valid");
 
   if (row.clientId !== input.clientId) {
-    throw new OAuthError('invalid_grant', 'that refresh token was issued to another client')
+    throw new OAuthError(
+      "invalid_grant",
+      "that refresh token was issued to another client",
+    );
   }
 
   if (row.revokedAt) {
-    await revokeGrant(exec, { userId: row.userId, clientId: row.clientId, now })
+    await revokeGrant(exec, {
+      userId: row.userId,
+      clientId: row.clientId,
+      now,
+    });
     throw new OAuthError(
-      'invalid_grant',
-      'that refresh token has already been used. The grant has been revoked — reconnect to continue.',
-    )
+      "invalid_grant",
+      "that refresh token has already been used. The grant has been revoked — reconnect to continue.",
+    );
   }
 
   if (row.expiresAt && row.expiresAt.getTime() <= now.getTime()) {
-    throw new OAuthError('invalid_grant', 'that refresh token has expired — reconnect')
+    throw new OAuthError(
+      "invalid_grant",
+      "that refresh token has expired — reconnect",
+    );
   }
-  if (row.deletedAt) throw new OAuthError('invalid_grant', 'that account no longer exists')
-  if (row.awaitingPlacement) throw new OAuthError('invalid_grant', 'that account has not been let in yet')
+  if (row.deletedAt)
+    throw new OAuthError("invalid_grant", "that account no longer exists");
+  if (row.awaitingPlacement)
+    throw new OAuthError(
+      "invalid_grant",
+      "that account has not been let in yet",
+    );
 
   /*
    * Scope can narrow on refresh but never widen (RFC 6749 §6), and the role is
@@ -228,19 +258,24 @@ export async function rotateRefreshToken(
    * minted while the user was an admin must not survive their demotion by
    * refreshing itself.
    */
-  const previous = parseScope(row.scope).scopes
-  const carriable = scopesForRole(row.role)
-  const requested = input.scopes ? [...input.scopes] : previous
-  const scopes = requested.filter((s) => previous.includes(s) && carriable.includes(s))
+  const previous = parseScope(row.scope).scopes;
+  const carriable = scopesForRole(row.role);
+  const requested = input.scopes ? [...input.scopes] : previous;
+  const scopes = requested.filter(
+    (s) => previous.includes(s) && carriable.includes(s),
+  );
 
   if (scopes.length === 0) {
     throw new OAuthError(
-      'invalid_scope',
-      'none of the requested scopes are still available on this grant',
-    )
+      "invalid_scope",
+      "none of the requested scopes are still available on this grant",
+    );
   }
 
-  await exec.update(oauthTokens).set({ revokedAt: now }).where(eq(oauthTokens.id, row.id))
+  await exec
+    .update(oauthTokens)
+    .set({ revokedAt: now })
+    .where(eq(oauthTokens.id, row.id));
 
   return issueTokenPair(exec, {
     clientId: row.clientId,
@@ -249,7 +284,7 @@ export async function rotateRefreshToken(
     resource: row.resource,
     parentId: row.id,
     now,
-  })
+  });
 }
 
 // ─── revocation ──────────────────────────────────────────────────────────────
@@ -277,19 +312,23 @@ export async function revokeToken(
     })
     .from(oauthTokens)
     .where(eq(oauthTokens.tokenHash, hashToken(token)))
-    .limit(1)
+    .limit(1);
 
-  if (!row) return false
+  if (!row) return false;
 
-  if (row.kind === 'refresh') {
-    await revokeGrant(exec, { userId: row.userId, clientId: row.clientId, now })
+  if (row.kind === "refresh") {
+    await revokeGrant(exec, {
+      userId: row.userId,
+      clientId: row.clientId,
+      now,
+    });
   } else {
     await exec
       .update(oauthTokens)
       .set({ revokedAt: now })
-      .where(and(eq(oauthTokens.id, row.id), isNull(oauthTokens.revokedAt)))
+      .where(and(eq(oauthTokens.id, row.id), isNull(oauthTokens.revokedAt)));
   }
-  return true
+  return true;
 }
 
 /** Everything one client holds for one user. What the Settings revoke button does. */
@@ -307,21 +346,21 @@ export async function revokeGrant(
         isNull(oauthTokens.revokedAt),
       ),
     )
-    .returning({ id: oauthTokens.id })
+    .returning({ id: oauthTokens.id });
 
-  return revoked.length
+  return revoked.length;
 }
 
 // ─── the Settings screen's read ──────────────────────────────────────────────
 
 export type Grant = {
-  clientId: string
-  clientName: string
-  logoUri: string | null
-  scopes: Scope[]
-  issuedAt: Date
-  lastUsedAt: Date | null
-}
+  clientId: string;
+  clientName: string;
+  logoUri: string | null;
+  scopes: Scope[];
+  issuedAt: Date;
+  lastUsedAt: Date | null;
+};
 
 /**
  * Live grants for one user, one row per client.
@@ -331,7 +370,11 @@ export type Grant = {
  * write since Tuesday" — rather than as the token rows underneath, which after a
  * week of hourly refreshes are numerous and say nothing.
  */
-export async function listGrants(exec: Executor, userId: string, now = new Date()): Promise<Grant[]> {
+export async function listGrants(
+  exec: Executor,
+  userId: string,
+  now = new Date(),
+): Promise<Grant[]> {
   const rows = await exec
     .select({
       clientId: oauthTokens.clientId,
@@ -350,8 +393,13 @@ export async function listGrants(exec: Executor, userId: string, now = new Date(
         gt(oauthTokens.expiresAt, now),
       ),
     )
-    .groupBy(oauthTokens.clientId, oauthClients.clientName, oauthClients.logoUri, oauthTokens.scope)
-    .orderBy(desc(sql`min(${oauthTokens.issuedAt})`))
+    .groupBy(
+      oauthTokens.clientId,
+      oauthClients.clientName,
+      oauthClients.logoUri,
+      oauthTokens.scope,
+    )
+    .orderBy(desc(sql`min(${oauthTokens.issuedAt})`));
 
   /*
    * A grant that narrowed its scope on refresh has rows under both scope
@@ -360,11 +408,11 @@ export async function listGrants(exec: Executor, userId: string, now = new Date(
    * screen is answering "what can this connector do", and a live token under
    * either string is a yes.
    */
-  const byClient = new Map<string, Grant>()
+  const byClient = new Map<string, Grant>();
   for (const row of rows) {
-    const issuedAt = new Date(row.issuedAt)
-    const lastUsedAt = row.lastUsedAt ? new Date(row.lastUsedAt) : null
-    const existing = byClient.get(row.clientId)
+    const issuedAt = new Date(row.issuedAt);
+    const lastUsedAt = row.lastUsedAt ? new Date(row.lastUsedAt) : null;
+    const existing = byClient.get(row.clientId);
 
     if (!existing) {
       byClient.set(row.clientId, {
@@ -374,30 +422,36 @@ export async function listGrants(exec: Executor, userId: string, now = new Date(
         scopes: parseScope(row.scope).scopes,
         issuedAt,
         lastUsedAt,
-      })
-      continue
+      });
+      continue;
     }
 
     for (const scope of parseScope(row.scope).scopes) {
-      if (!existing.scopes.includes(scope)) existing.scopes.push(scope)
+      if (!existing.scopes.includes(scope)) existing.scopes.push(scope);
     }
-    if (issuedAt < existing.issuedAt) existing.issuedAt = issuedAt
-    if (lastUsedAt && (!existing.lastUsedAt || lastUsedAt > existing.lastUsedAt)) {
-      existing.lastUsedAt = lastUsedAt
+    if (issuedAt < existing.issuedAt) existing.issuedAt = issuedAt;
+    if (
+      lastUsedAt &&
+      (!existing.lastUsedAt || lastUsedAt > existing.lastUsedAt)
+    ) {
+      existing.lastUsedAt = lastUsedAt;
     }
   }
 
-  return [...byClient.values()]
+  return [...byClient.values()];
 }
 
 /** Housekeeping: expired rows are already inert, this keeps the table small. */
-export async function purgeExpiredTokens(exec: Executor, now = new Date()): Promise<number> {
+export async function purgeExpiredTokens(
+  exec: Executor,
+  now = new Date(),
+): Promise<number> {
   /* The query builder, not a sql`` fragment: a Date interpolated into raw SQL
      reaches the driver as a bare parameter it will not encode for timestamptz,
      and the query fails at bind time. The same trap as purgeExpiredConfirmations. */
   const deleted = await exec
     .delete(oauthTokens)
     .where(lt(oauthTokens.expiresAt, now))
-    .returning({ id: oauthTokens.id })
-  return deleted.length
+    .returning({ id: oauthTokens.id });
+  return deleted.length;
 }

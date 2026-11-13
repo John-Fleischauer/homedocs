@@ -13,11 +13,14 @@
  * half refuses it here.
  */
 
-import { type Scope, scopesForRole } from '../oauth/config'
-import type { BearerIdentity } from '../oauth/grants'
+import { type Scope, scopesForRole } from "../oauth/config";
+import type { BearerIdentity } from "../oauth/grants";
 
 export function granted(identity: BearerIdentity, scope: Scope): boolean {
-  return identity.scopes.includes(scope) && scopesForRole(identity.role).includes(scope)
+  return (
+    identity.scopes.includes(scope) &&
+    scopesForRole(identity.role).includes(scope)
+  );
 }
 
 /**
@@ -30,10 +33,10 @@ export function refusalFor(identity: BearerIdentity, scope: Scope): string {
     return (
       `This account does not hold ${scope}: it is a viewer account, and reconnecting will not ` +
       `change that — an admin has to change the role on the Family page.`
-    )
+    );
   }
   return (
     `This connection was not granted ${scope}. Reconnect the homedocs connector and approve ` +
     `${scope} to use this tool.`
-  )
+  );
 }

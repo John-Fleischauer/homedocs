@@ -1,12 +1,15 @@
-import type { ComponentProps } from 'react'
-import { Select } from './ui/Field'
+import type { ComponentProps } from "react";
+import { Select } from "./ui/Field";
 
 /* Options come pre-flattened from the server: "Main floor › Living room". */
 export function PlaceSelect({
   options,
-  emptyLabel = 'Whole house',
+  emptyLabel = "Whole house",
   ...props
-}: ComponentProps<'select'> & { options: { id: string; label: string }[]; emptyLabel?: string }) {
+}: ComponentProps<"select"> & {
+  options: { id: string; label: string }[];
+  emptyLabel?: string;
+}) {
   return (
     <Select {...props}>
       <option value="">{emptyLabel}</option>
@@ -16,5 +19,5 @@ export function PlaceSelect({
         </option>
       ))}
     </Select>
-  )
+  );
 }

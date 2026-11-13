@@ -16,30 +16,30 @@
  * headers would be handing out exactly that ambient authority.
  */
 
-import { z } from 'zod'
-import { readBody } from '../web/body'
-import { collect, queryParam } from '../web/fields'
-import { OAuthError, type OAuthErrorCode } from './errors'
+import { z } from "zod";
+import { readBody } from "../web/body";
+import { collect, queryParam } from "../web/fields";
+import { OAuthError, type OAuthErrorCode } from "./errors";
 
 const CORS_HEADERS: Record<string, string> = {
-  'access-control-allow-origin': '*',
-  'access-control-allow-methods': 'GET, POST, DELETE, OPTIONS',
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "GET, POST, DELETE, OPTIONS",
   /* `mcp-session-id` is listed even though this server issues none: a client
      that sends one on a stateless server gets it ignored, and a preflight that
      omits the header from the allowlist fails the request before the server ever
      sees it. `last-event-id` is the SSE resumption header, for the same reason. */
-  'access-control-allow-headers':
-    'authorization, content-type, mcp-protocol-version, mcp-session-id, last-event-id',
-  'access-control-expose-headers': 'mcp-session-id, www-authenticate',
-  'access-control-max-age': '86400',
-}
+  "access-control-allow-headers":
+    "authorization, content-type, mcp-protocol-version, mcp-session-id, last-event-id",
+  "access-control-expose-headers": "mcp-session-id, www-authenticate",
+  "access-control-max-age": "86400",
+};
 
 export function corsHeaders(): Record<string, string> {
-  return { ...CORS_HEADERS }
+  return { ...CORS_HEADERS };
 }
 
 export function preflight(): Response {
-  return new Response(null, { status: 204, headers: corsHeaders() })
+  return new Response(null, { status: 204, headers: corsHeaders() });
 }
 
 export function oauthJson(body: unknown, init: ResponseInit = {}): Response {
@@ -51,16 +51,16 @@ export function oauthJson(body: unknown, init: ResponseInit = {}): Response {
          The discovery documents are equally happy served fresh — they are two
          small objects on a homelab, and a stale one after a PUBLIC_BASE_URL
          change is a connector that fails with an issuer mismatch. */
-      'cache-control': 'no-store',
-      pragma: 'no-cache',
+      "cache-control": "no-store",
+      pragma: "no-cache",
       ...(init.headers as Record<string, string> | undefined),
     },
-  })
+  });
 }
 
 /* The OAuth endpoints take small bodies: a few parameters, or a registration's
    metadata. 64 KB is far more than any client sends. */
-export const OAUTH_BODY_MAX = 64 * 1024
+export const OAUTH_BODY_MAX = 64 * 1024;
 
 /**
  * An OAuth endpoint's body, capped at OAUTH_BODY_MAX. A refusal is an
@@ -71,11 +71,13 @@ export async function readOAuthBody(
   request: Request,
   code: OAuthErrorCode,
 ): Promise<{ text: string } | { error: OAuthError }> {
-  const body = await readBody(request, { max: OAUTH_BODY_MAX })
-  if (body.ok) return { text: body.text }
+  const body = await readBody(request, { max: OAUTH_BODY_MAX });
+  if (body.ok) return { text: body.text };
   return body.status === 413
-    ? { error: new OAuthError(code, 'the request body is too large', 413) }
-    : { error: new OAuthError(code, 'the request body could not be read', 400) }
+    ? { error: new OAuthError(code, "the request body is too large", 413) }
+    : {
+        error: new OAuthError(code, "the request body could not be read", 400),
+      };
 }
 
 /**
@@ -84,22 +86,25 @@ export async function readOAuthBody(
  * parameter must not be sent more than once.
  */
 export function formFields(text: string): Record<string, string | string[]> {
-  return collect(new URLSearchParams(text))
+  return collect(new URLSearchParams(text));
 }
 
 /** One OAuth parameter: text, sent at most once, of a sane length. */
 export function oauthParam(name: string) {
-  return queryParam({ once: `${name} must be sent once, as text`, long: `${name} is too long` })
+  return queryParam({
+    once: `${name} must be sent once, as text`,
+    long: `${name} is too long`,
+  });
 }
 
 /** A refusal, as the specification's JSON error body with its status. */
 export function oauthError(err: OAuthError): Response {
-  return oauthJson(err.body(), { status: err.status })
+  return oauthJson(err.body(), { status: err.status });
 }
 
 /** The first refusal a schema found, as the description of an `invalid_request`. */
 export function firstIssue(error: z.ZodError): string {
-  return error.issues[0]?.message ?? 'the request could not be read'
+  return error.issues[0]?.message ?? "the request could not be read";
 }
 
 /**
@@ -107,6 +112,12 @@ export function firstIssue(error: z.ZodError): string {
  * gets the specification's `server_error` instead of Next's HTML 500 page.
  */
 export function serverError(where: string, err: unknown): Response {
-  console.error(`[oauth] ${where} failed:`, err)
-  return oauthJson({ error: 'server_error', error_description: 'something went wrong — try again' }, { status: 500 })
+  console.error(`[oauth] ${where} failed:`, err);
+  return oauthJson(
+    {
+      error: "server_error",
+      error_description: "something went wrong — try again",
+    },
+    { status: 500 },
+  );
 }

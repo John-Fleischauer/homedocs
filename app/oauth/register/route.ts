@@ -14,14 +14,25 @@
  * /oauth/authorize.
  */
 
-import { z } from 'zod'
-import { MAX_REDIRECT_URIS, registerClient, registrationResponse } from '@/lib/oauth/clients'
-import { OAuthError } from '@/lib/oauth/errors'
-import { corsHeaders, oauthError, oauthJson, preflight, readOAuthBody, serverError } from '@/lib/oauth/http'
-import { clientAddress, fixedWindow } from '@/lib/oauth/rate-limit'
-import { db } from '@/lib/db'
+import { z } from "zod";
+import {
+  MAX_REDIRECT_URIS,
+  registerClient,
+  registrationResponse,
+} from "@/lib/oauth/clients";
+import { OAuthError } from "@/lib/oauth/errors";
+import {
+  corsHeaders,
+  oauthError,
+  oauthJson,
+  preflight,
+  readOAuthBody,
+  serverError,
+} from "@/lib/oauth/http";
+import { clientAddress, fixedWindow } from "@/lib/oauth/rate-limit";
+import { db } from "@/lib/db";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 /*
  * Ten an hour per address. A person connecting a connector does this once and
@@ -30,7 +41,7 @@ export const dynamic = 'force-dynamic'
  * resets with the container — see lib/oauth/rate-limit.ts on why that is
  * acceptable here.
  */
-const limiter = fixedWindow(10, 60 * 60 * 1000)
+const limiter = fixedWindow(10, 60 * 60 * 1000);
 
 /*
  * The metadata this server reads (RFC 7591 §2); anything else a client sends
@@ -39,51 +50,76 @@ const limiter = fixedWindow(10, 60 * 60 * 1000)
  * redirect targets, how long a name) stays in registerClient. Optional fields
  * may be null, which some clients send.
  */
-const URIS_REQUIRED = 'redirect_uris is required and must be an array'
+const URIS_REQUIRED = "redirect_uris is required and must be an array";
 const registration = z.object(
   {
-    client_name: z.string({ error: 'client_name must be text' }).max(10_000, { error: 'client_name is too long' }).nullish(),
+    client_name: z
+      .string({ error: "client_name must be text" })
+      .max(10_000, { error: "client_name is too long" })
+      .nullish(),
     redirect_uris: z
-      .array(z.string({ error: 'each redirect_uri must be text' }).max(2_048, { error: 'a redirect_uri is too long' }), {
-        error: URIS_REQUIRED,
-      })
+      .array(
+        z
+          .string({ error: "each redirect_uri must be text" })
+          .max(2_048, { error: "a redirect_uri is too long" }),
+        {
+          error: URIS_REQUIRED,
+        },
+      )
       .min(1, { error: URIS_REQUIRED })
-      .max(MAX_REDIRECT_URIS, { error: `at most ${MAX_REDIRECT_URIS} redirect_uris may be registered` }),
-    logo_uri: z.string({ error: 'logo_uri must be text' }).max(2_048, { error: 'logo_uri is too long' }).nullish(),
+      .max(MAX_REDIRECT_URIS, {
+        error: `at most ${MAX_REDIRECT_URIS} redirect_uris may be registered`,
+      }),
+    logo_uri: z
+      .string({ error: "logo_uri must be text" })
+      .max(2_048, { error: "logo_uri is too long" })
+      .nullish(),
   },
-  { error: 'the request body must be a JSON object' },
-)
+  { error: "the request body must be a JSON object" },
+);
 
 export async function POST(request: Request) {
   if (!limiter.take(clientAddress(request))) {
     return oauthJson(
       {
-        error: 'invalid_client_metadata',
-        error_description: 'too many registration attempts — try again later',
+        error: "invalid_client_metadata",
+        error_description: "too many registration attempts — try again later",
       },
-      { status: 429, headers: { 'retry-after': '3600' } },
-    )
+      { status: 429, headers: { "retry-after": "3600" } },
+    );
   }
 
   /* Capped before it is read: this is the one write anybody can reach. */
-  const body = await readOAuthBody(request, 'invalid_client_metadata')
-  if ('error' in body) return refused(body.error, undefined)
+  const body = await readOAuthBody(request, "invalid_client_metadata");
+  if ("error" in body) return refused(body.error, undefined);
 
-  let payload: unknown
+  let payload: unknown;
   try {
-    payload = JSON.parse(body.text)
+    payload = JSON.parse(body.text);
   } catch {
     return oauthJson(
-      { error: 'invalid_client_metadata', error_description: 'the request body must be JSON' },
+      {
+        error: "invalid_client_metadata",
+        error_description: "the request body must be JSON",
+      },
       { status: 400 },
-    )
+    );
   }
 
-  const parsed = registration.safeParse(payload)
+  const parsed = registration.safeParse(payload);
   if (!parsed.success) {
-    const issue = parsed.error.issues[0]
-    const code = issue?.path[0] === 'redirect_uris' ? 'invalid_redirect_uri' : 'invalid_client_metadata'
-    return refused(new OAuthError(code, issue?.message ?? 'the registration could not be read'), payload)
+    const issue = parsed.error.issues[0];
+    const code =
+      issue?.path[0] === "redirect_uris"
+        ? "invalid_redirect_uri"
+        : "invalid_client_metadata";
+    return refused(
+      new OAuthError(
+        code,
+        issue?.message ?? "the registration could not be read",
+      ),
+      payload,
+    );
   }
 
   try {
@@ -91,11 +127,11 @@ export async function POST(request: Request) {
       clientName: parsed.data.client_name ?? undefined,
       redirectUris: parsed.data.redirect_uris,
       logoUri: parsed.data.logo_uri ?? undefined,
-    })
-    return oauthJson(registrationResponse(client), { status: 201 })
+    });
+    return oauthJson(registrationResponse(client), { status: 201 });
   } catch (err) {
-    if (err instanceof OAuthError) return refused(err, payload)
-    return serverError('registration', err)
+    if (err instanceof OAuthError) return refused(err, payload);
+    return serverError("registration", err);
   }
 }
 
@@ -111,19 +147,29 @@ export async function POST(request: Request) {
  * compare against the allowlist. Capped, so a refusal can't fill the log.
  */
 function refused(err: OAuthError, payload: unknown): Response {
-  const body = payload && typeof payload === 'object' ? (payload as Record<string, unknown>) : {}
-  const uris = Array.isArray(body.redirect_uris) ? body.redirect_uris.slice(0, 10) : undefined
-  console.warn('[oauth] registration refused', {
+  const body =
+    payload && typeof payload === "object"
+      ? (payload as Record<string, unknown>)
+      : {};
+  const uris = Array.isArray(body.redirect_uris)
+    ? body.redirect_uris.slice(0, 10)
+    : undefined;
+  console.warn("[oauth] registration refused", {
     error: err.code,
     description: err.description,
-    clientName: typeof body.client_name === 'string' ? body.client_name.slice(0, 200) : null,
-    redirectUris: uris?.map((uri) => (typeof uri === 'string' ? uri.slice(0, 300) : typeof uri)),
-  })
-  return oauthError(err)
+    clientName:
+      typeof body.client_name === "string"
+        ? body.client_name.slice(0, 200)
+        : null,
+    redirectUris: uris?.map((uri) =>
+      typeof uri === "string" ? uri.slice(0, 300) : typeof uri,
+    ),
+  });
+  return oauthError(err);
 }
 
 export async function OPTIONS() {
-  return preflight()
+  return preflight();
 }
 
 /* A GET here is someone exploring, not a client. Say what the endpoint is for
@@ -131,9 +177,9 @@ export async function OPTIONS() {
 export async function GET() {
   return oauthJson(
     {
-      error: 'invalid_request',
-      error_description: 'client registration is a POST — see RFC 7591',
+      error: "invalid_request",
+      error_description: "client registration is a POST — see RFC 7591",
     },
-    { status: 405, headers: { ...corsHeaders(), allow: 'POST, OPTIONS' } },
-  )
+    { status: 405, headers: { ...corsHeaders(), allow: "POST, OPTIONS" } },
+  );
 }
