@@ -37,7 +37,7 @@ export async function LinksSection({ owner, canEdit }: { owner: Owner; canEdit: 
                   <span className="min-w-0">
                     <span className="block wrap-anywhere text-[15px] font-medium text-ink">{l.title}</span>
                     <span className="flex items-center gap-2 text-sm text-ink-3">
-                      {[SYSTEM_LABEL[l.system], l.subtitle].filter(Boolean).join(' · ')}
+                      <span className="min-w-0 wrap-anywhere">{[SYSTEM_LABEL[l.system], l.subtitle].filter(Boolean).join(' · ')}</span>
                       {l.status === 'missing' ? <Pill tone="warn">Missing</Pill> : null}
                       {l.status === 'auth_error' ? <Pill tone="warn">Reconnect</Pill> : null}
                     </span>

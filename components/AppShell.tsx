@@ -45,7 +45,7 @@ export function AppShell({
     <div className="min-h-dvh">
       <header className="no-print sticky top-0 z-30 border-b border-line bg-card/95 backdrop-blur">
         <div className="mx-auto flex min-h-14 max-w-3xl items-center gap-3 px-4 py-2">
-          <Link href="/" className="min-w-0 wrap-anywhere text-[17px] leading-snug font-semibold text-ink">
+          <Link href="/" className="min-w-40 wrap-anywhere text-[17px] leading-snug font-semibold text-ink">
             {homeName}
           </Link>
           <nav className="ml-4 hidden shrink-0 items-center gap-1 md:flex" aria-label="Main">

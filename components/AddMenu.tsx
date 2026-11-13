@@ -8,7 +8,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useId, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { addItems } from '@/lib/web/add-items'
 import { Icon } from './ui/icons'
 
@@ -21,9 +21,6 @@ export function AddMenu() {
     setOpenAt((typeof next === 'function' ? next(open) : next) ? pathname : null)
   const root = useRef<HTMLDivElement>(null)
   const menuId = useId()
-  /* On a phone the menu spans the screen just below the top bar, which grows
-     when a long home name wraps; measured as it opens. */
-  const [top, setTop] = useState(56)
 
   // Close on a tap outside, or Escape.
   useEffect(() => {
@@ -44,7 +41,9 @@ export function AddMenu() {
   }, [open])
 
   return (
-    <div ref={root} className="relative">
+    /* Not positioned on a phone, so the menu hangs from the (sticky) header
+       across the screen, below however many lines the home name takes. */
+    <div ref={root} className="sm:relative">
       <a
         href="/add"
         role="button"
@@ -54,7 +53,6 @@ export function AddMenu() {
         aria-controls={open ? menuId : undefined}
         onClick={(e) => {
           e.preventDefault()
-          setTop(root.current?.closest('header')?.getBoundingClientRect().bottom ?? 56)
           setOpen((o) => !o)
         }}
         className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-accent-ink"
@@ -66,8 +64,7 @@ export function AddMenu() {
           id={menuId}
           role="menu"
           aria-label="Add something"
-          style={{ '--menu-top': `${top}px` } as CSSProperties}
-          className="fixed inset-x-4 top-(--menu-top) z-40 mt-1 overflow-hidden rounded-card border border-line bg-card shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:w-80"
+          className="absolute inset-x-4 top-full z-40 mt-1 overflow-hidden rounded-card border border-line bg-card shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:w-80"
         >
           <ul className="divide-y divide-line">
             {addItems(pathname).map((item) => (

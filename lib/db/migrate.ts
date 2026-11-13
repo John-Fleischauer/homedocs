@@ -69,6 +69,9 @@ async function main() {
     console.error('DATABASE_URL is not set')
     process.exit(1)
   }
+  /* Said out loud, since .env.local isn't read: a run meant for another
+     database shows where it went. */
+  if (!process.env.DATABASE_URL?.trim()) console.log(`DATABASE_URL not set: migrating the local dev database (${new URL(url).host})`)
 
   // max: 1 — migrations are serial, and a pool here would outlive the process.
   const sql = postgres(url, { max: 1 })
