@@ -9,7 +9,7 @@ const BASE =
   'disabled:cursor-not-allowed disabled:opacity-50'
 
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-accent text-accent-ink hover:opacity-90',
+  primary: 'bg-accent text-accent-ink hover:bg-accent-strong',
   secondary: 'border border-line bg-card text-ink hover:bg-sunk',
   danger: 'border border-danger/40 bg-card text-danger hover:bg-danger-soft',
   ghost: 'text-ink-2 hover:bg-sunk',

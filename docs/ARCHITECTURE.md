@@ -15,8 +15,10 @@ housesitter.
 
 - **App:** Next.js 16 (App Router, `output: 'standalone'`), React 19 and TypeScript.
 - **Data:** Postgres 18 through Drizzle (postgres-js), with Zod for validation.
-- **UI:** Tailwind 4 with in-house components (`components/ui`). Phone first, and light/dark mode
-  follows the device.
+- **UI:** Tailwind 4 with in-house components (`components/ui`), colour tokens in
+  `app/globals.css` (checked for AA by `test/design/contrast.test.ts`). Phone first. Light/dark
+  follows the device unless someone picks Light or Dark under Settings → You; the choice is per
+  device, in `localStorage`, applied by a head script before first paint (`lib/design/theme.ts`).
 - **Tests:** Vitest against a real Postgres via testcontainers (`test/`), and Playwright at phone width
   with axe (`e2e/`).
 

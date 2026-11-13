@@ -73,7 +73,7 @@ export default async function NotePage({ params }: { params: Promise<{ id: strin
           <p className="text-[15px]">
             <span className="font-semibold">Next Time:</span> {note.nextTime}
           </p>
-          {note.remindAfter ? <p className="mt-1 text-xs opacity-80">Reminder around {formatDay(note.remindAfter)}</p> : null}
+          {note.remindAfter ? <p className="mt-1 text-xs">Reminder around {formatDay(note.remindAfter)}</p> : null}
           {applicable && need !== null ? <ApplyNeed noteId={id} need={need} unit={applicable.unit} where={applicable.where} /> : null}
           {remembered ? <p className="mt-2 text-sm font-medium">✓ Remembered: {remembered}</p> : null}
         </div>

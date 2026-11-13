@@ -25,6 +25,7 @@ import { listGrants } from '@/lib/oauth/grants'
 import { absoluteUrl } from '@/lib/web/urls'
 import { timeAgo } from '@/lib/web/format'
 import { CopyButton } from '@/components/CopyButton'
+import { ThemeChoice } from '@/components/ThemeChoice'
 import { HomeForm, IntegrationForm, NameForm, PasswordForm, RebuildSearch } from './forms'
 
 export const metadata = { title: 'Settings' }
@@ -43,6 +44,7 @@ export default async function SettingsPage() {
         <Card className="flex flex-col gap-6 p-4">
           <NameForm action={nameAction} name={user.displayName} />
           <PasswordForm action={passwordAction} hasPassword={Boolean(row?.hash)} />
+          <ThemeChoice />
         </Card>
       </Section>
       <Section title="Connected Apps">

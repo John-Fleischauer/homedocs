@@ -12,6 +12,7 @@ rejected. Newest last. The standards sweep's questions and John's answers are in
 - [CLAUDE.md holds only the rules; the rest lives in `docs/`](#2026-11-12-claudemd-holds-only-the-rules-the-rest-lives-in-docs)
 - [Server actions through `act()` with a zod schema, and forms that say what a reset does: a CLAUDE.md rule](#2026-11-12-server-actions-through-act-with-a-zod-schema-and-forms-that-say-what-a-reset-does-a-claudemd-rule)
 - [`pnpm db:migrate` defaults to the local database outside production](#2026-11-12-pnpm-dbmigrate-defaults-to-the-local-database-outside-production)
+- [A theme choice in Settings; `accent-strong` and the status tokens](#2026-11-12-a-theme-choice-in-settings-accent-strong-and-the-status-tokens)
 
 ## 2026-11-12: A sign-on that matches nobody gets no access until an admin places it
 
@@ -119,3 +120,25 @@ the README's `docker run` line (`lib/db/migrate-url.ts`, also `drizzle.config.ts
 Production has no default: the image sets `NODE_ENV=production`, the migrator runs `checkEnv()`
 first and `lib/env.ts` refuses a missing `DATABASE_URL`, and `migrationUrl()` returns nothing there
 either (`test/migrate-url.test.ts`).
+
+## 2026-11-12: A theme choice in Settings; `accent-strong` and the status tokens
+
+**Before:** dark mode followed the device only, on purpose ("no toggle to find").
+
+**Now** (standards design.md, Dark mode; John's answer to Q11): Light, Dark and System under
+Settings → You, not in the header, so the family still has nothing new on every page. System
+stays the default. The choice is stored per device in `localStorage` and applied by an inline
+head script before first paint (`lib/design/theme.ts`; homedocs sends no CSP); the static offline
+pages (`public/offline.html`, the guide's offline copy) still follow the device.
+
+Tokens kept their values; the missing standard ones were mapped onto colours already in use, not
+new ones: `ok`/`ok-ink`/`ok-soft` are the accent's (homedocs' green is its done colour),
+`warn-ink` and `danger-ink` are white in light and the dark page colour in dark. One app token,
+`accent-strong` (darker in light, lighter in dark), is a filled accent button's hover: it
+replaces `hover:opacity-90`, which put a translucent fill under the label that the contrast check
+can't measure. The header and tab bar lost their translucent `bg-card/95` for the same reason.
+`test/design/contrast.test.ts` checks every text pair in both themes, and
+`test/design/classes.test.ts` refuses translucent surface fills and fading hovers.
+
+The Wi-Fi QR code keeps `bg-white` (`components/guide/GuideView.tsx`): a QR code needs a white
+quiet zone in either theme.
