@@ -41,15 +41,28 @@ function parse(path: string): ts.SourceFile {
   return ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, kind)
 }
 
-/* A module whose first statement is the 'use server' directive. */
-function isServerModule(source: ts.SourceFile): boolean {
+/* A module whose first statement is this directive. Read from the syntax tree, so the
+   quote style and any comment above it don't matter. */
+function hasDirective(source: ts.SourceFile, directive: 'use server' | 'use client'): boolean {
   const first = source.statements[0]
   return (
     first !== undefined &&
     ts.isExpressionStatement(first) &&
     ts.isStringLiteral(first.expression) &&
-    first.expression.text === 'use server'
+    first.expression.text === directive
   )
+}
+
+function isServerModule(source: ts.SourceFile): boolean {
+  return hasDirective(source, 'use server')
+}
+
+/* A JSX attribute's string value, whatever the quote: `type="hidden"`, `type='hidden'` or
+   `type={'hidden'}`. */
+function stringValue(attribute: ts.JsxAttribute | undefined): string | undefined {
+  let value: ts.Node | undefined = attribute?.initializer
+  if (value !== undefined && ts.isJsxExpression(value)) value = value.expression
+  return value !== undefined && ts.isStringLiteralLike(value) ? value.text : undefined
 }
 
 const serverModules = [...files('app', /\.tsx?$/), ...files('components', /\.tsx?$/), ...files('lib', /\.tsx?$/)].filter(
@@ -124,15 +137,19 @@ describe('server actions', () => {
       .flatMap(exportedFunctions)
       .filter((action) => {
         const first = action.body.statements[0]?.getText() ?? ''
-        return !/\.safeParse\(|= params\(form\)|await cookies\(\)/.test(first)
+        /* Whitespace allowed where Prettier may break a line. */
+        return !/\.\s*safeParse\s*\(|=\s*params\(form\)|await\s+cookies\(\)/.test(first)
       })
       .map((action) => `${action.file}: ${action.name}`)
     expect(offenders).toEqual([])
   })
 
   it('no action reads FormData itself', () => {
+    /* Whitespace allowed around the dot: Prettier breaks a long member chain over lines. */
     const offenders = serverModules
-      .filter((file) => /\b(fd|form|formData|data)\.(get|getAll|has|entries)\(/.test(readFileSync(join(ROOT, file), 'utf8')))
+      .filter((file) =>
+        /\b(fd|form|formData|data)\s*\??\.\s*(get|getAll|has|entries)\s*\(/.test(readFileSync(join(ROOT, file), 'utf8')),
+      )
     expect(offenders).toEqual([])
   })
 
@@ -160,12 +177,11 @@ describe('forms', () => {
     const visit = (child: ts.Node) => {
       if (ts.isJsxOpeningElement(child) || ts.isJsxSelfClosingElement(child)) {
         const tag = child.tagName.getText(source)
-        const type = child.attributes.properties
-          .filter(ts.isJsxAttribute)
-          .find((a) => a.name.getText(source) === 'type')
-          ?.initializer?.getText(source)
+        const type = stringValue(
+          child.attributes.properties.filter(ts.isJsxAttribute).find((a) => a.name.getText(source) === 'type'),
+        )
         if (['textarea', 'select', 'TextInput', 'TextArea', 'Select', 'Checkbox'].includes(tag)) count++
-        else if (tag === 'input' && type !== '"hidden"') count++
+        else if (tag === 'input' && type !== 'hidden') count++
       }
       ts.forEachChild(child, visit)
     }
@@ -175,9 +191,10 @@ describe('forms', () => {
 
   it('every form that posts to an action says what happens on reset', () => {
     const offenders: string[] = []
+    let clientForms = 0
     for (const file of [...files('app', /\.tsx$/), ...files('components', /\.tsx$/)]) {
       const source = parse(file)
-      const client = source.text.trimStart().startsWith("'use client'")
+      const client = hasDirective(source, 'use client')
       const visit = (node: ts.Node) => {
         const opening = ts.isJsxElement(node) ? node.openingElement : ts.isJsxSelfClosingElement(node) ? node : null
         if (opening && opening.tagName.getText(source) === 'form') {
@@ -185,12 +202,13 @@ describe('forms', () => {
           const attr = (name: string) => attributes.find((a) => a.name.getText(source) === name)
           /* `method="get"` is a search form: the browser navigates, nothing is
              reset. Only a form with an action expression posts to an action. */
-          const get = attr('method')?.initializer?.getText(source) === '"get"'
+          const get = stringValue(attr('method'))?.toLowerCase() === 'get'
           const action = attr('action')
           const posts = !get && action?.initializer !== undefined && ts.isJsxExpression(action.initializer)
           /* A server component can't take an event handler; its forms must be
              buttons over hidden fields, with nothing typed to lose. */
           const covered = client ? attr('onReset') !== undefined : typedFields(node, source) === 0
+          if (posts && client) clientForms++
           if (posts && !covered) {
             const line = source.getLineAndCharacterOfPosition(node.getStart()).line + 1
             offenders.push(`${file}:${line}`)
@@ -201,5 +219,8 @@ describe('forms', () => {
       visit(source)
     }
     expect(offenders).toEqual([])
+    /* Client forms were found at all, so a change that stops 'use client' being recognised
+       (every client form then reads as a server one) fails here instead of passing quietly. */
+    expect(clientForms).toBeGreaterThan(0)
   })
 })

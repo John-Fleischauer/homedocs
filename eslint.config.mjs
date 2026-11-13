@@ -1,6 +1,7 @@
 // eslint-config-next 16 ships native flat configs, so no eslintrc compat bridge.
 import coreWebVitals from 'eslint-config-next/core-web-vitals'
 import typescript from 'eslint-config-next/typescript'
+import prettier from 'eslint-config-prettier'
 
 const config = [
   /* `.claude/` is agent scratch space — worktrees with their own `.next/` build
@@ -12,6 +13,8 @@ const config = [
   { ignores: ['.next/**', '.next-*/**', '.claude/**', 'node_modules/**', 'dist/**', 'next-env.d.ts'] },
   ...coreWebVitals,
   ...typescript,
+  // Last, so it turns off every stylistic rule above that would fight Prettier.
+  prettier,
 ]
 
 export default config

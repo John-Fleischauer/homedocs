@@ -29,6 +29,9 @@ pnpm dev                     # http://localhost:3000 → /setup
 `pnpm test` runs Vitest against Postgres in Docker. `pnpm e2e` runs Playwright, which starts its own
 database and server.
 
+`pnpm format` rewrites files with Prettier (default settings; `.prettierignore` says what it
+skips).
+
 ## Docs
 
 - [Architecture](docs/ARCHITECTURE.md): the model, the guard table, search, the guide's location gate,
