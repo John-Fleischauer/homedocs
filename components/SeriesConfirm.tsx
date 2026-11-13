@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { buttonClass } from './ui/Button'
 
 type Ask = { changes: string[]; then: () => void }
@@ -22,6 +22,8 @@ export function useSeriesConfirm(): [ask: (changes: string[], then: () => void) 
 function SeriesDialog({ asking, close }: { asking: Ask | null; close: () => void }) {
   const ref = useRef<HTMLDialogElement>(null)
   const cancelRef = useRef<HTMLButtonElement>(null)
+  /* One of these per list on a project page, so the heading's id is unique. */
+  const titleId = useId()
 
   useEffect(() => {
     const dialog = ref.current
@@ -35,18 +37,18 @@ function SeriesDialog({ asking, close }: { asking: Ask | null; close: () => void
   return (
     <dialog
       ref={ref}
-      aria-labelledby="series-confirm-title"
+      aria-labelledby={titleId}
       onClose={close}
       className="m-auto w-[min(28rem,calc(100%-2rem))] rounded-card border border-line bg-card p-0 text-ink shadow-lg"
     >
       <div className="flex flex-col gap-3 p-4">
-        <h2 id="series-confirm-title" className="text-[17px] font-semibold">
+        <h2 id={titleId} className="text-[17px] font-semibold">
           Update the Series?
         </h2>
         <p className="text-sm text-ink-3">Next time starts from this</p>
         <ul className="flex list-disc flex-col gap-1 pl-5 text-[15px] text-ink-2">
-          {asking?.changes.map((change) => (
-            <li key={change} className="wrap-anywhere">
+          {asking?.changes.map((change, i) => (
+            <li key={i} className="wrap-anywhere">
               {change}
             </li>
           ))}

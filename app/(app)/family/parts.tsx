@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState, useState, useTransition } from 'react'
+import { InlineError } from '@/components/useRun'
 import { CopyButton } from '@/components/CopyButton'
 import { ActionForm, type FormAction } from '@/components/ActionForm'
 import { buttonClass } from '@/components/ui/Button'
@@ -131,8 +132,14 @@ export function RoleSelect({
 }) {
   const [pending, start] = useTransition()
   const [error, setError] = useState<string | null>(null)
-  /* Controlled, so a refused change snaps back to the role that stands. */
+  /* Controlled, so a refused change snaps back to the role that stands, and
+     follows the role when a revalidation brings a new one. */
   const [shown, setShown] = useState(role)
+  const [was, setWas] = useState(role)
+  if (role !== was) {
+    setWas(role)
+    setShown(role)
+  }
   return (
     <span className="flex shrink-0 flex-col items-end gap-1">
       <Select
@@ -157,11 +164,7 @@ export function RoleSelect({
         <option value="member">Member</option>
         <option value="viewer">Viewer</option>
       </Select>
-      {error ? (
-        <span role="alert" className="max-w-48 text-right text-sm text-danger">
-          {error}
-        </span>
-      ) : null}
+      <InlineError className="max-w-56 text-right">{error}</InlineError>
     </span>
   )
 }

@@ -5,10 +5,10 @@ import { ActionForm, type FormAction } from '@/components/ActionForm'
 import { DeleteButton } from '@/components/DeleteButton'
 import { buttonClass } from '@/components/ui/Button'
 import { Pill } from '@/components/ui/Card'
-import { Checkbox, Field, FormError, Select, SubmitButton, TextArea, TextInput } from '@/components/ui/Field'
+import { Checkbox, Field, Select, SubmitButton, TextArea, TextInput } from '@/components/ui/Field'
 import { Icon } from '@/components/ui/icons'
 import type { ActionResult } from '@/lib/web/action'
-import { useRun } from '../materials'
+import { InlineError, useRun } from '@/components/useRun'
 import { useSeriesConfirm } from '@/components/SeriesConfirm'
 import type { ItemView, MissingView } from '../series-view'
 
@@ -91,7 +91,7 @@ export function Checklist({
   copyHere?: (seriesRowId: string) => Promise<ActionResult>
   dropFromSeries?: (seriesRowId: string) => Promise<ActionResult>
 }) {
-  const [pending, run, error] = useRun()
+  const { pending, run, error, at } = useRun()
   const [ask, dialog] = useSeriesConfirm()
   const [details, setDetails] = useState(false)
   const link = 'inline-flex min-h-11 items-center text-sm font-medium text-accent'
@@ -112,7 +112,7 @@ export function Checklist({
                       aria-label={item.text}
                       onChange={(e) => {
                         const done = e.target.checked
-                        run(async () => (await toggle(item.id, done)) as ActionResult)
+                        run(() => toggle(item.id, done), item.id)
                       }}
                       className="h-6 w-6 shrink-0 accent-[var(--color-accent)]"
                     />
@@ -133,22 +133,23 @@ export function Checklist({
                 {canEdit && (differs || item.oneOff) ? (
                   <div className="flex flex-wrap gap-x-4 pl-9">
                     {differs && sendToSeries ? (
-                      <button type="button" disabled={pending} className={link} onClick={() => ask([item.change!], () => run(() => sendToSeries(item.id)))}>
+                      <button type="button" disabled={pending} className={link} onClick={() => ask([item.change!], () => run(() => sendToSeries(item.id), item.id))}>
                         Update Series
                       </button>
                     ) : null}
                     {item.status === 'added' && setOneOff ? (
-                      <button type="button" disabled={pending} className={link} onClick={() => run(() => setOneOff(item.id, true))}>
+                      <button type="button" disabled={pending} className={link} onClick={() => run(() => setOneOff(item.id, true), item.id)}>
                         Only This Project
                       </button>
                     ) : null}
                     {item.oneOff && setOneOff ? (
-                      <button type="button" disabled={pending} className={link} onClick={() => run(() => setOneOff(item.id, false))}>
+                      <button type="button" disabled={pending} className={link} onClick={() => run(() => setOneOff(item.id, false), item.id)}>
                         Not Just This Project
                       </button>
                     ) : null}
                   </div>
                 ) : null}
+                <InlineError className="pb-1">{at === item.id ? error : null}</InlineError>
               </li>
             )
           })}
@@ -160,14 +161,15 @@ export function Checklist({
               </div>
               {canEdit && copyHere && dropFromSeries ? (
                 <div className="flex flex-wrap gap-x-4">
-                  <button type="button" disabled={pending} className={link} onClick={() => run(() => copyHere(m.id))}>
+                  <button type="button" disabled={pending} className={link} onClick={() => run(() => copyHere(m.id), m.id)}>
                     Add Here
                   </button>
-                  <button type="button" disabled={pending} className={link} onClick={() => ask([m.change], () => run(() => dropFromSeries(m.id)))}>
+                  <button type="button" disabled={pending} className={link} onClick={() => ask([m.change], () => run(() => dropFromSeries(m.id), m.id))}>
                     Remove from Series
                   </button>
                 </div>
               ) : null}
+              <InlineError>{at === m.id ? error : null}</InlineError>
             </li>
           ))}
         </ul>
@@ -207,7 +209,7 @@ export function Checklist({
           )}
         </ActionForm>
       ) : null}
-      <FormError>{error}</FormError>
+      <InlineError>{at ? null : error}</InlineError>
       {dialog}
     </div>
   )

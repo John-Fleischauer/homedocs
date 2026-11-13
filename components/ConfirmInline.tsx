@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition, type ReactNode } from 'react'
 import { buttonClass, type Variant } from './ui/Button'
+import { InlineError } from './useRun'
 
 /**
  * A button that asks in place before it acts (standards design.md, Actions):
@@ -20,6 +21,7 @@ export function ConfirmInline({
   variant = 'danger',
   note,
   pendingText,
+  openClass = '',
 }: {
   action: () => Promise<unknown>
   /** The verb, on the question and the confirm button ("Delete", "Turn Off"). */
@@ -36,6 +38,8 @@ export function ConfirmInline({
   /** One line under the question: what can or can't be had back. */
   note?: string
   pendingText?: string
+  /** Extra classes on the open question, e.g. a surface where it overlays a photo. */
+  openClass?: string
 }) {
   const [pending, start] = useTransition()
   const [open, setOpen] = useState(false)
@@ -57,20 +61,33 @@ export function ConfirmInline({
     }
   }, [open, pending])
 
-  /* A pointer listener rather than blur: Safari doesn't focus a button it
-     taps, so a blur would close the group before the tap on the verb arrived. */
+  /* A tap outside cancels: pointer events rather than blur, because Safari
+     doesn't focus a button it taps, so a blur would close the group before the
+     tap on the verb arrived. A tap, not a touch: a drag that scrolls the page
+     to reread the record (moving more than a few pixels) leaves it open. */
   useEffect(() => {
     if (!open) return
-    const onPointerDown = (event: PointerEvent) => {
-      if (!groupRef.current?.contains(event.target as Node)) setOpen(false)
+    let start: { x: number; y: number; outside: boolean } | null = null
+    const onDown = (event: PointerEvent) => {
+      start = { x: event.clientX, y: event.clientY, outside: !groupRef.current?.contains(event.target as Node) }
     }
-    document.addEventListener('pointerdown', onPointerDown)
-    return () => document.removeEventListener('pointerdown', onPointerDown)
+    const onUp = (event: PointerEvent) => {
+      if (start?.outside && Math.hypot(event.clientX - start.x, event.clientY - start.y) < 10) setOpen(false)
+      start = null
+    }
+    document.addEventListener('pointerdown', onDown)
+    document.addEventListener('pointerup', onUp)
+    return () => {
+      document.removeEventListener('pointerdown', onDown)
+      document.removeEventListener('pointerup', onUp)
+    }
   }, [open])
 
   if (!open) {
+    /* The refusal sits under the trigger, in one box, so it never becomes an
+       extra item in the caller's row. */
     return (
-      <>
+      <span className="inline-flex max-w-full flex-col items-end gap-1">
         <button
           ref={triggerRef}
           type="button"
@@ -85,12 +102,8 @@ export function ConfirmInline({
         >
           {pending && pendingText ? pendingText : (trigger ?? verb)}
         </button>
-        {error ? (
-          <span role="alert" className="text-sm text-danger">
-            {error}
-          </span>
-        ) : null}
-      </>
+        <InlineError className="max-w-56 text-right">{error}</InlineError>
+      </span>
     )
   }
   return (
@@ -98,7 +111,7 @@ export function ConfirmInline({
       ref={groupRef}
       role="group"
       aria-label={subject ? `${verb} ${subject}?` : `${verb}?`}
-      className="inline-flex max-w-full flex-wrap items-center justify-end gap-2"
+      className={`inline-flex max-w-full flex-wrap items-center justify-end gap-2 ${openClass}`}
       onKeyDown={(event) => {
         if (event.key === 'Escape') setOpen(false)
       }}

@@ -12,6 +12,8 @@ export function DeleteButton({
   variant = 'danger',
   compact = false,
   recoverable = true,
+  openClass,
+  className = '',
 }: {
   action: () => Promise<unknown>
   what: string
@@ -20,12 +22,16 @@ export function DeleteButton({
   compact?: boolean
   /** False when there is no Recently Deleted to bring it back from. */
   recoverable?: boolean
+  openClass?: string
+  /** Extra classes on the trigger. */
+  className?: string
 }) {
   return (
     <ConfirmInline
       action={action}
       verb={label}
       subject={what}
+      openClass={openClass}
       variant="danger"
       note={recoverable ? 'Restorable from Recently Deleted' : undefined}
       pendingText={compact ? undefined : 'Deleting…'}
@@ -33,8 +39,8 @@ export function DeleteButton({
       triggerLabel={compact ? `${label} ${what}` : undefined}
       triggerClass={
         compact
-          ? 'flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink-3 hover:bg-sunk hover:text-danger'
-          : buttonClass(variant)
+          ? 'flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink-3 hover:bg-sunk hover:text-danger ' + className
+          : buttonClass(variant, className)
       }
     />
   )

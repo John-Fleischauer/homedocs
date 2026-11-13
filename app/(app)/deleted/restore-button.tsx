@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { buttonClass } from '@/components/ui/Button'
+import { InlineError } from '@/components/useRun'
 import { restoreAction } from './actions'
 
 export function RestoreButton({ kind, id }: { kind: string; id: string }) {
@@ -23,11 +24,7 @@ export function RestoreButton({ kind, id }: { kind: string; id: string }) {
       >
         {pending ? 'Restoring…' : 'Restore'}
       </button>
-      {error ? (
-        <span role="alert" className="max-w-48 text-right text-sm text-danger">
-          {error}
-        </span>
-      ) : null}
+      <InlineError className="max-w-56 text-right">{error}</InlineError>
     </span>
   )
 }

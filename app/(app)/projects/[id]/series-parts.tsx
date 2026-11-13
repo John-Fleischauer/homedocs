@@ -7,9 +7,8 @@ import type { NoteRow } from '@/lib/notes/notes'
 import type { ActionResult } from '@/lib/web/action'
 import { formatDay } from '@/lib/web/format'
 import { ConfirmInline } from '@/components/ConfirmInline'
-import { FormError } from '@/components/ui/Field'
 import { useSeriesConfirm } from '@/components/SeriesConfirm'
-import { useRun } from '../materials'
+import { InlineError, useRun } from '@/components/useRun'
 import { addLessonToHowToAction } from '../actions'
 
 /* The series' one "how we do it" — read-only here, edited on the series so it can't drift. */
@@ -36,7 +35,7 @@ export function HowTo({ seriesId, text, canEdit }: { seriesId: string; text: str
 
 /* Last round's "next time" lessons, each one tap from becoming part of the how-to. */
 export function LastTime({ lessons, seenAt, canEdit, howTo }: { lessons: NoteRow[]; seenAt: string; canEdit: boolean; howTo: string }) {
-  const [pending, run, error] = useRun()
+  const { pending, run, error, at } = useRun()
   const [ask, dialog] = useSeriesConfirm()
   if (lessons.length === 0) return null
   return (
@@ -56,17 +55,17 @@ export function LastTime({ lessons, seenAt, canEdit, howTo }: { lessons: NoteRow
                 className="mt-1 inline-flex min-h-11 items-center text-sm font-medium underline"
                 onClick={() =>
                   ask([`Instructions gain “${note.nextTime}”, shown on every project in the series`], () =>
-                    run(() => addLessonToHowToAction(note.id, seenAt)),
+                    run(() => addLessonToHowToAction(note.id, seenAt), note.id),
                   )
                 }
               >
                 Add to Instructions
               </button>
             ) : null}
+            <InlineError>{at === note.id ? error : null}</InlineError>
           </span>
         </div>
       ))}
-      <FormError>{error}</FormError>
       {dialog}
     </div>
   )
