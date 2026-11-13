@@ -14,9 +14,9 @@ command -v drizzle-kit >/dev/null 2>&1 \
 saved=$(mktemp -d)
 restore() {
   rc=$?
-  # Ignore Ctrl-C and TERM from here on: an interrupt between removing the directory and
-  # moving the copy in would leave no migrations directory at all.
-  trap '' INT TERM
+  # Ignore interrupts from here on: one between removing the directory and moving the
+  # copy in would leave no migrations directory at all.
+  trap '' HUP INT TERM
   # Only once the copy is complete, so a failed copy never deletes the original. The copy
   # goes back beside the directory first and is swapped in with mv, so a failed copy
   # leaves the directory as it was. The saved copy is removed only once it's back in
@@ -27,7 +27,8 @@ restore() {
       && rm -rf "$dir" && mv "$dir.restoring" "$dir"; then
       rm -rf "$saved"
     else
-      rm -rf "$dir.restoring" || true
+      # The copy beside it stays only if the directory itself is gone.
+      if [ -d "$dir" ]; then rm -rf "$dir.restoring" || true; fi
       echo "db:drift: couldn't restore $dir; the original is in $saved/migrations." >&2
       [ "$rc" -ne 0 ] || rc=1
     fi
@@ -37,6 +38,7 @@ restore() {
   exit "$rc"
 }
 trap restore EXIT
+trap 'exit 129' HUP
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
