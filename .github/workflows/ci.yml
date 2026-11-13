@@ -12,7 +12,7 @@ on:
     branches: [main]
     # A docs-only direct push (allowed by workflow.md) doesn't rebuild or redeploy.
     # Push only: PRs always run, because merge-on-green needs a green run to merge.
-    paths-ignore: ['docs/**', '**/*.md']
+    paths-ignore: ["docs/**", "**/*.md"]
   pull_request:
     # `labeled`: adding `automerge` to a PR whose checks already passed merges it.
     types: [opened, synchronize, reopened, labeled, ready_for_review]
@@ -24,7 +24,7 @@ on:
       # and security skip if it's still main's head. Leave it empty by hand.
       tested:
         type: string
-        default: ''
+        default: ""
 
 # Superseded runs are cancelled on a PR, never on main. On main a running build always
 # finishes; a queued one can still be replaced by a newer commit's run (GitHub keeps one
@@ -95,12 +95,12 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      actions: write   # dispatches this workflow on main after merging
-      checks: read     # waits for app checks (GitGuardian); private repos need it
+      actions: write # dispatches this workflow on main after merging
+      checks: read # waits for app checks (GitGuardian); private repos need it
     uses: ki4hrg/standards/.github/workflows/merge-on-green.yml@v1
     with:
       # paths-ignore above doesn't apply to the dispatch after a merge; this does.
-      skip-dispatch-paths: 'docs/* *.md'
+      skip-dispatch-paths: "docs/* *.md"
       # On `labeled`, merge only if these passed on this commit in another run.
       # Names must be jobs that call a workflow, hence e2e.yml (docs/core/workflow.md, Merging).
       require-jobs: check security image e2e
