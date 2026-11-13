@@ -14,7 +14,7 @@
 
 import { OAuthError } from '@/lib/oauth/errors'
 import { revokeToken } from '@/lib/oauth/grants'
-import { corsHeaders, firstIssue, formFields, oauthJson, oauthParam, preflight, readOAuthBody, serverError } from '@/lib/oauth/http'
+import { corsHeaders, firstIssue, oauthError, formFields, oauthJson, oauthParam, preflight, readOAuthBody, serverError } from '@/lib/oauth/http'
 import { z } from 'zod'
 import { db } from '@/lib/db'
 
@@ -28,9 +28,7 @@ const revokeRequest = z.object({
   token_type_hint: oauthParam('token_type_hint'),
 })
 
-function refuse(err: OAuthError): Response {
-  return oauthJson(err.body(), { status: err.status })
-}
+const refuse = oauthError
 
 export async function POST(request: Request) {
   const body = await readOAuthBody(request, 'invalid_request')

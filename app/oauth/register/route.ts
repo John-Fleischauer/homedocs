@@ -17,7 +17,7 @@
 import { z } from 'zod'
 import { MAX_REDIRECT_URIS, registerClient, registrationResponse } from '@/lib/oauth/clients'
 import { OAuthError } from '@/lib/oauth/errors'
-import { corsHeaders, oauthJson, preflight, readOAuthBody, serverError } from '@/lib/oauth/http'
+import { corsHeaders, oauthError, oauthJson, preflight, readOAuthBody, serverError } from '@/lib/oauth/http'
 import { clientAddress, fixedWindow } from '@/lib/oauth/rate-limit'
 import { db } from '@/lib/db'
 
@@ -119,7 +119,7 @@ function refused(err: OAuthError, payload: unknown): Response {
     clientName: typeof body.client_name === 'string' ? body.client_name.slice(0, 200) : null,
     redirectUris: uris?.map((uri) => (typeof uri === 'string' ? uri.slice(0, 300) : typeof uri)),
   })
-  return oauthJson(err.body(), { status: err.status })
+  return oauthError(err)
 }
 
 export async function OPTIONS() {

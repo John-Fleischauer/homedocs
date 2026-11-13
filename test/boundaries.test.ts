@@ -74,10 +74,17 @@ describe('the session-starting actions parse first', () => {
     expect(await db.select().from(users)).toEqual([])
   })
 
-  it('joining refuses a token that is not one', async () => {
+  it('joining refuses a token that is not one, and a field in its own words', async () => {
     expect(await joinAction('../../etc', {}, form({ password: 'long enough password' }))).toEqual({
       error: 'This link has expired or was already used. Ask for a new one.',
     })
+    expect((await joinAction('a'.repeat(43), {}, form({ password: 'x'.repeat(1_001) }))).error).toMatch(/too long/)
+  })
+
+  it('sign-in with a very long way back still signs in (safeNext drops it), rather than refusing', async () => {
+    await household()
+    const answer = await loginAction({}, form({ email: 'nobody@example.test', password: 'wrong password', next: `/oauth/authorize?state=${'x'.repeat(50_000)}` }))
+    expect(answer.error).toMatch(/do not match/)
   })
 
   it('the PIN unlock refuses a token that is not one before looking anything up', async () => {
@@ -121,6 +128,32 @@ describe('POST /api/files', () => {
     const res = await upload(uploadRequest(body, { 'content-type': none.headers.get('content-type')!, 'content-length': String(body.byteLength) }))
     expect(res.status).toBe(400)
     expect(await res.json()).toEqual({ error: 'Choose a file.' })
+  })
+
+  it('stores a photo sent as the browser sends it', async () => {
+    const { mkdtempSync } = await import('node:fs')
+    const { tmpdir } = await import('node:os')
+    const { join } = await import('node:path')
+    process.env.DATA_DIR = mkdtempSync(join(tmpdir(), 'homedocs-upload-'))
+    const home = await signedIn()
+    const { spaces } = await import('../lib/db/schema')
+    const [place] = await db.insert(spaces).values({ propertyId: home.scope.propertyId, name: 'Attic' }).returning()
+    const sharp = (await import('sharp')).default
+    const png = await sharp({ create: { width: 4, height: 4, channels: 3, background: '#888' } }).png().toBuffer()
+    const browser = new FormData()
+    browser.append('file', new File([new Uint8Array(png)], 'a.png', { type: 'image/png' }))
+    browser.append('caption', 'The hatch')
+    const encoded = new Request('https://x.test', { method: 'POST', body: browser })
+    const body = new Uint8Array(await encoded.arrayBuffer())
+    const res = await upload(
+      new Request(`https://homedocs.example.test/api/files?owner=space:${place!.id}`, {
+        method: 'POST',
+        headers: { 'content-type': encoded.headers.get('content-type')!, 'content-length': String(body.byteLength) },
+        body,
+      }),
+    )
+    expect(res.status).toBe(200)
+    expect(await res.json()).toMatchObject({ id: expect.any(String), sha256: expect.stringMatching(/^[a-f0-9]{64}$/) })
   })
 
   it('is for members: a viewer gets 403 before the body is read', async () => {

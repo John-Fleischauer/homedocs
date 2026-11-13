@@ -11,7 +11,8 @@
  * lived; the row's expires_at is what decides.
  */
 
-import { and, eq, gt, isNull, lt } from 'drizzle-orm'
+import { and, eq, gt, lt } from 'drizzle-orm'
+import { liveAccount } from './live'
 import { db } from '../db'
 import { sessions, users } from '../db/schema'
 import type { Executor, Role } from '../core/types'
@@ -75,8 +76,8 @@ export async function resolveSession(
     .from(sessions)
     .innerJoin(users, eq(users.id, sessions.userId))
     /* Nor does an account awaiting placement resolve: it has no access until an
-       admin lets it in, whatever session might exist for it. */
-    .where(and(eq(sessions.id, id), gt(sessions.expiresAt, now), isNull(users.deletedAt), eq(users.awaitingPlacement, false)))
+       admin lets it in, whatever session might exist for it (liveAccount). */
+    .where(and(eq(sessions.id, id), gt(sessions.expiresAt, now), liveAccount()))
     .limit(1)
 
   if (!row) return null

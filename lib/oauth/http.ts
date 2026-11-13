@@ -18,7 +18,7 @@
 
 import { z } from 'zod'
 import { readBody } from '../web/body'
-import { collect } from '../web/fields'
+import { collect, queryParam } from '../web/fields'
 import { OAuthError, type OAuthErrorCode } from './errors'
 
 const CORS_HEADERS: Record<string, string> = {
@@ -89,10 +89,12 @@ export function formFields(text: string): Record<string, string | string[]> {
 
 /** One OAuth parameter: text, sent at most once, of a sane length. */
 export function oauthParam(name: string) {
-  return z
-    .string({ error: `${name} must be sent once, as text` })
-    .max(4_096, { error: `${name} is too long` })
-    .optional()
+  return queryParam({ once: `${name} must be sent once, as text`, long: `${name} is too long` })
+}
+
+/** A refusal, as the specification's JSON error body with its status. */
+export function oauthError(err: OAuthError): Response {
+  return oauthJson(err.body(), { status: err.status })
 }
 
 /** The first refusal a schema found, as the description of an `invalid_request`. */

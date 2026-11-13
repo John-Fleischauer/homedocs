@@ -46,6 +46,8 @@ export type OidcRefusal =
   | 'other-identity'
   /** The address belongs to an account, and the provider has not verified it. */
   | 'unverified-email'
+  /** No account matched, and the provider has not verified the address to make one with. */
+  | 'unverified-new-email'
   /** No account matched, and there is no address to create one with. */
   | 'no-email'
   /** The account exists but an admin has not let it in yet. */
@@ -120,6 +122,10 @@ export async function resolveOidcAccount(
        sets the house up chooses to, rather than whoever reaches the provider
        first. */
     if (await needsSetup(tx)) return { kind: 'refused', reason: 'setup' }
+
+    /* Only on an address the provider vouches for (or one the deployment
+       trusts): the account's address is what an admin recognises them by. */
+    if (!claims.emailVerified && !options.trustEmail) return { kind: 'refused', reason: 'unverified-new-email' }
 
     /* `viewer` is only what the row needs to be valid, and the least it could
        mean: an awaiting account gets no session or token, so the role means

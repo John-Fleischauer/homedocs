@@ -15,13 +15,13 @@ import { safeNext } from '@/lib/auth/redirects'
 import { SESSION_COOKIE, cookieOptions, createSession } from '@/lib/auth/sessions'
 import { absoluteUrl } from '@/lib/web/urls'
 import { clientIp } from '@/lib/web/client-ip'
-import { collect } from '@/lib/web/fields'
+import { collect, queryParam } from '@/lib/web/fields'
 import { z } from 'zod'
 import { loginUrl } from '../../login-url'
 
 export const dynamic = 'force-dynamic'
 
-const once = z.string().max(4_096).optional()
+const once = queryParam()
 const callbackQuery = z.object({ code: once, state: once, error: once, error_description: once, iss: once, session_state: once })
 
 export async function GET(request: NextRequest) {

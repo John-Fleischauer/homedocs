@@ -19,6 +19,7 @@ import { and, desc, eq, gt, isNull, lt, sql } from 'drizzle-orm'
 import { generateToken, hashToken } from '../auth/tokens'
 import type { Executor, Role } from '../core/types'
 import { oauthClients, oauthTokens, users } from '../db/schema'
+import { liveAccount } from '../auth/live'
 import {
   ACCESS_TOKEN_TTL_SECONDS,
   REFRESH_TOKEN_TTL_SECONDS,
@@ -141,9 +142,8 @@ export async function resolveBearer(
         // A soft-deleted user's tokens stop working at once, exactly as their
         // sessions do. A join that forgot this would leave a deactivated
         // account with a live connector for up to an hour.
-        isNull(users.deletedAt),
-        // An account awaiting placement has no access, by token or otherwise.
-        eq(users.awaitingPlacement, false),
+        // And one awaiting placement has no access, by token or otherwise.
+        liveAccount(),
       ),
     )
     .limit(1)

@@ -19,6 +19,7 @@ import { absoluteUrl } from '../web/urls'
 import { hashPassword } from './password'
 import { findUserByEmail, insertUser, setPassword, validateNewUser } from './users'
 import { generateToken, hashToken } from './tokens'
+import { liveAccount } from './live'
 import type { AuthUser } from './sessions'
 
 export const INVITE_TTL_DAYS = 7
@@ -64,7 +65,7 @@ export async function createReset(
     .from(users)
     /* Not for an account awaiting placement: a password would be a way in that
        skips the admin letting them in. */
-    .where(and(eq(users.id, userId), isNull(users.deletedAt), eq(users.awaitingPlacement, false)))
+    .where(and(eq(users.id, userId), liveAccount()))
   if (!target) throw new ValidationError('No such person.')
 
   const token = generateToken()
@@ -124,7 +125,7 @@ export async function redeemInvite(
       const [user] = await tx
         .select({ id: users.id, email: users.email, displayName: users.displayName, role: users.role })
         .from(users)
-        .where(and(eq(users.id, invite.userId!), isNull(users.deletedAt), eq(users.awaitingPlacement, false)))
+        .where(and(eq(users.id, invite.userId!), liveAccount()))
       if (!user) throw new ValidationError('This account no longer exists.')
       await claim(tx, invite.id, user.id)
       await setPassword(user.id, input.password, { userId: user.id, role: user.role, source: 'web', requestId: crypto.randomUUID() }, tx)
@@ -136,9 +137,11 @@ export async function redeemInvite(
       displayName: input.displayName ?? '',
       password: input.password,
     })
-    if (await findUserByEmail(email, tx)) {
-      throw new ValidationError('That email address already has an account. Sign in instead.')
+    const holder = await findUserByEmail(email, tx)
+    if (holder?.awaitingPlacement) {
+      throw new ValidationError('You’re already waiting to be let in. Ask an admin to let you in from Family.')
     }
+    if (holder) throw new ValidationError('That email address already has an account. Sign in instead.')
     const passwordHash = await hashPassword(input.password)
     const user = await insertUser(tx, { email, displayName, passwordHash, role: invite.role }, null)
     await claim(tx, invite.id, user.id)

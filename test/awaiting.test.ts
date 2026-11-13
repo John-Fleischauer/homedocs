@@ -98,6 +98,14 @@ describe('a sign-on that matches nobody', () => {
     expect(await db.select().from(users)).toEqual([])
   })
 
+  it('is only made on an address the provider verified, or one the deployment trusts', async () => {
+    await household()
+    const unverified = { ...claims('unverified@example.test'), emailVerified: false }
+    expect(await resolveOidcAccount(unverified, options, db)).toEqual({ kind: 'refused', reason: 'unverified-new-email' })
+    expect(await db.select().from(users).where(eq(users.email, 'unverified@example.test'))).toEqual([])
+    expect(await resolveOidcAccount(unverified, { trustEmail: true }, db)).toEqual({ kind: 'refused', reason: 'awaiting-placement' })
+  })
+
   it('stays off the family list and on the awaiting one', async () => {
     await household()
     const row = await awaitingAccount()
@@ -231,6 +239,16 @@ describe('placing it', () => {
     expect(await addMemberAction({}, form({ displayName: 'New', email: 'new@example.test', role: 'viewer' }))).toMatchObject({ ok: true })
     const [back] = await db.select().from(users).where(eq(users.id, row.id))
     expect(back).toMatchObject({ awaitingPlacement: false, deletedAt: null, role: 'viewer' })
+  })
+
+  it('an invite for a waiting address says they’re waiting, not “sign in instead”', async () => {
+    const { admin } = await household()
+    await awaitingAccount()
+    const { createInvite, redeemInvite } = await import('../lib/auth/invites')
+    const { token } = await createInvite({ role: 'member', label: 'New' }, admin, db)
+    await expect(redeemInvite(token, { email: 'new@example.test', displayName: 'New', password: 'long enough password' }, db)).rejects.toThrow(
+      /already waiting/,
+    )
   })
 
   it('Add Person points at the awaiting list rather than making a second account', async () => {

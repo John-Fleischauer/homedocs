@@ -21,6 +21,7 @@
  */
 
 import { z } from 'zod'
+import { queryParam } from '../web/fields'
 import type { RegisteredClient } from './clients'
 import { findClient, redirectUriRegistered } from './clients'
 import { assertUsableChallenge } from './codes'
@@ -76,7 +77,7 @@ const AUTHORIZE_PARAMS = [
 /* RFC 6749 §3.1: a parameter sent twice is a malformed request, refused like
    any other that doesn't parse. Empty reads as absent, as the form's `read`
    did. */
-const param = z.preprocess((value) => (value === '' ? undefined : value), z.string().max(4_096).optional())
+const param = z.preprocess((value) => (value === '' ? undefined : value), queryParam())
 
 const authorizeParams = z.object(
   Object.fromEntries(AUTHORIZE_PARAMS.map((key) => [key, param])) as Record<(typeof AUTHORIZE_PARAMS)[number], typeof param>,

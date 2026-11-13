@@ -16,7 +16,7 @@ import { findClient } from '@/lib/oauth/clients'
 import { parseScope } from '@/lib/oauth/config'
 import { OAuthError } from '@/lib/oauth/errors'
 import { issueTokenPair, revokeGrant, rotateRefreshToken } from '@/lib/oauth/grants'
-import { corsHeaders, firstIssue, formFields, oauthJson, oauthParam, preflight, readOAuthBody, serverError } from '@/lib/oauth/http'
+import { corsHeaders, firstIssue, oauthError, formFields, oauthJson, oauthParam, preflight, readOAuthBody, serverError } from '@/lib/oauth/http'
 import { z } from 'zod'
 import { db } from '@/lib/db'
 
@@ -157,9 +157,7 @@ function tokenResponse(pair: {
   })
 }
 
-function fail(err: OAuthError): Response {
-  return oauthJson(err.body(), { status: err.status })
-}
+const fail = oauthError
 
 export async function OPTIONS() {
   return preflight()

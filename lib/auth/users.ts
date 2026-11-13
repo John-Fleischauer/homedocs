@@ -21,6 +21,7 @@ import { seedSystems } from '../systems/systems'
 import { hashPassword } from './password'
 import { passwordProblem } from './password-policy'
 import { revokeAllSessions, type AuthUser } from './sessions'
+import { liveAccount } from './live'
 
 export type CreateUserInput = {
   email: string
@@ -52,7 +53,7 @@ export async function getUser(id: string, exec: Executor = db): Promise<AuthUser
   const [row] = await exec
     .select({ id: users.id, email: users.email, displayName: users.displayName, role: users.role })
     .from(users)
-    .where(and(eq(users.id, id), isNull(users.deletedAt), eq(users.awaitingPlacement, false)))
+    .where(and(eq(users.id, id), liveAccount()))
     .limit(1)
   return row
 }
@@ -69,7 +70,7 @@ export async function listUsers(exec: Executor = db) {
       createdAt: users.createdAt,
     })
     .from(users)
-    .where(and(isNull(users.deletedAt), eq(users.awaitingPlacement, false)))
+    .where(liveAccount())
     .orderBy(asc(users.displayName))
 }
 

@@ -15,8 +15,9 @@ export const DEFAULT_AFTER_LOGIN = '/'
 
 export function safeNext(raw: string | null | undefined): string {
   if (!raw) return DEFAULT_AFTER_LOGIN
-  /* Room for a whole /oauth/authorize request, and no more. */
-  if (raw.length > 40_000) return DEFAULT_AFTER_LOGIN
+  /* Room for a whole /oauth/authorize request (eight parameters of up to 4 KB,
+     percent-encoded), and no more. */
+  if (raw.length > 120_000) return DEFAULT_AFTER_LOGIN
 
   /* Must be a path on this origin. Rejecting anything that does not start with
      a single slash covers the whole family at once: absolute URLs

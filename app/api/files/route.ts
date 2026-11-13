@@ -44,7 +44,8 @@ export async function POST(request: Request) {
 
   let form: FormData
   try {
-    form = await new Response(new Uint8Array(body.bytes), { headers: { 'content-type': request.headers.get('content-type') ?? '' } }).formData()
+    /* The same bytes, not a copy: Buffer.concat's result is a plain ArrayBuffer-backed view. */
+    form = await new Response(body.bytes as Uint8Array<ArrayBuffer>, { headers: { 'content-type': request.headers.get('content-type') ?? '' } }).formData()
   } catch {
     return Response.json({ error: 'The upload did not arrive in one piece. Try again.' }, { status: 400 })
   }

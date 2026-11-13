@@ -38,13 +38,14 @@ const setupForm = z.object({ email: text(320), displayName: text(200), password:
 const loginForm = z.object({
   email: text(320),
   password: raw(1_000),
-  /* Room for a whole /oauth/authorize URL, which is carried in `next`. */
-  next: text(40_000),
+  /* Room for a whole /oauth/authorize URL, which is carried in `next`; safeNext
+     drops anything longer rather than refusing the sign-in. */
+  next: text(1_000_000),
 })
 
 /* The link token: base64url, as generateToken makes it. */
 const inviteToken = z.string().regex(/^[A-Za-z0-9_-]{16,200}$/)
-const joinForm = z.object({ token: inviteToken, email: text(320), displayName: text(200), password: raw(1_000) })
+const joinForm = z.object({ email: text(320), displayName: text(200), password: raw(1_000) })
 
 export async function setupAction(_prev: FormState, formData: FormData): Promise<FormState> {
   const parsed = setupForm.safeParse(formValues(formData))
@@ -94,11 +95,14 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
 }
 
 export async function joinAction(token: string, _prev: FormState, formData: FormData): Promise<FormState> {
-  const parsed = joinForm.safeParse({ ...formValues(formData), token })
-  if (!parsed.success) return { error: 'This link has expired or was already used. Ask for a new one.' }
+  const parsed = z.object({ token: inviteToken, form: joinForm }).safeParse({ token, form: formValues(formData) })
+  if (!parsed.success) {
+    /* A link that isn't one is said as such; a field is refused in its own words. */
+    const badLink = parsed.error.issues.some((issue) => issue.path[0] === 'token')
+    return { error: badLink ? 'This link has expired or was already used. Ask for a new one.' : refusalMessage(parsed.error) }
+  }
   try {
-    const { token: link, ...input } = parsed.data
-    const user = await redeemInvite(link, input)
+    const user = await redeemInvite(parsed.data.token, parsed.data.form)
     await startSession(user.id)
   } catch (err) {
     if (err instanceof ValidationError) return { error: err.message }

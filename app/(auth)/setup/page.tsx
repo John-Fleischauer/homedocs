@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation'
 import { signInOptions } from '@/lib/auth/oidc'
 import { needsSetup } from '@/lib/auth/users'
-import { SsoButton } from '../login/sso-button'
 import { SetupForm } from './setup-form'
 
 export const metadata = { title: 'Set Up' }
@@ -20,13 +19,13 @@ export default async function SetupPage() {
       <p className="mb-6 text-[15px] text-ink-3">
         Create the first account. You’ll be the admin and can invite the family later.
       </p>
-      {sso ? (
-        <div className="mb-4 flex flex-col gap-4">
-          <SsoButton name={sso.name} only={false} />
-          <p className="text-center text-sm text-ink-3">or</p>
-        </div>
-      ) : null}
       <SetupForm />
+      {sso ? (
+        /* The first account is made here, never by a sign-on (docs/DECISIONS.md). */
+        <p className="mt-4 text-sm text-ink-3">
+          To use {sso.name}, set up with a password first, then sign in with {sso.name} using the same email address. It links to this account.
+        </p>
+      ) : null}
     </>
   )
 }
