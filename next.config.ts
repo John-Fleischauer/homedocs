@@ -3,7 +3,7 @@ import type { NextConfig } from 'next'
 const nextConfig: NextConfig = {
   // One image containing the server and its pruned dependency tree.
   output: 'standalone',
-  // Keeps `next dev` from appending its own block to the hand-written CLAUDE.md.
+  // Keeps `next dev` from writing its own agent block into AGENTS.md, a one-line pointer to CLAUDE.md.
   agentRules: false,
   // Lets two builds run side by side in one checkout without sharing `.next`.
   distDir: process.env.NEXT_DIST_DIR || '.next',

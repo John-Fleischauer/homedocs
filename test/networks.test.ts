@@ -34,8 +34,11 @@ describe('client address', () => {
     expect(clientIp(h, { TRUSTED_PROXY_HOPS: '2' })).toBe('10.0.0.5')
   })
 
-  it('uses the configured header behind Cloudflare', () => {
+  it('reads only the configured header when CLIENT_IP_HEADER is set', () => {
     const h = headers({ 'x-forwarded-for': '1.1.1.1', 'cf-connecting-ip': '203.0.113.4' })
     expect(clientIp(h, { CLIENT_IP_HEADER: 'cf-connecting-ip' })).toBe('203.0.113.4')
+    // Absent, it is null: no falling back to X-Forwarded-For or X-Real-IP, which a client can send.
+    const missing = headers({ 'x-forwarded-for': '1.1.1.1', 'x-real-ip': '1.1.1.1' })
+    expect(clientIp(missing, { CLIENT_IP_HEADER: 'cf-connecting-ip' })).toBeNull()
   })
 })

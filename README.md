@@ -22,7 +22,7 @@ pnpm install
 docker run -d --name homedocs-dev-db -e POSTGRES_USER=homedocs -e POSTGRES_PASSWORD=homedocs \
   -e POSTGRES_DB=homedocs -p 54330:5432 postgres:18-alpine
 cp .env.example .env.local   # fill SESSION_SECRET and INTEGRATIONS_KEY (openssl rand -base64 48)
-pnpm db:migrate
+DATABASE_URL=postgres://homedocs:homedocs@localhost:54330/homedocs pnpm db:migrate   # doesn't read .env.local
 pnpm dev                     # http://localhost:3000 → /setup
 ```
 
@@ -35,3 +35,7 @@ database and server.
   files, integrations and MCP.
 - [Deployment](docs/DEPLOYMENT.md): CI to GHCR to Dockhand, environment, reverse proxy, backups and
   restore.
+- [Decisions](docs/DECISIONS.md): choices this repo made, with why and what was rejected.
+- [Roadmap](docs/ROADMAP.md): agreed, not yet built.
+- [CLAUDE.md](CLAUDE.md): commands and the rules that are easy to break, for agents and people
+  alike.

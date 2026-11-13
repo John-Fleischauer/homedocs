@@ -150,7 +150,7 @@ describe('the handshake', () => {
       }),
     )
 
-    // ADR-0007: stateless transport. A session id here would mean sticky routing
+    // Stateless transport (docs/ARCHITECTURE.md, MCP). A session id here would mean sticky routing
     // and a restart mid-conversation that is anything but invisible.
     expect(response.headers.get('mcp-session-id')).toBeNull()
   })

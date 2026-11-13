@@ -3,9 +3,9 @@
  *
  * The lib tests cover the decisions; this file covers the wire — form encoding,
  * status codes, CORS preflight, and the discovery documents. Those are exactly
- * the parts ADR-0007 warns are all-or-nothing: a missing preflight header or a
+ * the all-or-nothing parts: a missing preflight header or a
  * wrong issuer breaks the connector with an error that names none of this, and
- * the handshake is manual to test end to end (TESTING.md), so the halves that
+ * the handshake is manual to test end to end, so the halves that
  * can be asserted should be.
  *
  * DATABASE_URL is pointed at this file's own database before the route modules

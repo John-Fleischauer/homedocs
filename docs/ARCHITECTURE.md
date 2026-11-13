@@ -37,6 +37,9 @@ housesitter.
 | House guide | `guide_sections`, `secrets`, `share_links` | See below. |
 | — | `attachments`, `external_refs` | One nullable FK column per owner type, with a `num_nonnulls(...) = 1` check. Never `owner_type/owner_id`. |
 
+The UI names are the only words the family sees. Fixtures were "Things" and contacts were
+"People" until October 2026; `/things` and `/people` redirect (`next.config.ts`).
+
 **Rules on every table:**
 - `property_id` on every table, and every domain call takes a `PropertyScope`. There is one property
   today, and the UI hides the property switcher until there are two.
@@ -49,12 +52,14 @@ housesitter.
 
 ## One write path
 
-- **Callers:** server actions (`app/**/actions.ts`, all wrapped in `act()` from `lib/web/action.ts`,
+- **Callers:** server actions (`app/**/actions.ts`, wrapped in `act()` from `lib/web/action.ts`,
   which signs in first and then parses the input with zod, using the field schemas in
-  `lib/web/fields.ts`), route handlers and MCP tools. The schemas check shape only (an id is a uuid,
+  `lib/web/fields.ts`; the ones that start a session parse first instead, `NOT_ACT` in
+  `test/action-guards.test.ts`), route handlers and MCP tools. The schemas check shape only (an id is a uuid,
   text is text and not a megabyte); the domain modules still own the rules.
 - **Domain modules:** every caller goes through the modules under `lib/`: `places`, `fixtures`, `parts`,
-  `notes`, `contacts`, `projects`, `guide`, `links`, `integrations`, `files`.
+  `systems`, `notes`, `contacts`, `projects`, `guide`, `links`, `integrations`, `files`, `trash`,
+  `property`.
 - **Shared rules:** the modules check the role (`assertCanEdit`/`assertAdmin`), validate input, write
   the audit row, and rebuild the search documents.
 - **Errors:** `AppError` subclasses are refusals meant for a person. Forms show them, and MCP returns
