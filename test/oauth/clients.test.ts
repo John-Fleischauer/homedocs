@@ -47,7 +47,7 @@ describe('registration', () => {
 
     /* The row never exists. Storing it and refusing later at authorize time
        would make registration a database-growth primitive for anyone who finds
-       the URL — ADR-0007 is explicit that the refusal happens here. */
+       the URL, so the refusal happens here. */
     expect(await countClients(db)).toBe(0)
   })
 

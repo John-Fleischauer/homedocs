@@ -12,18 +12,24 @@ command -v drizzle-kit >/dev/null 2>&1 \
 
 saved=$(mktemp -d)
 restore() {
-  # Only once the copy is complete, so a failed copy never deletes the original. The
-  # saved copy is removed only after it's back in place; otherwise it's kept and named.
+  rc=$?
+  # Only once the copy is complete, so a failed copy never deletes the original. The copy
+  # goes back beside the directory first and is swapped in with mv, so a failed copy
+  # leaves the directory as it was. The saved copy is removed only once it's back in
+  # place; otherwise it's kept and named, and the script fails with its own exit code
+  # (or 1 if it had passed).
   if [ -f "$saved/.complete" ]; then
-    if rm -rf "$dir" && cp -a "$saved/migrations" "$dir"; then
+    if rm -rf "$dir.restoring" && cp -a "$saved/migrations" "$dir.restoring" \
+      && rm -rf "$dir" && mv "$dir.restoring" "$dir"; then
       rm -rf "$saved"
     else
       echo "db:drift: couldn't restore $dir; the original is in $saved/migrations." >&2
-      exit 1
+      [ "$rc" -ne 0 ] || rc=1
     fi
   else
     rm -rf "$saved"
   fi
+  exit "$rc"
 }
 trap restore EXIT
 trap 'exit 130' INT
