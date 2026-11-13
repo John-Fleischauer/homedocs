@@ -20,7 +20,7 @@ export default async function SharedGuidePage({ params }: { params: Promise<{ to
 
   // Chat apps fetch a pasted link to build a preview. Show them nothing.
   if (isPreviewBot(h.get('user-agent'))) {
-    return <p className="text-ink-3">House guide.</p>
+    return <p className="text-ink-3">House Guide</p>
   }
   if (!guideLimiter.take(clientIp(h) ?? 'unknown')) {
     return <p className="py-16 text-center text-ink-3">Too many requests. Wait a few minutes and reload.</p>
@@ -33,10 +33,10 @@ export default async function SharedGuidePage({ params }: { params: Promise<{ to
 
   const locked = visit.link.lockedAt || visit.link.pinFailures >= MAX_PIN_FAILURES
   const lockSlot = !visit.link.pinHash ? (
-    <Card className="p-4 text-sm text-ink-3">Codes and the address are shown when you’re on the house Wi-Fi.</Card>
+    <Card className="p-4 text-sm text-ink-3">Codes and the address appear when you’re on the house Wi-Fi</Card>
   ) : locked ? (
     <Card className="p-4 text-sm text-ink-3">
-      Codes are shown when you’re on the house Wi-Fi. (The PIN is locked after too many tries.)
+      PIN locked after too many tries; codes appear when you’re on the house Wi-Fi
     </Card>
   ) : (
     <PinForm token={token} />

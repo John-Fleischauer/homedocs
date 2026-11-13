@@ -30,7 +30,7 @@ test('a shutoff lands in Water & plumbing, and the system hands it over', async 
   expect(serious.map((v) => `${v.id} — ${v.nodes[0]?.target}`)).toEqual([])
 
   // The + menu on a system page starts a fixture already in it.
-  await page.getByRole('button', { name: 'Add something' }).click()
+  await page.getByRole('button', { name: 'Add Something' }).click()
   await page.getByRole('menuitem', { name: /Fixture/ }).click()
   await expect(page.getByRole('combobox', { name: 'System' }).locator('option:checked')).toHaveText('Water & plumbing')
 

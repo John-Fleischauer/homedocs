@@ -44,7 +44,7 @@ test('the + menu adds right where you are', async ({ page }) => {
   await page.goto('/places')
   await page.getByRole('link', { name: 'Living room' }).click()
   await expect(page.getByRole('heading', { name: 'Living room' })).toBeVisible()
-  await page.getByRole('button', { name: 'Add something' }).click()
+  await page.getByRole('button', { name: 'Add Something' }).click()
   const fixture = page.getByRole('menuitem', { name: /^Fixture/ })
   await expect(fixture).toHaveAttribute('href', /\/fixtures\/new\?space=[0-9a-f-]{36}$/)
   await page.keyboard.press('Escape')
@@ -62,7 +62,7 @@ test('a new fixture asks for a photo, and password managers stay out of the form
 
 test('question 1: what bulb does the living room light take?', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('searchbox', { name: 'Search everything' }).fill('living room bulb')
+  await page.getByRole('searchbox', { name: 'Search Everything' }).fill('living room bulb')
   await page.keyboard.press('Enter')
   await page.getByRole('link', { name: /Overhead light/ }).click() // one tap
   await expect(page.getByText('A19 E26 2700K bulb · 3 bulbs')).toBeVisible()
@@ -166,8 +166,8 @@ test('question 4: who is our plumber?', async ({ page }) => {
 })
 
 test('a project with a quote and a to-do list', async ({ page }) => {
-  await create(page, '/projects/new', { title: 'Replace electrical panel' }, 'Add project')
-  await page.getByRole('textbox', { name: 'New to-do' }).fill('2 outlets in the garage')
+  await create(page, '/projects/new', { title: 'Replace electrical panel' }, 'Add Project')
+  await page.getByRole('textbox', { name: 'New To-Do' }).fill('2 outlets in the garage')
   await page.getByRole('button', { name: 'Add', exact: true }).click()
   await expect(page.getByText('2 outlets in the garage')).toBeVisible()
 

@@ -17,7 +17,7 @@ export default async function SetupPage() {
     <>
       <h2 className="mb-2 text-xl font-semibold text-ink">Welcome</h2>
       <p className="mb-6 text-[15px] text-ink-3">
-        Create the first account. You’ll be the admin and can invite the family later.
+        Create the first account. You’ll be the admin and can invite the family later
       </p>
       <SetupForm />
       {sso ? (

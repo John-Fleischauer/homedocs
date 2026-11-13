@@ -51,11 +51,11 @@ export function HomeForm({
       <fieldset className="flex flex-col gap-3 rounded-card border border-line p-4">
         <legend className="px-1 text-sm font-semibold text-ink-2">Home Network</legend>
         <p className="text-sm text-ink-3">
-          On the home network, the house guide shows codes without a PIN
+          On the home network, the house guide shows codes without a PIN.
           {seenAs ? (
             <>
               {' '}
-              Right now this device is seen as <code className="rounded bg-sunk px-1">{seenAs}</code>.
+              This device is seen as <code className="rounded bg-sunk px-1">{seenAs}</code>.
             </>
           ) : null}
         </p>

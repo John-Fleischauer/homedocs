@@ -62,7 +62,7 @@ export function TradeChips({
           </div>
         ))}
       </div>
-      <TextInput name="customTrades" className="mt-2" placeholder="Other, e.g. Chimney sweep" aria-label="Other trade" />
+      <TextInput name="customTrades" className="mt-2" placeholder="Other, e.g. Chimney sweep" aria-label="Other Trade" />
     </fieldset>
   )
 }
