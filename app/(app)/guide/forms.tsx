@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ActionForm, type FormAction } from '@/components/ActionForm'
 import { Checkbox, Field, Select, SubmitButton, TextArea, TextInput } from '@/components/ui/Field'
+import { focusUnlessTouch } from '@/components/ui/focus'
 
 export function SectionForm({
   action,
@@ -15,7 +16,7 @@ export function SectionForm({
     <ActionForm action={action}>
       {initial ? <input type="hidden" name="updatedAt" value={initial.updatedAt} /> : null}
       <Field label="Title">
-        <TextInput name="title" defaultValue={initial?.title} placeholder="Trash day, The dog, Thermostat" required autoFocus={!initial} />
+        <TextInput name="title" defaultValue={initial?.title} placeholder="Trash day, The dog, Thermostat" required ref={initial ? undefined : focusUnlessTouch} />
       </Field>
       <Field label="Note">
         <TextArea name="body" rows={6} defaultValue={initial?.body} />

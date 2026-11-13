@@ -14,7 +14,7 @@ export function SystemTiles({ systems }: { systems: SystemSummary[] }) {
   return (
     <ul className="grid grid-cols-2 gap-2">
       {systems.map((s) => (
-        <li key={s.id}>
+        <li key={s.id} className="min-w-0">
           <Link
             href={`/systems/${s.id}`}
             className="flex min-h-18 items-center gap-2.5 rounded-card border border-line bg-card px-3 py-3 hover:bg-sunk"
@@ -23,7 +23,7 @@ export function SystemTiles({ systems }: { systems: SystemSummary[] }) {
               <Icon name={systemIcon(s.icon)} className="h-[18px] w-[18px]" />
             </span>
             <span className="flex min-w-0 flex-col gap-0.5">
-              <span className="text-[15px] font-medium leading-tight text-ink">{s.name}</span>
+              <span className="wrap-anywhere text-[15px] font-medium leading-tight text-ink">{s.name}</span>
               <span className="text-xs text-ink-3">{systemDetail(s)}</span>
             </span>
           </Link>

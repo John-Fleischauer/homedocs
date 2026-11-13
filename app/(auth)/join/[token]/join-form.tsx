@@ -5,6 +5,7 @@ import { Field, FormError, SubmitButton, TextInput } from '@/components/ui/Field
 import { MIN_PASSWORD_LENGTH } from '@/lib/auth/password-policy'
 import { joinAction, type FormState } from '../../actions'
 import { keepFormValues } from '@/lib/keep-form-values'
+import { focusUnlessTouch } from '@/components/ui/focus'
 
 export function JoinForm({ token, kind }: { token: string; kind: 'invite' | 'reset' }) {
   const [state, action] = useActionState<FormState, FormData>(joinAction.bind(null, token), {})
@@ -13,7 +14,7 @@ export function JoinForm({ token, kind }: { token: string; kind: 'invite' | 'res
       {kind === 'invite' ? (
         <>
           <Field label="Your Name">
-            <TextInput name="displayName" autoComplete="name" required autoFocus />
+            <TextInput name="displayName" autoComplete="name" required ref={focusUnlessTouch} />
           </Field>
           <Field label="Email" hint="For signing in">
             <TextInput name="email" type="email" autoComplete="username" required />
@@ -27,7 +28,7 @@ export function JoinForm({ token, kind }: { token: string; kind: 'invite' | 'res
           autoComplete="new-password"
           minLength={MIN_PASSWORD_LENGTH}
           required
-          autoFocus={kind === 'reset'}
+          ref={kind === 'reset' ? focusUnlessTouch : undefined}
         />
       </Field>
       <FormError>{state.error}</FormError>

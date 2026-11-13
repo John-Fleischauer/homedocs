@@ -23,7 +23,7 @@ export default async function DeletedPage() {
           {rows.map((r) => (
             <li key={`${r.kind}-${r.id}`} className="flex min-h-14 items-center gap-3 px-4 py-2">
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[15px] font-medium text-ink">{r.title}</span>
+                <span className="block wrap-anywhere text-[15px] font-medium text-ink">{r.title}</span>
                 <span className="block text-sm text-ink-3">
                   {LABEL[r.kind]} · deleted {timeAgo(r.deletedAt)}
                   {r.by ? ` by ${r.by}` : ''}

@@ -46,9 +46,9 @@ export async function DocumentsSection({ owner, kind, canEdit }: { owner: Owner;
                 <a href={d.url} target="_blank" rel="noreferrer" className="flex min-w-0 flex-1 items-center gap-3">
                   <LinkThumb src={d.hasThumb ? `/api/ext/paperless/${d.externalId}/thumb` : null} />
                   <span className="min-w-0">
-                    <span className="block truncate text-[15px] font-medium text-ink">{d.title}</span>
+                    <span className="block wrap-anywhere text-[15px] font-medium text-ink">{d.title}</span>
                     <span className="flex items-center gap-2 text-sm text-ink-3">
-                      <span className="truncate">{d.subtitle}</span>
+                      <span className="min-w-0 wrap-anywhere">{d.subtitle}</span>
                       {d.status === 'missing' ? <Pill tone="warn">Missing</Pill> : null}
                       {d.status === 'auth_error' ? <Pill tone="warn">Reconnect</Pill> : null}
                     </span>

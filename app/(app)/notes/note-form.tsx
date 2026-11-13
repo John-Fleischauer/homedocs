@@ -6,6 +6,7 @@ import { PlaceSelect } from '@/components/PlaceSelect'
 import { buttonClass } from '@/components/ui/Button'
 import { Field, Select, SubmitButton, TextArea, TextInput } from '@/components/ui/Field'
 import { localDay } from '@/lib/web/format'
+import { focusUnlessTouch } from '@/components/ui/focus'
 
 type Opt = { id: string; label: string }
 
@@ -62,7 +63,7 @@ export function NoteForm({
     <ActionForm action={action}>
       {initial?.updatedAt ? <input type="hidden" name="updatedAt" value={initial.updatedAt} /> : null}
       <Field label="Title">
-        <TextInput name="title" defaultValue={v('title')} placeholder="Put down mulch, Replaced furnace filter" required autoFocus={!initial?.title} />
+        <TextInput name="title" defaultValue={v('title')} placeholder="Put down mulch, Replaced furnace filter" required ref={initial?.title ? undefined : focusUnlessTouch} />
       </Field>
       <Field label="When">
         <TextInput name="happenedOn" type="date" defaultValue={v('happenedOn') || today} />

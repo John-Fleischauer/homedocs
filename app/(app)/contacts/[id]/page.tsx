@@ -87,10 +87,10 @@ export default async function ContactPage({ params }: { params: Promise<{ id: st
           {contact.website ? (
             <li>
               <a href={contact.website} target="_blank" rel="noreferrer" className="flex min-h-14 items-center gap-3 px-4 py-2 hover:bg-sunk">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-soft text-accent">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
                   <Icon name="external" />
                 </span>
-                <span className="truncate text-[15px] text-ink">{contact.website.replace(/^https?:\/\//, '')}</span>
+                <span className="min-w-0 wrap-anywhere text-[15px] text-ink">{contact.website.replace(/^https?:\/\//, '')}</span>
               </a>
             </li>
           ) : null}

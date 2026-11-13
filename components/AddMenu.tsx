@@ -8,7 +8,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState, type CSSProperties } from 'react'
 import { addItems } from '@/lib/web/add-items'
 import { Icon } from './ui/icons'
 
@@ -21,6 +21,9 @@ export function AddMenu() {
     setOpenAt((typeof next === 'function' ? next(open) : next) ? pathname : null)
   const root = useRef<HTMLDivElement>(null)
   const menuId = useId()
+  /* On a phone the menu spans the screen just below the top bar, which grows
+     when a long home name wraps; measured as it opens. */
+  const [top, setTop] = useState(56)
 
   // Close on a tap outside, or Escape.
   useEffect(() => {
@@ -51,6 +54,7 @@ export function AddMenu() {
         aria-controls={open ? menuId : undefined}
         onClick={(e) => {
           e.preventDefault()
+          setTop(root.current?.closest('header')?.getBoundingClientRect().bottom ?? 56)
           setOpen((o) => !o)
         }}
         className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-accent-ink"
@@ -62,7 +66,8 @@ export function AddMenu() {
           id={menuId}
           role="menu"
           aria-label="Add something"
-          className="fixed inset-x-4 top-14 z-40 mt-1 overflow-hidden rounded-card border border-line bg-card shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:w-80"
+          style={{ '--menu-top': `${top}px` } as CSSProperties}
+          className="fixed inset-x-4 top-(--menu-top) z-40 mt-1 overflow-hidden rounded-card border border-line bg-card shadow-lg sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:w-80"
         >
           <ul className="divide-y divide-line">
             {addItems(pathname).map((item) => (
@@ -76,7 +81,7 @@ export function AddMenu() {
                   <Icon name={item.icon} className="h-5 w-5 shrink-0 text-accent" />
                   <span className="min-w-0">
                     <span className="block text-[15px] font-medium text-ink">{item.title}</span>
-                    <span className="block truncate text-xs text-ink-3">{item.detail}</span>
+                    <span className="block text-xs text-ink-3">{item.detail}</span>
                   </span>
                 </Link>
               </li>

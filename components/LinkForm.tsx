@@ -5,6 +5,7 @@ import { ActionForm, type FormAction } from './ActionForm'
 import { buttonClass } from './ui/Button'
 import { Field, SubmitButton, TextInput } from './ui/Field'
 import { Icon } from './ui/icons'
+import { focusUnlessTouch } from './ui/focus'
 
 export function LinkForm({ action }: { action: FormAction }) {
   const [open, setOpen] = useState(false)
@@ -19,7 +20,7 @@ export function LinkForm({ action }: { action: FormAction }) {
   return (
     <ActionForm action={action} resetOnSuccess onSuccess={() => setOpen(false)}>
       <Field label="Address" hint="Homebox, paperless or Home Assistant">
-        <TextInput name="url" type="url" inputMode="url" placeholder="https://homebox.example/item/…" required autoFocus />
+        <TextInput name="url" type="url" inputMode="url" placeholder="https://homebox.example/item/…" required ref={focusUnlessTouch} />
       </Field>
       <Field label="Label">
         <TextInput name="title" />

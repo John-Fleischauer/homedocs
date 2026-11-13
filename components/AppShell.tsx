@@ -44,11 +44,11 @@ export function AppShell({
   return (
     <div className="min-h-dvh">
       <header className="no-print sticky top-0 z-30 border-b border-line bg-card/95 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-3xl items-center gap-3 px-4">
-          <Link href="/" className="shrink-0 truncate text-[17px] font-semibold text-ink">
+        <div className="mx-auto flex min-h-14 max-w-3xl items-center gap-3 px-4 py-2">
+          <Link href="/" className="min-w-0 wrap-anywhere text-[17px] leading-snug font-semibold text-ink">
             {homeName}
           </Link>
-          <nav className="ml-4 hidden items-center gap-1 md:flex" aria-label="Main">
+          <nav className="ml-4 hidden shrink-0 items-center gap-1 md:flex" aria-label="Main">
             {TABS.map((tab) => (
               <Link
                 key={tab.href}
@@ -62,7 +62,7 @@ export function AppShell({
               </Link>
             ))}
           </nav>
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex shrink-0 items-center gap-1">
             <Link
               href="/search"
               aria-label="Search"

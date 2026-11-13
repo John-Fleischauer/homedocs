@@ -5,6 +5,7 @@ import { ActionForm, type FormAction } from '@/components/ActionForm'
 import { TradeChips } from '@/components/TradeChips'
 import { Checkbox, Field, SubmitButton, TextArea, TextInput } from '@/components/ui/Field'
 import { tradeLabeler, type TradeGroup } from '@/lib/contacts/trade-labels'
+import { focusUnlessTouch } from '@/components/ui/focus'
 
 type Method = { label: string; value: string }
 
@@ -54,7 +55,7 @@ export function ContactForm({
     <ActionForm action={action}>
       {initial?.updatedAt ? <input type="hidden" name="updatedAt" value={initial.updatedAt} /> : null}
       <Field label="Name">
-        <TextInput name="name" defaultValue={initial?.name} placeholder="Ace Plumbing, City Water" required autoFocus={!initial?.name} />
+        <TextInput name="name" defaultValue={initial?.name} placeholder="Ace Plumbing, City Water" required ref={initial?.name ? undefined : focusUnlessTouch} />
       </Field>
       <Field label="Company or Contact Person">
         <TextInput name="company" defaultValue={initial?.company} />

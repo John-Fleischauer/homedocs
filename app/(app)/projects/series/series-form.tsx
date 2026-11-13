@@ -2,6 +2,7 @@
 
 import { ActionForm, type FormAction } from '@/components/ActionForm'
 import { Field, Select, SubmitButton, TextArea, TextInput } from '@/components/ui/Field'
+import { focusUnlessTouch } from '@/components/ui/focus'
 
 export function SeriesForm({
   action,
@@ -20,7 +21,7 @@ export function SeriesForm({
     <ActionForm action={action}>
       {initial?.updatedAt ? <input type="hidden" name="updatedAt" value={initial.updatedAt} /> : null}
       <Field label="Name">
-        <TextInput name="title" defaultValue={initial?.title} placeholder="Spring mulching" required autoFocus={!initial?.title} />
+        <TextInput name="title" defaultValue={initial?.title} placeholder="Spring mulching" required ref={initial?.title ? undefined : focusUnlessTouch} />
       </Field>
       <Field label="Instructions" hint="Shown on every project in the series">
         <TextArea name="howTo" rows={5} defaultValue={initial?.howTo} placeholder="Rake out the old mulch first" />

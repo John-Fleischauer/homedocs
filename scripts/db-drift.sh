@@ -1,5 +1,6 @@
 #!/bin/sh
-# Fails when lib/db/schema.ts has changes with no migration (docs/profiles/nextjs-app.md).
+# Fails when lib/db/schema.ts has changes with no migration (standards:
+# https://github.com/ki4hrg/standards/blob/main/docs/profiles/nextjs-app.md).
 # It copies the migrations directory as it is now (committed or not, so it works while
 # a new migration is still uncommitted), generates a throwaway "drift-check" migration,
 # compares, and puts the copy back, pass, fail or interrupted.
@@ -13,6 +14,9 @@ command -v drizzle-kit >/dev/null 2>&1 \
 saved=$(mktemp -d)
 restore() {
   rc=$?
+  # Ignore Ctrl-C and TERM from here on: an interrupt between removing the directory and
+  # moving the copy in would leave no migrations directory at all.
+  trap '' INT TERM
   # Only once the copy is complete, so a failed copy never deletes the original. The copy
   # goes back beside the directory first and is swapped in with mv, so a failed copy
   # leaves the directory as it was. The saved copy is removed only once it's back in
@@ -23,6 +27,7 @@ restore() {
       && rm -rf "$dir" && mv "$dir.restoring" "$dir"; then
       rm -rf "$saved"
     else
+      rm -rf "$dir.restoring" || true
       echo "db:drift: couldn't restore $dir; the original is in $saved/migrations." >&2
       [ "$rc" -ne 0 ] || rc=1
     fi

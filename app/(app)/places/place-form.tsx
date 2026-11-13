@@ -3,6 +3,7 @@
 import { ActionForm, type FormAction } from '@/components/ActionForm'
 import { Field, Select, SubmitButton, TextArea, TextInput } from '@/components/ui/Field'
 import { PlaceSelect } from '@/components/PlaceSelect'
+import { focusUnlessTouch } from '@/components/ui/focus'
 
 const KINDS = [
   { value: 'room', label: 'Room' },
@@ -27,7 +28,7 @@ export function PlaceForm({
     <ActionForm action={action}>
       {initial?.updatedAt ? <input type="hidden" name="updatedAt" value={initial.updatedAt} /> : null}
       <Field label="Name">
-        <TextInput name="name" defaultValue={initial?.name} placeholder="Living room, Front flowerbed, Garage" required autoFocus={!initial?.name} />
+        <TextInput name="name" defaultValue={initial?.name} placeholder="Living room, Front flowerbed, Garage" required ref={initial?.name ? undefined : focusUnlessTouch} />
       </Field>
       <Field label="Inside" hint="E.g. a room on a floor">
         <PlaceSelect name="parentId" defaultValue={initial?.parentId ?? ''} options={places} emptyLabel="Top level" />

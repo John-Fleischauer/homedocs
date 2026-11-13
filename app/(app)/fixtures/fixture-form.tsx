@@ -5,6 +5,7 @@ import { PlaceSelect } from '@/components/PlaceSelect'
 import { Checkbox, Field, Select, SubmitButton, TextArea, TextInput } from '@/components/ui/Field'
 import { guessSystemKey } from '@/lib/systems/seeds'
 import { useState } from 'react'
+import { focusUnlessTouch } from '@/components/ui/focus'
 
 export function FixtureForm({
   action,
@@ -52,7 +53,7 @@ export function FixtureForm({
           onChange={(e) => retype({ name: e.target.value })}
           placeholder="Overhead light, Main water shutoff"
           required
-          autoFocus={!initial?.name}
+          ref={initial?.name ? undefined : focusUnlessTouch}
         />
       </Field>
       <Field label="Place">

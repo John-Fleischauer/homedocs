@@ -54,10 +54,10 @@ export default async function FamilyPage() {
           <li key={p.id} className="flex flex-col gap-2 px-4 py-3">
             <div className="flex items-center gap-3">
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[15px] font-medium text-ink">
+                <span className="block wrap-anywhere text-[15px] font-medium text-ink">
                   {p.displayName} {p.id === me.id ? <Pill>You</Pill> : null}
                 </span>
-                <span className="block truncate text-sm text-ink-3">
+                <span className="block wrap-anywhere text-sm text-ink-3">
                   {p.email}
                   {p.sso ? ' · single sign-on' : p.hasPassword ? '' : ' · not signed in yet'}
                 </span>
@@ -103,7 +103,7 @@ export default async function FamilyPage() {
             {invites.map((i) => (
               <li key={i.id} className="flex min-h-14 items-center gap-3 px-4 py-2">
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15px] text-ink">
+                  <span className="block wrap-anywhere text-[15px] text-ink">
                     {i.kind === 'reset' ? `Password reset for ${i.label}` : i.label || 'Invite'}
                   </span>
                   <span className="block text-sm text-ink-3">
