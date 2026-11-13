@@ -1,0 +1,6 @@
+# Commits `git blame` skips: formatting only, no change in behaviour.
+# GitHub's blame view reads this file; locally, once per clone:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# chore: format with Prettier (#27)
+379af533e071bc75def2200c60d38061afc613fc
