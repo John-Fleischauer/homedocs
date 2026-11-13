@@ -2,7 +2,8 @@
 
 Choices this repo made that a reader would otherwise question: why, since when, and what was
 rejected. Newest last. The standards sweep's questions and John's answers are in
-`docs/plans/standards-conformance.md` ("John's decisions"); the entries below cite them as Q1–Q15.
+`docs/plans/standards-conformance.md` ("John's decisions"), which also holds the sweep's close-out
+(2026-11-13); the entries below cite them as Q1–Q15.
 
 - [A sign-on that matches nobody gets no access until an admin places it](#2026-11-12-a-sign-on-that-matches-nobody-gets-no-access-until-an-admin-places-it)
 - [Deploy mode A on an arm64 host](#2026-11-12-deploy-mode-a-dockhand-git-stack-on-an-arm64-host)
