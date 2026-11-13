@@ -49,8 +49,10 @@ housesitter.
 
 ## One write path
 
-- **Callers:** server actions (`app/**/actions.ts`, all wrapped in `act()` from `lib/web/action.ts`),
-  route handlers and MCP tools.
+- **Callers:** server actions (`app/**/actions.ts`, all wrapped in `act()` from `lib/web/action.ts`,
+  which signs in first and then parses the input with zod, using the field schemas in
+  `lib/web/fields.ts`), route handlers and MCP tools. The schemas check shape only (an id is a uuid,
+  text is text and not a megabyte); the domain modules still own the rules.
 - **Domain modules:** every caller goes through the modules under `lib/`: `places`, `fixtures`, `parts`,
   `notes`, `contacts`, `projects`, `guide`, `links`, `integrations`, `files`.
 - **Shared rules:** the modules check the role (`assertCanEdit`/`assertAdmin`), validate input, write
@@ -77,7 +79,7 @@ A page under `app/(app)/` is authenticated by its layout. Everything else authen
 | Route | Guard |
 |---|---|
 | `app/(app)/**` | layout → `viewer()` → `requireUser()`; admin pages also call `requireRole('admin')` |
-| server actions | `act()` → `viewer()` (every action is a public endpoint) |
+| server actions | `act()` → `viewer()`, then a zod schema over the form and bound arguments (every action is a public endpoint) |
 | `GET /api/health` | none (returns `{ ok: true, revision }` only, no database call) |
 | `POST /api/files` | `requireApiRole('member')`; the property comes from the owning record |
 | `GET /api/files/[sha]` | `requireApiUser()`, and the sha must belong to a live attachment |

@@ -6,6 +6,7 @@ import type { FormAction } from '@/components/ActionForm'
 import { buttonClass } from '@/components/ui/Button'
 import { Field, Select, SubmitButton, TextInput } from '@/components/ui/Field'
 import type { ActionResult } from '@/lib/web/action'
+import { keepFormValues, useClearOnSuccess } from '@/lib/keep-form-values'
 
 export const ROLE_HELP = {
   admin: 'Admin — can change anything, invite people, share the guide',
@@ -25,9 +26,10 @@ function MadeLink({ url, kind }: { url: string; kind: string }) {
 }
 
 export function InviteForm({ action }: { action: FormAction }) {
-  const [state, formAction] = useActionState<ActionResult, FormData>(action, {})
+  const form = useClearOnSuccess(action)
+  const [state, formAction] = useActionState<ActionResult, FormData>(form.action, {})
   return (
-    <form action={formAction} className="flex flex-col gap-3">
+    <form action={formAction} onReset={form.onReset} className="flex flex-col gap-3">
       <Field label="Name">
         <TextInput name="label" placeholder="Mom" />
       </Field>
@@ -58,9 +60,10 @@ export function AddMemberForm({
   password: boolean
   needsVerifiedEmail: boolean
 }) {
-  const [state, formAction] = useActionState<ActionResult, FormData>(action, {})
+  const form = useClearOnSuccess(action)
+  const [state, formAction] = useActionState<ActionResult, FormData>(form.action, {})
   return (
-    <form action={formAction} className="flex flex-col gap-3">
+    <form action={formAction} onReset={form.onReset} className="flex flex-col gap-3">
       <Field label="Name">
         <TextInput name="displayName" required placeholder="Mom" />
       </Field>
@@ -105,7 +108,7 @@ export function AddMemberForm({
 export function ResetLink({ action, label = 'Make Password Reset Link' }: { action: FormAction; label?: string }) {
   const [state, formAction] = useActionState<ActionResult, FormData>(action, {})
   return (
-    <form action={formAction} className="flex flex-col gap-2">
+    <form action={formAction} onReset={keepFormValues} className="flex flex-col gap-2">
       {state.message ? <MadeLink url={state.message} kind="password reset" /> : null}
       {state.error ? <p className="text-sm text-danger">{state.error}</p> : null}
       {!state.message ? (

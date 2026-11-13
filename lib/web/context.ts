@@ -4,7 +4,7 @@
 
 import { cookies } from 'next/headers'
 import { requireUser, type AuthUser } from '../auth/guards'
-import type { ActorContext, PropertyScope } from '../core/types'
+import { ValidationError, type ActorContext, type PropertyScope } from '../core/types'
 import { listProperties, type Property } from '../property/property'
 
 export const PROPERTY_COOKIE = 'homedocs_property'
@@ -31,6 +31,6 @@ export async function viewer(): Promise<Viewer> {
   const all = await listProperties()
   const wanted = (await cookies()).get(PROPERTY_COOKIE)?.value
   const property = all.find((p) => p.id === wanted) ?? all[0]
-  if (!property) throw new Error('No home exists. Run setup again.')
+  if (!property) throw new ValidationError('No home exists. Run setup again.')
   return { user, actor: webActor(user), property, properties: all, scope: { propertyId: property.id } }
 }
