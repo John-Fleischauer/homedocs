@@ -33,8 +33,11 @@ const TABLES = {
 
 export type TrashKind = keyof typeof TABLES
 
+export const TRASH_KINDS = Object.keys(TABLES) as [TrashKind, ...TrashKind[]]
+
+/* Own keys only: `'toString' in TABLES` is true. */
 export function isTrashKind(value: string): value is TrashKind {
-  return value in TABLES
+  return Object.hasOwn(TABLES, value)
 }
 
 export async function listDeleted(exec: Executor, scope: PropertyScope) {

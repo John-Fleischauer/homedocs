@@ -7,6 +7,7 @@ import { buttonClass } from '@/components/ui/Button'
 import { Field, Select, SubmitButton, TextInput } from '@/components/ui/Field'
 import { PlaceSelect } from '@/components/PlaceSelect'
 import type { ActionResult } from '@/lib/web/action'
+import { useClearOnSuccess } from '@/lib/keep-form-values'
 
 function randomPin(): string {
   const n = crypto.getRandomValues(new Uint32Array(1))[0]! % 1_000_000
@@ -14,10 +15,11 @@ function randomPin(): string {
 }
 
 export function ShareForm({ action, places }: { action: FormAction; places: { id: string; label: string }[] }) {
-  const [state, formAction] = useActionState<ActionResult, FormData>(action, {})
+  const form = useClearOnSuccess(action)
+  const [state, formAction] = useActionState<ActionResult, FormData>(form.action, {})
   const [pin, setPin] = useState('')
   return (
-    <form action={formAction} className="flex flex-col gap-4">
+    <form action={formAction} onReset={form.onReset} className="flex flex-col gap-4">
       <Field label="Who It’s For">
         <TextInput name="label" placeholder="Pet sitter, Thanksgiving week" required />
       </Field>

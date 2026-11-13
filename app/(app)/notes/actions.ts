@@ -2,48 +2,56 @@
 
 import { and, eq, isNull } from 'drizzle-orm'
 import { redirect } from 'next/navigation'
+import { z } from 'zod'
 import { db } from '@/lib/db'
 import { supplyUses } from '@/lib/db/schema'
 import { createNote, deleteNote, getNote, suggestedNeed, updateNote } from '@/lib/notes/notes'
 import { updateUse } from '@/lib/parts/parts'
 import { ValidationError } from '@/lib/core/types'
-import { act, field, readUpdatedAt, type ActionResult } from '@/lib/web/action'
+import { act, type ActionResult } from '@/lib/web/action'
+import { id, optionalId, text, timestamp, withForm } from '@/lib/web/fields'
 
-function input(fd: FormData) {
-  return {
-    title: field(fd, 'title'),
-    happenedOn: field(fd, 'happenedOn'),
-    body: field(fd, 'body'),
-    spaceId: field(fd, 'spaceId') || null,
-    fixtureId: field(fd, 'fixtureId') || null,
-    supplyId: field(fd, 'supplyId') || null,
-    contactId: field(fd, 'contactId') || null,
-    projectId: field(fd, 'projectId') || null,
-    quantity: field(fd, 'quantity'),
-    unit: field(fd, 'unit'),
-    cost: field(fd, 'cost'),
-    nextTime: field(fd, 'nextTime'),
-    remindAfter: field(fd, 'remindAfter'),
-  }
+const noteFields = {
+  title: text(),
+  happenedOn: text(200),
+  body: text(),
+  spaceId: optionalId(),
+  fixtureId: optionalId(),
+  supplyId: optionalId(),
+  contactId: optionalId(),
+  projectId: optionalId(),
+  quantity: text(200),
+  unit: text(200),
+  cost: text(200),
+  nextTime: text(),
+  remindAfter: text(200),
 }
 
+const byId = z.object({ id: id() })
+
 export async function createNoteAction(_: ActionResult, fd: FormData): Promise<ActionResult> {
-  const r = await act(async ({ scope, actor }) => ({ id: (await createNote(db, scope, actor, input(fd))).id }))
+  const r = await act(fd, z.object(noteFields), async (input, { scope, actor }) => ({
+    id: (await createNote(db, scope, actor, input)).id,
+  }))
   if (r.error) return r
   redirect(`/notes/${r.id}`)
 }
 
-export async function updateNoteAction(id: string, _: ActionResult, fd: FormData): Promise<ActionResult> {
-  const r = await act(async ({ scope, actor }) => {
-    await updateNote(db, scope, actor, id, input(fd), readUpdatedAt(fd))
-  })
+export async function updateNoteAction(noteId: string, _: ActionResult, fd: FormData): Promise<ActionResult> {
+  const r = await act(
+    withForm(fd, { id: noteId }),
+    z.object({ ...noteFields, id: id(), updatedAt: timestamp() }),
+    async ({ id, updatedAt, ...input }, { scope, actor }) => {
+      await updateNote(db, scope, actor, id, input, updatedAt)
+    },
+  )
   if (r.error) return r
-  redirect(`/notes/${id}`)
+  redirect(`/notes/${noteId}`)
 }
 
-export async function deleteNoteAction(id: string): Promise<ActionResult> {
-  const r = await act(async ({ scope, actor }) => {
-    await deleteNote(db, scope, actor, id)
+export async function deleteNoteAction(noteId: string): Promise<ActionResult> {
+  const r = await act({ id: noteId }, byId, async (input, { scope, actor }) => {
+    await deleteNote(db, scope, actor, input.id)
   })
   if (r.error) return r
   redirect('/notes')
@@ -51,8 +59,8 @@ export async function deleteNoteAction(id: string): Promise<ActionResult> {
 
 /** "Update needed amount to 15?" — carry a note's lesson onto the part's use. */
 export async function applyNeedAction(noteId: string): Promise<ActionResult> {
-  return act(async ({ scope, actor }) => {
-    const note = await getNote(db, scope, noteId)
+  return act({ id: noteId }, byId, async (input, { scope, actor }) => {
+    const note = await getNote(db, scope, input.id)
     const need = suggestedNeed(note)
     if (need === null || !note.supplyId || !(note.spaceId || note.fixtureId)) {
       throw new ValidationError('There’s no amount to carry over from this note.')

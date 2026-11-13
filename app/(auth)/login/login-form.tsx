@@ -3,11 +3,12 @@
 import { useActionState } from 'react'
 import { Field, FormError, SubmitButton, TextInput } from '@/components/ui/Field'
 import { loginAction, type FormState } from '../actions'
+import { keepFormValues } from '@/lib/keep-form-values'
 
 export function LoginForm({ next }: { next?: string }) {
   const [state, action] = useActionState<FormState, FormData>(loginAction, {})
   return (
-    <form action={action} className="flex flex-col gap-4">
+    <form action={action} onReset={keepFormValues} className="flex flex-col gap-4">
       {next ? <input type="hidden" name="next" value={next} /> : null}
       <Field label="Email">
         <TextInput name="email" type="email" autoComplete="username" required autoFocus />

@@ -1,47 +1,61 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { z } from 'zod'
 import { db } from '@/lib/db'
 import { deleteSecret, deleteSection, saveSecret, saveSection } from '@/lib/guide/guide'
-import { act, checkbox, field, readUpdatedAt, type ActionResult } from '@/lib/web/action'
+import { act, type ActionResult } from '@/lib/web/action'
+import { checked, id, text, timestamp, withForm } from '@/lib/web/fields'
 
-export async function saveSectionAction(id: string | null, _: ActionResult, fd: FormData): Promise<ActionResult> {
-  const r = await act(async ({ scope, actor }) => {
-    await saveSection(db, scope, actor, id, { title: field(fd, 'title'), body: field(fd, 'body'), sensitive: checkbox(fd, 'sensitive') }, readUpdatedAt(fd))
+/* null for a new section or secret, an id for an edit. */
+const newOrId = z.union([z.null(), id()])
+
+export async function saveSectionAction(sectionId: string | null, _: ActionResult, fd: FormData): Promise<ActionResult> {
+  const r = await act(
+    withForm(fd, { id: sectionId }),
+    z.object({ id: newOrId, title: text(), body: text(), sensitive: checked(), updatedAt: timestamp() }),
+    async ({ id, updatedAt, ...input }, { scope, actor }) => {
+      await saveSection(db, scope, actor, id, input, updatedAt)
+    },
+  )
+  if (r.error) return r
+  redirect('/guide/edit')
+}
+
+export async function deleteSectionAction(sectionId: string): Promise<ActionResult> {
+  const r = await act({ id: sectionId }, z.object({ id: id() }), async (input, { scope, actor }) => {
+    await deleteSection(db, scope, actor, input.id)
   })
   if (r.error) return r
   redirect('/guide/edit')
 }
 
-export async function deleteSectionAction(id: string): Promise<ActionResult> {
-  const r = await act(async ({ scope, actor }) => {
-    await deleteSection(db, scope, actor, id)
-  })
-  if (r.error) return r
-  redirect('/guide/edit')
-}
-
-export async function saveSecretAction(id: string | null, _: ActionResult, fd: FormData): Promise<ActionResult> {
-  const r = await act(async ({ scope, actor }) => {
-    await saveSecret(db, scope, actor, id, {
-      kind: field(fd, 'kind'),
-      label: field(fd, 'label'),
+export async function saveSecretAction(secretId: string | null, _: ActionResult, fd: FormData): Promise<ActionResult> {
+  const r = await act(
+    withForm(fd, { id: secretId }),
+    z.object({
+      id: newOrId,
+      kind: text(200),
+      label: text(),
+      value: text(10_000),
+      ssid: text(),
+      security: text(200),
+      gate: text(200),
+      inGuide: checked(),
+      notes: text(),
+    }),
+    async ({ id, value, ...input }, { scope, actor }) => {
       // Blank on an edit keeps the stored value.
-      value: field(fd, 'value') || (id ? undefined : ''),
-      ssid: field(fd, 'ssid'),
-      security: field(fd, 'security'),
-      gate: field(fd, 'gate'),
-      inGuide: checkbox(fd, 'inGuide'),
-      notes: field(fd, 'notes'),
-    })
-  })
+      await saveSecret(db, scope, actor, id, { ...input, value: value || (id ? undefined : '') })
+    },
+  )
   if (r.error) return r
   redirect('/guide/edit')
 }
 
-export async function deleteSecretAction(id: string): Promise<ActionResult> {
-  const r = await act(async ({ scope, actor }) => {
-    await deleteSecret(db, scope, actor, id)
+export async function deleteSecretAction(secretId: string): Promise<ActionResult> {
+  const r = await act({ id: secretId }, z.object({ id: id() }), async (input, { scope, actor }) => {
+    await deleteSecret(db, scope, actor, input.id)
   })
   if (r.error) return r
   redirect('/guide/edit')

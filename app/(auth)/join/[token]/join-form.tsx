@@ -4,11 +4,12 @@ import { useActionState } from 'react'
 import { Field, FormError, SubmitButton, TextInput } from '@/components/ui/Field'
 import { MIN_PASSWORD_LENGTH } from '@/lib/auth/password-policy'
 import { joinAction, type FormState } from '../../actions'
+import { keepFormValues } from '@/lib/keep-form-values'
 
 export function JoinForm({ token, kind }: { token: string; kind: 'invite' | 'reset' }) {
   const [state, action] = useActionState<FormState, FormData>(joinAction.bind(null, token), {})
   return (
-    <form action={action} className="flex flex-col gap-4">
+    <form action={action} onReset={keepFormValues} className="flex flex-col gap-4">
       {kind === 'invite' ? (
         <>
           <Field label="Your Name">
