@@ -65,7 +65,7 @@ export function StoreFields({ initial }: { initial?: StoreLink[] }) {
               // Named from the link when it's a store the app knows.
               placeholder={
                 knownRetailer({ retailer: "", url: r.url })?.name ??
-                "Home Depot, Amazon…"
+                "Store name"
               }
               aria-label={`Store ${i + 1}`}
               className="min-w-0 flex-1"

@@ -1,6 +1,7 @@
 import { badgeFor, type StoreLink } from "@/lib/parts/retailers";
+import { Icon } from "./ui/icons";
 
-/* A store's mark in its own colours (a known retailer) or the app's (any other). Decorative: its name is beside it. */
+/* A store's mark in its own colours (a known retailer), the app's (any other), or a shop icon (no name or link yet). Decorative: its name is beside it. */
 export function StoreBadge({
   store,
   className = "h-9 w-9",
@@ -24,7 +25,8 @@ export function StoreBadge({
       } ${className}`}
       style={badge.bg ? { backgroundColor: badge.bg, color: badge.fg } : {}}
     >
-      {badge.mark}
+      {/* Nothing to name it by yet (the form's spare row): a shop, not an empty circle. */}
+      {badge.mark || <Icon name="store" className="h-[18px] w-[18px]" />}
     </span>
   );
 }
