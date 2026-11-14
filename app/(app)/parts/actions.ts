@@ -15,6 +15,7 @@ import { TEMPLATES, isCategory } from "@/lib/parts/templates";
 import { act, type ActionResult } from "@/lib/web/action";
 import {
   collect,
+  each,
   formValues,
   id,
   localPath,
@@ -45,7 +46,9 @@ const partFields = {
   name: text(),
   fields: z.record(z.string(), text()),
   units: text(),
-  buyUrl: text(2_000),
+  storeRetailer: each(20),
+  storeUrl: each(20),
+  storeHow: each(20),
   notes: text(),
 };
 
@@ -61,7 +64,12 @@ function partInput(f: z.output<z.ZodObject<typeof partFields>>) {
     fields,
     unit,
     extraUnits,
-    buyUrl: f.buyUrl,
+    // Rows sent in step; the domain drops blank ones and checks the rest.
+    stores: f.storeUrl.map((url, i) => ({
+      retailer: f.storeRetailer[i] ?? "",
+      url,
+      how: f.storeHow[i] ?? "",
+    })),
     notes: f.notes,
   };
 }

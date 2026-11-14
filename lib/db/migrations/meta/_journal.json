@@ -57,6 +57,20 @@
       "when": 1794529541954,
       "tag": "0007_awaiting_placement",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794692681404,
+      "tag": "0008_part_stores",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794692689295,
+      "tag": "0009_drop_part_buy_url",
+      "breakpoints": true
     }
   ]
 }

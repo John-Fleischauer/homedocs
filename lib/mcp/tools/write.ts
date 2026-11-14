@@ -8,6 +8,7 @@
 import { z } from "zod";
 import { createNote } from "../../notes/notes";
 import { addUse, createPart } from "../../parts/parts";
+import { HOW } from "../../parts/retailers";
 import { CATEGORIES, TEMPLATES } from "../../parts/templates";
 import { createContact } from "../../contacts/contacts";
 import { createSpace } from "../../places/places";
@@ -155,7 +156,26 @@ export const writeTools = [
         .max(9)
         .optional()
         .describe('Units it is sold by, the usual one first: ["roll", "bale"]'),
-      buy_url: z.string().max(2000).optional(),
+      where_to_buy: z
+        .array(
+          z.object({
+            retailer: z
+              .string()
+              .max(60)
+              .optional()
+              .describe(
+                "Home Depot, Amazon… named from the link when left out",
+              ),
+            url: z.string().max(2000).optional(),
+            how: z
+              .enum(HOW)
+              .optional()
+              .describe("Bought in_store, online, or either (the default)"),
+          }),
+        )
+        .max(10)
+        .optional()
+        .describe("The stores it is bought at, the usual one first"),
       notes: z.string().max(20_000).optional(),
     }),
     handler: async (input, ctx) => {
@@ -166,7 +186,7 @@ export const writeTools = [
         fields: input.fields,
         unit: input.units?.[0],
         extraUnits: input.units?.slice(1),
-        buyUrl: input.buy_url,
+        stores: input.where_to_buy,
         notes: input.notes,
       });
       return { id: row.id, name: row.name, fields: row.fields };

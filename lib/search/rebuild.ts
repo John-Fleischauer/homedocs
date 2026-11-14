@@ -42,6 +42,7 @@ import {
   supplyUses,
   systems,
 } from "../db/schema";
+import { storeName } from "../parts/retailers";
 import { TEMPLATES, isCategory } from "../parts/templates";
 
 type Doc = { a?: string[]; b?: string[]; c?: string[] };
@@ -194,7 +195,8 @@ export async function rebuildSupply(exec: Executor, id: string) {
       searchDoc: vector({
         a: [row.name],
         b: fieldText(row.category, row.fields),
-        c: [row.notes, ...places],
+        // Where it's bought, so "lowes" finds what the family gets there.
+        c: [row.notes, ...places, ...row.stores.map(storeName)],
       }),
     } as never)
     .where(eq(supplies.id, id));

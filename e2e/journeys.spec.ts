@@ -254,6 +254,45 @@ test("a project with a quote and a to-do list", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("a filter bought at two stores, one in person and one online", async ({
+  page,
+}) => {
+  await page.goto("/parts/new?category=filter");
+  await page.locator("[name=f_size]").fill("20x25x1");
+  await page.getByLabel("Store 1", { exact: true }).fill("Home Depot");
+  await page
+    .getByLabel("Store 1: how it’s bought")
+    .selectOption({ label: "In store" });
+  await page.getByRole("button", { name: "Add Store" }).click();
+  await page
+    .getByLabel("Store 2 link")
+    .fill("https://www.amazon.com/dp/B000000000");
+  await page
+    .getByLabel("Store 2: how it’s bought")
+    .selectOption({ label: "Online" });
+  await page.getByRole("button", { name: "Add Part" }).click();
+
+  const stores = page.locator("#where-to-buy");
+  await expect(stores.getByText("Home Depot")).toBeVisible();
+  await expect(stores.getByText("In store", { exact: true })).toBeVisible();
+  // Named from its link; opens it.
+  const amazon = stores.getByRole("link", { name: /Amazon/ });
+  await expect(amazon).toHaveAttribute(
+    "href",
+    "https://www.amazon.com/dp/B000000000",
+  );
+  await expect(amazon).toContainText("Online · amazon.com");
+
+  const results = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa"])
+    .analyze();
+  expect(
+    results.violations
+      .filter((v) => v.impact === "serious" || v.impact === "critical")
+      .map((v) => `${v.id} — ${v.nodes[0]?.target}`),
+  ).toEqual([]);
+});
+
 test("main pages have no serious accessibility problems", async ({ page }) => {
   for (const path of [
     "/",

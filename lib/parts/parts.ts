@@ -33,6 +33,7 @@ import {
   rebuildSupply,
   spacePath,
 } from "../search/rebuild";
+import { isHow, knownRetailer, type StoreLink } from "./retailers";
 import { cleanFields, isCategory, TEMPLATES, type Category } from "./templates";
 
 export type Supply = typeof supplies.$inferSelect;
@@ -45,7 +46,8 @@ export type PartInput = {
   unit?: string;
   /** Other units it is sold by, besides `unit`. */
   extraUnits?: string[];
-  buyUrl?: string;
+  /** Where it is bought, in order. A row with neither a retailer nor a link is dropped. */
+  stores?: { retailer?: string; url?: string; how?: string }[];
   notes?: string;
 };
 
@@ -66,6 +68,27 @@ function extraUnits(raw: string[] | undefined, unit: string): string[] {
   }
   if (out.length > 8)
     throw new ValidationError("That’s a lot of units — keep it to eight.");
+  return out;
+}
+
+/*
+ * The stores, tidied: blank rows dropped, links checked, a known retailer named
+ * from its link when the name was left blank, and "either" when it wasn't said.
+ */
+export function cleanStores(raw: PartInput["stores"]): StoreLink[] {
+  const out: StoreLink[] = [];
+  for (const row of raw ?? []) {
+    if ((row.url ?? "").length > 2_000)
+      throw new ValidationError("That link is too long.");
+    const url = cleanUrl(row.url);
+    let retailer = cleanText(row.retailer, 60);
+    if (retailer === "" && url === "") continue;
+    if (retailer === "")
+      retailer = knownRetailer({ retailer, url })?.name ?? "";
+    out.push({ retailer, url, how: isHow(row.how) ? row.how : "either" });
+  }
+  if (out.length > 10)
+    throw new ValidationError("That’s a lot of stores — keep it to ten.");
   return out;
 }
 
@@ -163,7 +186,7 @@ export async function createPart(
         fields,
         unit,
         extraUnits: extraUnits(input.extraUnits, unit),
-        buyUrl: cleanUrl(input.buyUrl),
+        stores: cleanStores(input.stores),
         notes: cleanText(input.notes),
         createdBy: actor.userId,
         updatedBy: actor.userId,
@@ -217,7 +240,7 @@ export async function updatePart(
         patch.unit ?? current!.unit,
       );
     }
-    if (input.buyUrl !== undefined) patch.buyUrl = cleanUrl(input.buyUrl);
+    if (input.stores !== undefined) patch.stores = cleanStores(input.stores);
     if (input.notes !== undefined) patch.notes = cleanText(input.notes);
     const changes = diff(current!, patch);
     if (Object.keys(changes.after).length === 0) return current!;

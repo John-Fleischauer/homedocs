@@ -31,7 +31,14 @@ export type Template = {
   finishes?: string[];
   /** A nudge shown on the form. */
   tip?: string;
+  /** In the order the form asks for them: for paint, the order the can's label reads. */
   fields: TemplateField[];
+  /**
+   * How the part's page groups the fields, when one list would bury what's
+   * asked for most (paint's colour under the store's order number). Fields left
+   * out of every group follow in a group of their own.
+   */
+  view?: { title: string; keys: string[] }[];
 };
 
 export const TEMPLATES: Record<Category, Template> = {
@@ -101,6 +108,21 @@ export const TEMPLATES: Record<Category, Template> = {
         label: "Product number",
         placeholder: "B30W12651",
       },
+    ],
+    view: [
+      {
+        title: "Colour",
+        keys: [
+          "color_name",
+          "color_code",
+          "brand",
+          "product_line",
+          "sheen",
+          "interior_exterior",
+        ],
+      },
+      { title: "Can", keys: ["size", "base", "product_number"] },
+      { title: "Mixed At", keys: ["store", "mixed_on", "order", "formula"] },
     ],
   },
   filter: {
@@ -187,4 +209,24 @@ export function summarize(
     .map((k) => fields[k])
     .filter(Boolean)
     .join(" · ");
+}
+
+/**
+ * The template's fields in the groups the part's page shows: its `view`, then
+ * whatever no group names. A template without a view is one group, "Details".
+ */
+export function fieldGroups(
+  category: Category,
+): { title: string; fields: TemplateField[] }[] {
+  const template = TEMPLATES[category];
+  const byKey = new Map(template.fields.map((f) => [f.key, f]));
+  const groups = (template.view ?? []).map((g) => ({
+    title: g.title,
+    fields: g.keys.flatMap((k) => byKey.get(k) ?? []),
+  }));
+  const named = new Set(groups.flatMap((g) => g.fields.map((f) => f.key)));
+  const rest = template.fields.filter((f) => !named.has(f.key));
+  if (rest.length)
+    groups.push({ title: groups.length ? "More" : "Details", fields: rest });
+  return groups;
 }
