@@ -7,6 +7,7 @@
 import { z } from "zod";
 import { getNote, listNotes, comingUp, lessons } from "../../notes/notes";
 import { getPart, listUses } from "../../parts/parts";
+import { storeName } from "../../parts/retailers";
 import { summarize, TEMPLATES } from "../../parts/templates";
 import {
   getContact,
@@ -457,7 +458,13 @@ export const readTools = [
       return {
         ...partView(p),
         summary: summarize(p.category, p.fields) || undefined,
-        buy_url: p.buyUrl || undefined,
+        where_to_buy: p.stores.length
+          ? p.stores.map((st) => ({
+              retailer: storeName(st) || undefined,
+              url: st.url || undefined,
+              how: st.how,
+            }))
+          : undefined,
         notes: p.notes || undefined,
         used_in: uses.map((u) => ({
           kind: u.owner.kind,

@@ -30,6 +30,8 @@ const PATHS = {
   alert: "M12 4 2 20h20zm0 6v4m0 3h.01",
   external: "M14 4h6v6m0-6-9 9M18 14v6H4V6h6",
   printer: "M7 9V4h10v5M7 17H4v-7h16v7h-3M7 14h10v6H7z",
+  store:
+    "M3 9l1.5-5h15L21 9M3 9h18M3 9a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0M5 12v8h14v-8M10 20v-4h4v4",
   // Systems (lib/systems/seeds.ts SYSTEM_ICONS).
   system: "M4 4h7v7H4zm9 0h7v7h-7zM4 13h7v7H4zm9 0h7v7h-7z",
   water: "M12 3s-6 6.8-6 11a6 6 0 0 0 12 0c0-4.2-6-11-6-11z",

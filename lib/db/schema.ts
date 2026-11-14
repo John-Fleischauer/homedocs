@@ -16,6 +16,7 @@
  */
 
 import { sql } from "drizzle-orm";
+import type { StoreLink } from "../parts/retailers";
 import {
   bigserial,
   boolean,
@@ -358,7 +359,8 @@ export const supplies = pgTable(
       .array()
       .notNull()
       .default(sql`'{}'::text[]`),
-    buyUrl: text("buy_url").notNull().default(""),
+    /** Where it is bought, in the family's order: lib/parts/retailers.ts. */
+    stores: jsonb("stores").$type<StoreLink[]>().notNull().default([]),
     notes: text("notes").notNull().default(""),
     searchDoc: tsvector("search_doc"),
     ...authored,

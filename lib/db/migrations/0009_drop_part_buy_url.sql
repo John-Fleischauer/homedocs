@@ -1,0 +1,1 @@
+ALTER TABLE "supplies" DROP COLUMN "buy_url";
