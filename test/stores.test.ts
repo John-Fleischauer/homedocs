@@ -23,6 +23,8 @@ import { db, resetBetweenTests } from "./helpers/db";
 import { household } from "./helpers/fixtures";
 import { connect, dataOf, identityFor } from "./helpers/mcp";
 
+resetBetweenTests();
+
 /* WCAG relative luminance and contrast ratio, for the badge colours. */
 function luminance(hex: string): number {
   const [r, g, b] = [1, 3, 5].map((i) => {
@@ -43,9 +45,26 @@ describe("retailers", () => {
     expect(knownRetailer({ retailer: "The Home Depot", url: "" })?.key).toBe(
       "home-depot",
     );
-    expect(knownRetailer({ retailer: "Ace on Main St", url: "" })).toBe(
+    // Its name inside a longer one, as whole words.
+    expect(knownRetailer({ retailer: "Ace on Main St", url: "" })?.key).toBe(
+      "ace",
+    );
+    expect(knownRetailer({ retailer: "Home Depot on Elm", url: "" })?.key).toBe(
+      "home-depot",
+    );
+    expect(knownRetailer({ retailer: "Grace Hardware", url: "" })).toBe(
       undefined,
     );
+  });
+
+  it("goes by the name the family typed, not the link, when there is one", () => {
+    const store = {
+      retailer: "Bob's Hardware",
+      url: "https://www.homedepot.com/p/1",
+    };
+    expect(knownRetailer(store)).toBe(undefined);
+    expect(badgeFor(store)).toEqual({ mark: "B" });
+    expect(storeName(store)).toBe("Bob's Hardware");
   });
 
   it("knows a store by its link's host, subdomains and short links too", () => {
@@ -76,7 +95,9 @@ describe("retailers", () => {
       mark: "a",
       bg: "#232f3e",
     });
-    expect(badgeFor({ retailer: "ace on main", url: "" }).bg).toBe(undefined);
+    expect(badgeFor({ retailer: "Bob's Hardware", url: "" })).toEqual({
+      mark: "B",
+    });
     expect(badgeFor({ retailer: "", url: "https://example.com" })).toEqual({
       mark: "E",
     });
@@ -99,7 +120,7 @@ describe("retailers", () => {
 });
 
 describe("a part's stores", () => {
-  it("drops blank rows, names a known store from its link, and says either when not told", () => {
+  it("drops blank rows, leaves a blank name blank, and says either when not told", () => {
     expect(
       cleanStores([
         { retailer: "", url: "https://www.homedepot.com/p/1", how: "online" },
@@ -108,11 +129,7 @@ describe("a part's stores", () => {
         { retailer: "", url: "example.com/bulb", how: "nonsense" },
       ]),
     ).toEqual([
-      {
-        retailer: "Home Depot",
-        url: "https://www.homedepot.com/p/1",
-        how: "online",
-      },
+      { retailer: "", url: "https://www.homedepot.com/p/1", how: "online" },
       { retailer: "Ace on Main", url: "", how: "in_store" },
       { retailer: "", url: "https://example.com/bulb", how: "either" },
     ]);
@@ -137,13 +154,11 @@ describe("a part's stores", () => {
       fields: { size: "16x25x1" },
       stores: [{ url: "https://www.lowes.com/pd/filter/1", how: "online" }],
     });
+    // Named from its link when shown, so the name follows the link.
     expect(filter.stores).toEqual([
-      {
-        retailer: "Lowe’s",
-        url: "https://www.lowes.com/pd/filter/1",
-        how: "online",
-      },
+      { retailer: "", url: "https://www.lowes.com/pd/filter/1", how: "online" },
     ]);
+    expect(filter.stores.map(storeName)).toEqual(["Lowe’s"]);
     expect((await search(db, scope, "lowes")).map((h) => h.id)).toContain(
       filter.id,
     );

@@ -64,12 +64,21 @@ function partInput(f: z.output<z.ZodObject<typeof partFields>>) {
     fields,
     unit,
     extraUnits,
-    // Rows sent in step; the domain drops blank ones and checks the rest.
-    stores: f.storeUrl.map((url, i) => ({
-      retailer: f.storeRetailer[i] ?? "",
-      url,
-      how: f.storeHow[i] ?? "",
-    })),
+    // Rows sent in step, as many as the longest list; the domain drops blank ones and checks the rest.
+    stores: Array.from(
+      {
+        length: Math.max(
+          f.storeRetailer.length,
+          f.storeUrl.length,
+          f.storeHow.length,
+        ),
+      },
+      (_, i) => ({
+        retailer: f.storeRetailer[i] ?? "",
+        url: f.storeUrl[i] ?? "",
+        how: f.storeHow[i] ?? "",
+      }),
+    ),
     notes: f.notes,
   };
 }

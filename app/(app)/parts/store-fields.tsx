@@ -8,6 +8,7 @@ import { Icon } from "@/components/ui/icons";
 import {
   HOW,
   HOW_LABEL,
+  MAX_STORES,
   knownRetailer,
   RETAILERS,
   type How,
@@ -25,7 +26,9 @@ const BLANK = { retailer: "", url: "", how: "either" as How };
  */
 export function StoreFields({ initial }: { initial?: StoreLink[] }) {
   const [rows, setRows] = useState<Row[]>(() =>
-    [...(initial ?? []), BLANK].map((s, key) => ({ ...s, key })),
+    [...(initial ?? []), BLANK]
+      .slice(0, MAX_STORES)
+      .map((s, key) => ({ ...s, key })),
   );
   /* A new row's key: past every key so far, so React never reuses a removed row's inputs. */
   const blank = (all: Row[]): Row => ({
@@ -85,7 +88,7 @@ export function StoreFields({ initial }: { initial?: StoreLink[] }) {
             inputMode="url"
             value={r.url}
             onChange={(e) => set(r.key, { url: e.target.value })}
-            placeholder="Link to the product (optional)"
+            placeholder="Product link"
             aria-label={`Store ${i + 1} link`}
           />
           <Select
@@ -102,13 +105,15 @@ export function StoreFields({ initial }: { initial?: StoreLink[] }) {
           </Select>
         </div>
       ))}
-      <Button
-        className="self-start"
-        onClick={() => setRows((all) => [...all, blank(all)])}
-      >
-        <Icon name="plus" className="h-4 w-4" />
-        Add Store
-      </Button>
+      {rows.length < MAX_STORES ? (
+        <Button
+          className="self-start"
+          onClick={() => setRows((all) => [...all, blank(all)])}
+        >
+          <Icon name="plus" className="h-4 w-4" />
+          Add Store
+        </Button>
+      ) : null}
     </fieldset>
   );
 }

@@ -44,15 +44,38 @@ export default async function PartPage({
       ? parseFormula(part.fields.formula)
       : null;
   const units = partUnits(part);
-  // Only the groups with something in them; a formula shown as a table isn't repeated as text.
-  const groups = fieldGroups(part.category)
-    .map((g) => ({
-      ...g,
-      fields: g.fields.filter(
-        (f) => part.fields[f.key] && !(formula && f.key === "formula"),
-      ),
+  /*
+   * The groups as label/value rows. "Sold By" goes beside the container size
+   * (paint's Can), or in the first group when there's no size; only groups with
+   * something in them are shown, and a formula shown as a table isn't repeated.
+   */
+  const all = fieldGroups(part.category);
+  const sizeAt = Math.max(
+    0,
+    all.findIndex((g) => g.fields.some((f) => f.key === "size")),
+  );
+  const groups = all
+    .map((g, i) => ({
+      title: g.title,
+      facts: [
+        ...g.fields
+          .filter(
+            (f) => part.fields[f.key] && !(formula && f.key === "formula"),
+          )
+          .map((f) => ({
+            label: f.label,
+            value: f.multiline ? (
+              <span className="whitespace-pre-line">{part.fields[f.key]}</span>
+            ) : (
+              part.fields[f.key]
+            ),
+          })),
+        ...(i === sizeAt && units.length > 1
+          ? [{ label: "Sold By", value: units.join(", ") }]
+          : []),
+      ],
     }))
-    .filter((g, i) => g.fields.length || (i === 0 && units.length > 1));
+    .filter((g) => g.facts.length);
 
   return (
     <>
@@ -67,27 +90,9 @@ export default async function PartPage({
         }
       />
 
-      {groups.map((g, i) => (
+      {groups.map((g) => (
         <Section key={g.title} title={g.title}>
-          <Facts
-            items={[
-              ...g.fields.map((f) => ({
-                label: f.label,
-                value:
-                  f.multiline && part.fields[f.key] ? (
-                    <span className="whitespace-pre-line">
-                      {part.fields[f.key]}
-                    </span>
-                  ) : (
-                    (part.fields[f.key] ?? "")
-                  ),
-              })),
-              // "Sold by" closes the first group: it's what you ask for at the counter.
-              ...(i === 0 && units.length > 1
-                ? [{ label: "Sold By", value: units.join(", ") }]
-                : []),
-            ]}
-          />
+          <Facts items={g.facts} />
         </Section>
       ))}
 

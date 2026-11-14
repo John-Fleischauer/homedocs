@@ -27,6 +27,9 @@ export function isHow(value: unknown): value is How {
   );
 }
 
+/** The most stores a part keeps; the form offers no more rows than this. */
+export const MAX_STORES = 10;
+
 export type StoreLink = {
   /** "Home Depot", "Ace on Main St". Filled from the link when left blank and the store is known. */
   retailer: string;
@@ -233,11 +236,24 @@ function byHost(host: string): Retailer | undefined {
   );
 }
 
-/** The known retailer a store is, by what the family called it or else by its link. */
+/**
+ * The known retailer a store is: by what the family called it ("Lowe's",
+ * "Home Depot on Elm") when they named it, and only by its link when they didn't.
+ */
 export function knownRetailer(
   store: Pick<StoreLink, "retailer" | "url">,
 ): Retailer | undefined {
-  return BY_NAME.get(plain(store.retailer)) ?? byHost(hostOf(store.url));
+  const name = plain(store.retailer);
+  // A name the family typed decides: "Ace on Main St" is Ace, whatever it links to.
+  if (name) {
+    const exact = BY_NAME.get(name);
+    if (exact) return exact;
+    const words = ` ${name} `;
+    for (const [known, r] of BY_NAME)
+      if (words.includes(` ${known} `)) return r;
+    return undefined;
+  }
+  return byHost(hostOf(store.url));
 }
 
 /** What to call a store: its own name, else the known retailer's, else the link's host. */

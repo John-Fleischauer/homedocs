@@ -33,7 +33,7 @@ import {
   rebuildSupply,
   spacePath,
 } from "../search/rebuild";
-import { isHow, knownRetailer, type StoreLink } from "./retailers";
+import { isHow, MAX_STORES, type StoreLink } from "./retailers";
 import { cleanFields, isCategory, TEMPLATES, type Category } from "./templates";
 
 export type Supply = typeof supplies.$inferSelect;
@@ -72,8 +72,9 @@ function extraUnits(raw: string[] | undefined, unit: string): string[] {
 }
 
 /*
- * The stores, tidied: blank rows dropped, links checked, a known retailer named
- * from its link when the name was left blank, and "either" when it wasn't said.
+ * The stores, tidied: blank rows dropped, links checked, and "either" when it
+ * wasn't said how. A name left blank stays blank: the store is named from its
+ * link when shown (storeName), so changing the link changes the name too.
  */
 export function cleanStores(raw: PartInput["stores"]): StoreLink[] {
   const out: StoreLink[] = [];
@@ -81,13 +82,11 @@ export function cleanStores(raw: PartInput["stores"]): StoreLink[] {
     if ((row.url ?? "").length > 2_000)
       throw new ValidationError("That link is too long.");
     const url = cleanUrl(row.url);
-    let retailer = cleanText(row.retailer, 60);
+    const retailer = cleanText(row.retailer, 60);
     if (retailer === "" && url === "") continue;
-    if (retailer === "")
-      retailer = knownRetailer({ retailer, url })?.name ?? "";
     out.push({ retailer, url, how: isHow(row.how) ? row.how : "either" });
   }
-  if (out.length > 10)
+  if (out.length > MAX_STORES)
     throw new ValidationError("That’s a lot of stores — keep it to ten.");
   return out;
 }
