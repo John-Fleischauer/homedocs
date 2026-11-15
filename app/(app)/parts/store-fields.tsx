@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { StoreBadge } from "@/components/StoreBadge";
+import { StorePicker } from "@/components/StorePicker";
 import { Button } from "@/components/ui/Button";
 import { Select, TextInput } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/icons";
@@ -10,7 +11,6 @@ import {
   HOW_LABEL,
   MAX_STORES,
   knownRetailer,
-  RETAILERS,
   type How,
   type StoreLink,
 } from "@/lib/parts/retailers";
@@ -48,11 +48,6 @@ export function StoreFields({ initial }: { initial?: StoreLink[] }) {
       <legend className="mb-1.5 text-sm font-medium text-ink-2">
         Where to Buy
       </legend>
-      <datalist id="retailers">
-        {RETAILERS.map((r) => (
-          <option key={r.key} value={r.name} />
-        ))}
-      </datalist>
       {rows.map((r, i) => (
         <div
           key={r.key}
@@ -60,18 +55,16 @@ export function StoreFields({ initial }: { initial?: StoreLink[] }) {
         >
           <div className="flex items-center gap-2">
             <StoreBadge store={r} />
-            <TextInput
+            <StorePicker
               name="storeRetailer"
-              list="retailers"
               value={r.retailer}
-              onChange={(e) => set(r.key, { retailer: e.target.value })}
+              onChange={(retailer) => set(r.key, { retailer })}
               // Named from the link when it's a store the app knows.
               placeholder={
                 knownRetailer({ retailer: "", url: r.url })?.name ??
                 "Store name"
               }
               aria-label={`Store ${i + 1}`}
-              className="min-w-0 flex-1"
             />
             <Button
               variant="ghost"

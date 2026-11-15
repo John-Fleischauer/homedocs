@@ -213,9 +213,25 @@ function plain(text: string): string {
     .trim();
 }
 
+/* "Wal-Mart", "wal mart" and "Walmart" all → "walmart": spaces don't count either. */
+function compact(text: string): string {
+  return plain(text).replace(/ /g, "");
+}
+
+/* Every name and alias, run together: "homedepot", "lowes", "walmart". */
 const BY_NAME = new Map<string, Retailer>();
 for (const r of RETAILERS)
-  for (const n of [r.name, ...(r.aliases ?? [])]) BY_NAME.set(plain(n), r);
+  for (const n of [r.name, ...(r.aliases ?? [])]) BY_NAME.set(compact(n), r);
+
+/* The longest known name made of a few words in a row: "Wal-Mart Supercenter" → Walmart. */
+function byWords(words: string[]): Retailer | undefined {
+  for (let i = 0; i < words.length; i++)
+    for (let j = Math.min(words.length, i + 4); j > i; j--) {
+      const found = BY_NAME.get(words.slice(i, j).join(""));
+      if (found) return found;
+    }
+  return undefined;
+}
 
 /** The link's host, without "www.": "homedepot.com". Empty when it isn't a link. */
 export function hostOf(url: string): string {
@@ -245,14 +261,8 @@ export function knownRetailer(
 ): Retailer | undefined {
   const name = plain(store.retailer);
   // A name the family typed decides: "Ace on Main St" is Ace, whatever it links to.
-  if (name) {
-    const exact = BY_NAME.get(name);
-    if (exact) return exact;
-    const words = ` ${name} `;
-    for (const [known, r] of BY_NAME)
-      if (words.includes(` ${known} `)) return r;
-    return undefined;
-  }
+  // Whole words only, so "Grace Hardware" isn't Ace.
+  if (name) return byWords(name.split(" "));
   return byHost(hostOf(store.url));
 }
 
@@ -272,4 +282,26 @@ export function badgeFor(store: Pick<StoreLink, "retailer" | "url">): Badge {
   const name = storeName(store);
   const letter = name.match(/[\p{L}\p{N}]/u)?.[0];
   return { mark: letter ? letter.toUpperCase() : "" };
+}
+
+/**
+ * The known retailers for the store picker, best match first: the ones whose
+ * name starts with what was typed, then an alias that does, then any that
+ * contain it. Everything, in the catalogue's order, when nothing is typed.
+ */
+export function searchRetailers(query: string): Retailer[] {
+  const q = compact(query);
+  if (!q) return RETAILERS;
+  const rank = (r: Retailer): number => {
+    const names = [r.name, ...(r.aliases ?? [])].map(compact);
+    if (names[0]!.startsWith(q)) return 0;
+    if (names.some((n) => n.startsWith(q))) return 1;
+    if (names.some((n) => n.includes(q))) return 2;
+    if (r.hosts.some((h) => compact(h).includes(q))) return 3;
+    return 4;
+  };
+  return RETAILERS.map((r) => ({ r, at: rank(r) }))
+    .filter((x) => x.at < 4)
+    .sort((a, b) => a.at - b.at)
+    .map((x) => x.r);
 }

@@ -259,7 +259,12 @@ test("a filter bought at two stores, one in person and one online", async ({
 }) => {
   await page.goto("/parts/new?category=filter");
   await page.locator("[name=f_size]").fill("20x25x1");
-  await page.getByLabel("Store 1", { exact: true }).fill("Home Depot");
+  // Picked from the known stores, found by typing part of the name.
+  await page.getByLabel("Store 1", { exact: true }).fill("dep");
+  await page.getByRole("option", { name: "Home Depot" }).click();
+  await expect(page.getByLabel("Store 1", { exact: true })).toHaveValue(
+    "Home Depot",
+  );
   await page
     .getByLabel("Store 1: how it’s bought")
     .selectOption({ label: "In store" });

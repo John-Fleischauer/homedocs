@@ -15,6 +15,7 @@ import {
   RETAILERS,
   badgeFor,
   knownRetailer,
+  searchRetailers,
   storeName,
 } from "../lib/parts/retailers";
 import { fieldGroups } from "../lib/parts/templates";
@@ -55,6 +56,32 @@ describe("retailers", () => {
     expect(knownRetailer({ retailer: "Grace Hardware", url: "" })).toBe(
       undefined,
     );
+  });
+
+  it("knows a store however its name is broken up", () => {
+    const key = (retailer: string) => knownRetailer({ retailer, url: "" })?.key;
+    for (const name of [
+      "Wal-Mart",
+      "wal mart",
+      "WALMART",
+      "Wal-Mart Supercenter",
+    ])
+      expect(key(name), name).toBe("walmart");
+    expect(key("Home-Depot")).toBe("home-depot");
+    expect(key("BestBuy")).toBe("best-buy");
+    expect(key("Sams Club on 5th")).toBe("sams-club");
+  });
+
+  it("finds known stores for the picker, best match first", () => {
+    const names = (q: string) => searchRetailers(q).map((r) => r.name);
+    expect(names("")).toHaveLength(RETAILERS.length);
+    expect(names("low")[0]).toBe("Lowe’s");
+    expect(names("wal-m")).toEqual(["Walmart"]);
+    // "Ace" starts its name; "Tractor Supply" only has the letters inside an alias.
+    expect(names("ace")[0]).toBe("Ace Hardware");
+    expect(names("depot")).toEqual(["Home Depot"]);
+    expect(names("homedepot.com")).toEqual(["Home Depot"]);
+    expect(names("zzz")).toEqual([]);
   });
 
   it("goes by the name the family typed, not the link, when there is one", () => {
