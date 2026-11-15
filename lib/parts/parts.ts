@@ -467,7 +467,7 @@ export async function updateUse(
       const [part] = await tx
         .select({ category: supplies.category })
         .from(supplies)
-        .where(eq(supplies.id, current.supplyId));
+        .where(liveIn(supplies, scope.propertyId, current.supplyId));
       patch.finish = tidyChoice(
         part ? TEMPLATES[part.category].finishes : undefined,
         cleanText(input.finish, 60),
