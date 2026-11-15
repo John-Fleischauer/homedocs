@@ -5,13 +5,11 @@ import {
   choiceLabel,
   choiceValue,
   matchChoice,
+  OTHER_CHOICE as OTHER,
   yesNoValue,
   type Choice,
-} from "@/lib/parts/templates";
+} from "@/lib/core/choices";
 import { Select, TextInput } from "./Field";
-
-/* Not an answer anyone saves; plain text, since HTML turns a NUL into U+FFFD. */
-const OTHER = "__other__";
 
 /*
  * A dropdown of the usual answers, with "Other…" for the rest. The form posts
@@ -92,7 +90,8 @@ export function YesNoInput({
   label: string;
   defaultValue?: string;
 }) {
-  const plain = defaultValue === "" ? "" : yesNoValue(defaultValue);
+  // "Yes", "No", "" (not sure), or undefined for an answer saved in other words.
+  const plain = yesNoValue(defaultValue);
   const options: [value: string, text: string][] = [
     ["Yes", "Yes"],
     ["No", "No"],

@@ -5,13 +5,12 @@
 
 import { describe, expect, it } from "vitest";
 import {
-  CATEGORIES,
-  TEMPLATES,
+  OTHER_CHOICE,
   choiceValue,
-  cleanFields,
   matchChoice,
   yesNoValue,
-} from "../lib/parts/templates";
+} from "../lib/core/choices";
+import { CATEGORIES, TEMPLATES, cleanFields } from "../lib/parts/templates";
 
 describe("a part's details", () => {
   it("saves a listed answer as the list spells it", () => {
@@ -54,16 +53,30 @@ describe("a part's details", () => {
     expect(yesNoValue("maybe")).toBe(undefined);
   });
 
-  it("lists each answer once per field, and never a blank one", () => {
+  it("counts dots, so a different size isn't taken for a listed one", () => {
+    expect(cleanFields("landscaping", { bag_size: "15 cu ft" })).toEqual({
+      bag_size: "15 cu ft",
+    });
+    expect(cleanFields("landscaping", { bag_size: "1.5 cu-ft" })).toEqual({
+      bag_size: "1.5 cu ft",
+    });
+  });
+
+  it("saves nothing for Not sure, or for Other… picked before the page loaded", () => {
+    expect(
+      cleanFields("bulb", { dimmable: "Not sure", shape: OTHER_CHOICE }),
+    ).toEqual({});
+  });
+
+  it("can reach every listed answer, and lists none blank", () => {
     for (const c of CATEGORIES)
       for (const f of TEMPLATES[c].fields) {
         if (!f.choices) continue;
-        const values = f.choices.map(choiceValue);
-        expect(values.every(Boolean), `${c}.${f.key}`).toBe(true);
-        expect(
-          new Set(values.map((v) => v.toLowerCase())).size,
-          `${c}.${f.key}`,
-        ).toBe(values.length);
+        for (const v of f.choices.map(choiceValue)) {
+          expect(v, `${c}.${f.key}`).not.toBe("");
+          // An answer that matched an earlier one could never be saved.
+          expect(matchChoice(f.choices, v), `${c}.${f.key}`).toBe(v);
+        }
       }
   });
 });

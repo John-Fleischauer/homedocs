@@ -9,19 +9,12 @@ import { z } from "zod";
 import { createNote } from "../../notes/notes";
 import { addUse, createPart } from "../../parts/parts";
 import { HOW } from "../../parts/retailers";
+import { choiceValue } from "../../core/choices";
 import {
   CATEGORIES,
-  choiceValue,
   TEMPLATES,
   type TemplateField,
 } from "../../parts/templates";
-
-/* "dimmable (Yes/No)", "base (E26|E12|…)": a field and the answers the form offers. */
-function fieldHint(f: TemplateField): string {
-  if (f.yesNo) return `${f.key} (Yes/No)`;
-  if (f.choices) return `${f.key} (${f.choices.map(choiceValue).join("|")})`;
-  return f.key;
-}
 import { createContact } from "../../contacts/contacts";
 import { createSpace } from "../../places/places";
 import { addMaterial } from "../../projects/materials";
@@ -36,6 +29,13 @@ import { createFixture } from "../../fixtures/fixtures";
 import { scopeOf } from "./read";
 import { optionalRef, resolveRef } from "./resolve";
 import { defineTool, ToolRefusal } from "./types";
+
+/* "dimmable (Yes/No)", "base (E26|E12|…)": a field and the answers the form offers. */
+function fieldHint(f: TemplateField): string {
+  if (f.yesNo) return `${f.key} (Yes/No)`;
+  if (f.choices) return `${f.key} (${f.choices.map(choiceValue).join("|")})`;
+  return f.key;
+}
 
 const ref = (what: string) =>
   z.string().min(1).describe(`The ${what}'s id, or its name`);

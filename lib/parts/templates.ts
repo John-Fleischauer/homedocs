@@ -14,8 +14,7 @@
 export type Category =
   "bulb" | "paint" | "filter" | "battery" | "landscaping" | "other";
 
-/** A dropdown answer: the value saved, or the value and how the list shows it ("2700K", "warm white"). */
-export type Choice = string | [value: string, note: string];
+import { tidyChoice, yesNoValue, type Choice } from "../core/choices";
 
 export type TemplateField = {
   key: string;
@@ -352,55 +351,18 @@ export function cleanFields(
   const out: Record<string, string> = {};
   for (const field of TEMPLATES[category].fields) {
     const value = raw[field.key];
-    if (typeof value === "string" && value.trim() !== "")
-      out[field.key] = tidyAnswer(field, value.trim().slice(0, 2000));
+    if (typeof value !== "string") continue;
+    // A blank, "Not sure" or a dropdown's unswapped "Other…" saves nothing.
+    const answer = tidyAnswer(field, value.trim().slice(0, 2000));
+    if (answer !== "") out[field.key] = answer;
   }
   return out;
 }
 
-/* "e26" or "E-26" and "E26" are the same answer; so are "semi gloss" and "Semi-gloss". */
-function same(a: string, b: string): boolean {
-  const plain = (t: string) => t.toLowerCase().replace(/[\s\-_.]/g, "");
-  return plain(a) === plain(b);
-}
-
-export function choiceValue(choice: Choice): string {
-  return typeof choice === "string" ? choice : choice[0];
-}
-
-/** How a dropdown shows an answer: "2700K · warm white". */
-export function choiceLabel(choice: Choice): string {
-  return typeof choice === "string" ? choice : `${choice[0]} · ${choice[1]}`;
-}
-
-/** The listed answer a typed one is, if any. */
-export function matchChoice(
-  choices: Choice[] | undefined,
-  value: string,
-): string | undefined {
-  if (!value) return undefined;
-  return choices?.map(choiceValue).find((c) => same(c, value));
-}
-
-const YES = ["yes", "y", "true"];
-const NO = ["no", "n", "false"];
-
-/** "Yes" or "No" for a yes/no answer that says so, else undefined. */
-export function yesNoValue(value: string): "Yes" | "No" | undefined {
-  const v = value.trim().toLowerCase();
-  if (YES.includes(v)) return "Yes";
-  if (NO.includes(v)) return "No";
-  return undefined;
-}
-
-/*
- * An answer as the list spells it. Anything else is kept as typed: an answer
- * the list doesn't have is still the family's answer, and one saved before
- * the field had a list must survive the next save.
- */
+/* An answer as its list spells it ("e26" → "E26", "y" → "Yes"); see lib/core/choices.ts. */
 function tidyAnswer(field: TemplateField, value: string): string {
   if (field.yesNo) return yesNoValue(value) ?? value;
-  return matchChoice(field.choices, value) ?? value;
+  return tidyChoice(field.choices, value);
 }
 
 /** A one-line summary for lists: "E26 · A19 · 2700K". */
