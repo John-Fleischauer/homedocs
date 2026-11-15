@@ -15,6 +15,7 @@ import {
   RETAILERS,
   badgeFor,
   knownRetailer,
+  searchRetailers,
   storeName,
 } from "../lib/parts/retailers";
 import { fieldGroups } from "../lib/parts/templates";
@@ -55,6 +56,38 @@ describe("retailers", () => {
     expect(knownRetailer({ retailer: "Grace Hardware", url: "" })).toBe(
       undefined,
     );
+  });
+
+  it("knows a store however its name is broken up", () => {
+    const key = (retailer: string) => knownRetailer({ retailer, url: "" })?.key;
+    for (const name of [
+      "Wal-Mart",
+      "wal mart",
+      "WALMART",
+      "Wal-Mart Supercenter",
+    ])
+      expect(key(name), name).toBe("walmart");
+    expect(key("Home-Depot")).toBe("home-depot");
+    expect(key("BestBuy")).toBe("best-buy");
+    expect(key("Sams Club on 5th")).toBe("sams-club");
+    // Single letters aren't run together: these are local stores.
+    expect(key("B&M Hardware")).toBe(undefined);
+    expect(key("S & W Supply")).toBe(undefined);
+    expect(key("E Bay Electric")).toBe(undefined);
+  });
+
+  it("finds known stores for the picker, best match first", () => {
+    const names = (q: string) => searchRetailers(q).map((r) => r.name);
+    expect(names("")).toHaveLength(RETAILERS.length);
+    expect(names("low")[0]).toBe("Lowe’s");
+    expect(names("wal-m")).toEqual(["Walmart"]);
+    // "Ace" starts its name; "Tractor Supply" only has the letters inside an alias.
+    expect(names("ace")[0]).toBe("Ace Hardware");
+    expect(names("depot")).toEqual(["Home Depot"]);
+    expect(names("homedepot.com")).toEqual(["Home Depot"]);
+    expect(names("zzz")).toEqual([]);
+    // A site's ending isn't a match: "Community Hardware" doesn't offer every store.
+    expect(names("com")).toEqual([]);
   });
 
   it("goes by the name the family typed, not the link, when there is one", () => {
@@ -110,10 +143,10 @@ describe("retailers", () => {
   });
 
   it("has no two retailers claiming the same name or host", () => {
-    const names = RETAILERS.flatMap((r) => [r.name, ...(r.aliases ?? [])]).map(
-      (n) => n.toLowerCase(),
-    );
-    expect(new Set(names).size).toBe(names.length);
+    // Matched the way the app matches, so a name that runs together into another's is caught.
+    for (const r of RETAILERS)
+      for (const n of [r.name, ...(r.aliases ?? [])])
+        expect(knownRetailer({ retailer: n, url: "" })?.key, n).toBe(r.key);
     const hosts = RETAILERS.flatMap((r) => r.hosts);
     expect(new Set(hosts).size).toBe(hosts.length);
   });
