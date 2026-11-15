@@ -9,6 +9,14 @@ import { expect, test, type Page } from "@playwright/test";
 
 test.describe.configure({ mode: "serial" });
 
+/* Answer a field the way a person would: pick from its dropdown, or type. */
+async function answer(page: Page, name: string, value: string) {
+  const field = page.locator(`[name="${name}"]`);
+  if ((await field.evaluate((el) => el.tagName)) === "SELECT")
+    await field.selectOption(value);
+  else await field.fill(value);
+}
+
 async function create(
   page: Page,
   path: string,
@@ -17,7 +25,7 @@ async function create(
 ) {
   await page.goto(path);
   for (const [name, value] of Object.entries(fill))
-    await page.locator(`[name="${name}"]`).fill(value);
+    await answer(page, name, value);
   await page.getByRole("button", { name: submit }).click();
 }
 
@@ -36,9 +44,9 @@ test("build the house: places, a light and its bulb", async ({ page }) => {
 
   await page.getByRole("link", { name: "Add Part" }).click();
   await page.getByRole("link", { name: "Light Bulb" }).click();
-  await page.locator("[name=f_base]").fill("E26");
-  await page.locator("[name=f_shape]").fill("A19");
-  await page.locator("[name=f_color_temp]").fill("2700K");
+  await answer(page, "f_base", "E26");
+  await answer(page, "f_shape", "A19");
+  await answer(page, "f_color_temp", "2700K");
   await page.locator("[name=quantity]").fill("3");
   await page.getByRole("button", { name: /Add to Overhead light/ }).click();
   await expect(page.getByText("A19 E26 2700K bulb · 3 bulbs")).toBeVisible();
@@ -141,11 +149,11 @@ test("question 3: which paint is in the bedroom?", async ({ page }) => {
   await create(page, "/places/new", { name: "Bedroom" }, "Add Place");
   await page.getByRole("link", { name: "Add Part" }).click();
   await page.getByRole("link", { name: "Paint Colour" }).click();
-  await page.locator("[name=f_brand]").fill("Sherwin-Williams");
+  await answer(page, "f_brand", "Sherwin-Williams");
   await page.locator("[name=f_color_code]").fill("SW 7015");
   await page.locator("[name=f_color_name]").fill("Repose Gray");
   await page.locator("[name=surface]").fill("walls");
-  await page.locator("[name=finish]").fill("Eggshell");
+  await answer(page, "finish", "Eggshell");
   await page.getByRole("button", { name: /Add to Bedroom/ }).click();
 
   await page.goto("/search?q=bedroom+paint");
@@ -258,7 +266,7 @@ test("a filter bought at two stores, one in person and one online", async ({
   page,
 }) => {
   await page.goto("/parts/new?category=filter");
-  await page.locator("[name=f_size]").fill("20x25x1");
+  await answer(page, "f_size", "20x25x1");
   // Picked from the known stores, found by typing part of the name.
   await page.getByLabel("Store 1", { exact: true }).fill("dep");
   await page.getByRole("option", { name: "Home Depot" }).click();
@@ -288,6 +296,42 @@ test("a filter bought at two stores, one in person and one online", async ({
   );
   await expect(amazon).toContainText("Online · amazon.com");
 
+  const results = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa"])
+    .analyze();
+  expect(
+    results.violations
+      .filter((v) => v.impact === "serious" || v.impact === "critical")
+      .map((v) => `${v.id} — ${v.nodes[0]?.target}`),
+  ).toEqual([]);
+});
+
+test("a bulb's details are picked, not typed, and an unusual one still fits", async ({
+  page,
+}) => {
+  await page.goto("/parts/new?category=bulb");
+  await answer(page, "f_base", "GU10");
+  // Not on the list: "Other…" opens a box for it.
+  await page.getByLabel("Shape", { exact: true }).selectOption("Other…");
+  await page.getByLabel("Shape, other").fill("R20");
+  await answer(page, "f_color_temp", "3000K");
+  await page
+    .getByRole("group", { name: "Dimmable?" })
+    .getByText("Yes", { exact: true })
+    .click();
+  await page.getByRole("button", { name: "Add Part" }).click();
+
+  await expect(
+    page.getByRole("heading", { name: "R20 GU10 3000K bulb" }),
+  ).toBeVisible();
+  await expect(page.getByText("Dimmable?")).toBeVisible();
+
+  // Editing opens on what was saved, the unusual shape included.
+  await page.getByRole("link", { name: "Edit" }).click();
+  await expect(page.getByLabel("Shape, other")).toHaveValue("R20");
+  await expect(
+    page.getByRole("group", { name: "Dimmable?" }).getByLabel("Yes"),
+  ).toBeChecked();
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa"])
     .analyze();

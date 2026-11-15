@@ -9,6 +9,7 @@ import {
   TextArea,
   TextInput,
 } from "@/components/ui/Field";
+import { ChoiceInput, YesNoInput } from "@/components/ui/Choice";
 import { HEADING_PRESETS, withHeadings } from "@/lib/parts/formula";
 import type { StoreLink } from "@/lib/parts/retailers";
 import {
@@ -96,21 +97,11 @@ export function PartForm({
               initial={initial?.fields?.[f.key]}
             />
           ) : (
-            <Field key={`${category}-${f.key}`} label={f.label} hint={f.hint}>
-              {f.multiline ? (
-                <TextArea
-                  name={`f_${f.key}`}
-                  defaultValue={initial?.fields?.[f.key]}
-                  placeholder={f.placeholder}
-                />
-              ) : (
-                <TextInput
-                  name={`f_${f.key}`}
-                  defaultValue={initial?.fields?.[f.key]}
-                  placeholder={f.placeholder}
-                />
-              )}
-            </Field>
+            <SpecField
+              key={`${category}-${f.key}`}
+              field={f}
+              initial={initial?.fields?.[f.key]}
+            />
           ),
         )}
         <Field label="Name" hint="Leave blank to use the details above">
@@ -148,6 +139,46 @@ export function PartForm({
       ) : null}
       <SubmitButton>{submit}</SubmitButton>
     </ActionForm>
+  );
+}
+
+/* One of the category's details, as the input its answers suit. */
+function SpecField({
+  field: f,
+  initial = "",
+}: {
+  field: TemplateField;
+  initial?: string;
+}) {
+  const name = `f_${f.key}`;
+  // Buttons are their own group, with a legend, not inside a <label>.
+  if (f.yesNo)
+    return <YesNoInput name={name} label={f.label} defaultValue={initial} />;
+  return (
+    <Field label={f.label} hint={f.hint}>
+      {f.choices ? (
+        <ChoiceInput
+          name={name}
+          label={f.label}
+          choices={f.choices}
+          defaultValue={initial}
+          placeholder={f.placeholder}
+        />
+      ) : f.multiline ? (
+        <TextArea
+          name={name}
+          defaultValue={initial}
+          placeholder={f.placeholder}
+        />
+      ) : (
+        <TextInput
+          name={name}
+          defaultValue={initial}
+          placeholder={f.placeholder}
+          inputMode={f.count ? "numeric" : undefined}
+        />
+      )}
+    </Field>
   );
 }
 

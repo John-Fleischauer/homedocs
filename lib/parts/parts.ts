@@ -10,6 +10,7 @@
 
 import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { diff, recordAudit } from "../core/audit";
+import { tidyChoice } from "../core/choices";
 import { assertFresh, inTransaction, liveIn } from "../core/internal";
 import {
   cleanText,
@@ -418,7 +419,10 @@ export async function addUse(
         fixtureId,
         spaceId,
         surface,
-        finish: cleanText(input.finish, 60),
+        finish: tidyChoice(
+          TEMPLATES[part.category].finishes,
+          cleanText(input.finish, 60),
+        ),
         quantity: parseQuantity(input.quantity, "How many"),
         unit: cleanText(input.unit, 30) || part.unit,
         quantityNeeded: parseQuantity(
@@ -459,7 +463,16 @@ export async function updateUse(
     const patch: Partial<SupplyUse> = {};
     if (input.surface !== undefined)
       patch.surface = cleanText(input.surface, 100);
-    if (input.finish !== undefined) patch.finish = cleanText(input.finish, 60);
+    if (input.finish !== undefined) {
+      const [part] = await tx
+        .select({ category: supplies.category })
+        .from(supplies)
+        .where(liveIn(supplies, scope.propertyId, current.supplyId));
+      patch.finish = tidyChoice(
+        part ? TEMPLATES[part.category].finishes : undefined,
+        cleanText(input.finish, 60),
+      );
+    }
     if (input.quantity !== undefined)
       patch.quantity = parseQuantity(input.quantity, "How many");
     if (input.unit !== undefined) patch.unit = cleanText(input.unit, 30);

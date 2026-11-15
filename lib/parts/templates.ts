@@ -14,12 +14,24 @@
 export type Category =
   "bulb" | "paint" | "filter" | "battery" | "landscaping" | "other";
 
+import { tidyChoice, yesNoValue, type Choice } from "../core/choices";
+
 export type TemplateField = {
   key: string;
   label: string;
   placeholder?: string;
   hint?: string;
   multiline?: boolean;
+  /**
+   * The usual answers, as a dropdown. "Other…" is always there too, so an
+   * unusual one can still be typed; a typed one that matches is saved as
+   * listed ("e26" → "E26").
+   */
+  choices?: Choice[];
+  /** Yes, No or Not sure, as buttons. A typed "y" or "true" is saved as Yes. */
+  yesNo?: boolean;
+  /** A count: the phone shows its number pad. */
+  count?: boolean;
 };
 
 export type Template = {
@@ -41,22 +53,79 @@ export type Template = {
   view?: { title: string; keys: string[] }[];
 };
 
+/* What a can's label says was mixed, and the finish a wall is painted in: the same list. */
+const PAINT_SHEENS = [
+  "Flat",
+  "Matte",
+  "Eggshell",
+  "Satin",
+  "Semi-gloss",
+  "Gloss",
+];
+
 export const TEMPLATES: Record<Category, Template> = {
   bulb: {
     category: "bulb",
     label: "Light Bulb",
     unit: "bulb",
     fields: [
-      { key: "base", label: "Base", placeholder: "E26, E12, GU10" },
-      { key: "shape", label: "Shape", placeholder: "A19, BR30, candelabra" },
-      { key: "color_temp", label: "Colour temperature", placeholder: "2700K" },
+      {
+        key: "base",
+        label: "Base",
+        placeholder: "E26, E12, GU10",
+        choices: [
+          ["E26", "standard"],
+          ["E12", "candelabra"],
+          ["E17", "intermediate"],
+          "GU10",
+          "GU24",
+          "G4",
+          "G9",
+          ["GU5.3", "MR16 pins"],
+          ["G13", "T8 tube"],
+          ["E39", "mogul"],
+        ],
+      },
+      {
+        key: "shape",
+        label: "Shape",
+        placeholder: "A19, BR30, candelabra",
+        choices: [
+          ["A19", "standard"],
+          "A21",
+          ["BR30", "recessed"],
+          "BR40",
+          "PAR20",
+          "PAR30",
+          "PAR38",
+          ["B11", "candelabra"],
+          ["G25", "globe"],
+          "ST19",
+          "MR16",
+          "T8",
+        ],
+      },
+      {
+        key: "color_temp",
+        label: "Colour temperature",
+        placeholder: "2700K",
+        choices: [
+          ["2200K", "candlelight"],
+          ["2700K", "warm white"],
+          ["3000K", "soft white"],
+          ["3500K", "neutral"],
+          ["4000K", "cool white"],
+          ["5000K", "daylight"],
+          ["6500K", "bright daylight"],
+        ],
+      },
       {
         key: "brightness",
         label: "Brightness",
         placeholder: "800 lumens / 60W equivalent",
       },
-      { key: "dimmable", label: "Dimmable?", placeholder: "Yes" },
-      { key: "smart", label: "Smart bulb?", placeholder: "No" },
+      { key: "dimmable", label: "Dimmable?", placeholder: "Yes", yesNo: true },
+      { key: "smart", label: "Smart bulb?", placeholder: "No", yesNo: true },
       {
         key: "brand",
         label: "Brand / product",
@@ -68,11 +137,25 @@ export const TEMPLATES: Record<Category, Template> = {
     category: "paint",
     label: "Paint Colour",
     unit: "gal",
-    finishes: ["Flat", "Matte", "Eggshell", "Satin", "Semi-gloss", "Gloss"],
+    finishes: PAINT_SHEENS,
     tip: "Copy these from the can’s label.",
     // In the order a store's tint label reads, top to bottom.
     fields: [
-      { key: "brand", label: "Brand", placeholder: "Sherwin-Williams" },
+      {
+        key: "brand",
+        label: "Brand",
+        placeholder: "Sherwin-Williams",
+        choices: [
+          "Sherwin-Williams",
+          "Benjamin Moore",
+          "Behr",
+          "Valspar",
+          "PPG",
+          "Glidden",
+          "Dunn-Edwards",
+          "Farrow & Ball",
+        ],
+      },
       { key: "store", label: "Store", placeholder: "#1234, 555-123-4567" },
       { key: "mixed_on", label: "Date mixed", placeholder: "04/22/24" },
       { key: "order", label: "Order number", placeholder: "0582820" },
@@ -80,13 +163,19 @@ export const TEMPLATES: Record<Category, Template> = {
         key: "interior_exterior",
         label: "Interior or exterior",
         placeholder: "Interior",
+        choices: ["Interior", "Exterior", "Interior/Exterior"],
       },
       {
         key: "product_line",
         label: "Product",
         placeholder: "ProMar 200 Zero, Duration, Emerald",
       },
-      { key: "sheen", label: "Sheen", placeholder: "Flat" },
+      {
+        key: "sheen",
+        label: "Sheen",
+        placeholder: "Flat",
+        choices: PAINT_SHEENS,
+      },
       { key: "color_name", label: "Colour name", placeholder: "Repose Gray" },
       {
         key: "color_code",
@@ -101,8 +190,26 @@ export const TEMPLATES: Record<Category, Template> = {
         hint: "One colorant per line; - for a blank.",
         multiline: true,
       },
-      { key: "size", label: "Container size", placeholder: "Five gallon" },
-      { key: "base", label: "Base", placeholder: "Extra White" },
+      {
+        key: "size",
+        label: "Container size",
+        placeholder: "Five gallon",
+        choices: ["Sample", "Quart", "Gallon", "Five gallon"],
+      },
+      {
+        key: "base",
+        label: "Base",
+        placeholder: "Extra White",
+        choices: [
+          "Extra White",
+          "Pastel",
+          "Medium",
+          "Deep",
+          "Ultradeep",
+          "Neutral",
+          "Clear",
+        ],
+      },
       {
         key: "product_number",
         label: "Product number",
@@ -130,10 +237,36 @@ export const TEMPLATES: Record<Category, Template> = {
     label: "Filter",
     unit: "filter",
     fields: [
-      { key: "size", label: "Size", placeholder: "16x25x1" },
-      { key: "rating", label: "Rating", placeholder: "MERV 8" },
+      {
+        key: "size",
+        label: "Size",
+        placeholder: "16x25x1",
+        choices: [
+          "14x20x1",
+          "14x25x1",
+          "16x20x1",
+          "16x25x1",
+          "20x20x1",
+          "20x25x1",
+          "16x25x4",
+          "20x20x4",
+          "20x25x4",
+          "20x25x5",
+        ],
+      },
+      {
+        key: "rating",
+        label: "Rating",
+        placeholder: "MERV 8",
+        choices: ["MERV 8", "MERV 11", "MERV 13", "MERV 16", "HEPA"],
+      },
       { key: "brand", label: "Brand / product", placeholder: "Filtrete 1500" },
-      { key: "interval", label: "Change every", placeholder: "90 days" },
+      {
+        key: "interval",
+        label: "Change every",
+        placeholder: "90 days",
+        choices: ["30 days", "60 days", "90 days", "6 months", "12 months"],
+      },
     ],
   },
   battery: {
@@ -141,9 +274,36 @@ export const TEMPLATES: Record<Category, Template> = {
     label: "Battery",
     unit: "battery",
     fields: [
-      { key: "size", label: "Size", placeholder: "AA, 9V, CR2032" },
-      { key: "count", label: "How many it takes", placeholder: "4" },
-      { key: "chemistry", label: "Type", placeholder: "Lithium, alkaline" },
+      {
+        key: "size",
+        label: "Size",
+        placeholder: "AA, 9V, CR2032",
+        choices: [
+          "AA",
+          "AAA",
+          "C",
+          "D",
+          "9V",
+          "CR2032",
+          "CR2025",
+          "CR2016",
+          "CR123A",
+          "CR2",
+          "LR44",
+        ],
+      },
+      {
+        key: "count",
+        label: "How many it takes",
+        placeholder: "4",
+        count: true,
+      },
+      {
+        key: "chemistry",
+        label: "Type",
+        placeholder: "Lithium, alkaline",
+        choices: ["Alkaline", "Lithium", "Rechargeable (NiMH)", "Lithium-ion"],
+      },
     ],
   },
   landscaping: {
@@ -156,7 +316,12 @@ export const TEMPLATES: Record<Category, Template> = {
         label: "Product",
         placeholder: "Hardwood mulch, brown",
       },
-      { key: "bag_size", label: "Bag size", placeholder: "2 cu ft" },
+      {
+        key: "bag_size",
+        label: "Bag size",
+        placeholder: "2 cu ft",
+        choices: ["1.5 cu ft", "2 cu ft", "3 cu ft", "40 lb", "50 lb"],
+      },
       { key: "brand", label: "Brand", placeholder: "Scotts" },
     ],
   },
@@ -186,10 +351,18 @@ export function cleanFields(
   const out: Record<string, string> = {};
   for (const field of TEMPLATES[category].fields) {
     const value = raw[field.key];
-    if (typeof value === "string" && value.trim() !== "")
-      out[field.key] = value.trim().slice(0, 2000);
+    if (typeof value !== "string") continue;
+    // A blank, "Not sure" or a dropdown's unswapped "Other…" saves nothing.
+    const answer = tidyAnswer(field, value.trim().slice(0, 2000));
+    if (answer !== "") out[field.key] = answer;
   }
   return out;
+}
+
+/* An answer as its list spells it ("e26" → "E26", "y" → "Yes"); see lib/core/choices.ts. */
+function tidyAnswer(field: TemplateField, value: string): string {
+  if (field.yesNo) return yesNoValue(value) ?? value;
+  return tidyChoice(field.choices, value);
 }
 
 /** A one-line summary for lists: "E26 · A19 · 2700K". */
