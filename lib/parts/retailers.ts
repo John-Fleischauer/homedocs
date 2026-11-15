@@ -223,11 +223,19 @@ const BY_NAME = new Map<string, Retailer>();
 for (const r of RETAILERS)
   for (const n of [r.name, ...(r.aliases ?? [])]) BY_NAME.set(compact(n), r);
 
-/* The longest known name made of a few words in a row: "Wal-Mart Supercenter" → Walmart. */
+/*
+ * The first known name in what was typed, reading left to right and trying
+ * the longest run of words first at each one: "Wal-Mart Supercenter" →
+ * Walmart; "Lowe's by the Home Depot" → Lowe's, the store named first.
+ * Words are run together only when each has two letters or more, so "B&M
+ * Hardware" and "E Bay Electric" aren't Benjamin Moore and eBay.
+ */
 function byWords(words: string[]): Retailer | undefined {
   for (let i = 0; i < words.length; i++)
     for (let j = Math.min(words.length, i + 4); j > i; j--) {
-      const found = BY_NAME.get(words.slice(i, j).join(""));
+      const run = words.slice(i, j);
+      if (run.length > 1 && run.some((w) => w.length < 2)) continue;
+      const found = BY_NAME.get(run.join(""));
       if (found) return found;
     }
   return undefined;
@@ -284,6 +292,17 @@ export function badgeFor(store: Pick<StoreLink, "retailer" | "url">): Badge {
   return { mark: letter ? letter.toUpperCase() : "" };
 }
 
+/*
+ * Each retailer's names run together, and its sites without the ending
+ * ("homedepot", not "homedepot.com"), so typing "com" or "ca" doesn't offer
+ * every store. Worked out once, not on every keystroke.
+ */
+const SEARCH = RETAILERS.map((r) => ({
+  r,
+  names: [r.name, ...(r.aliases ?? [])].map(compact),
+  sites: r.hosts.map((h) => compact(h.split(".")[0]!)),
+}));
+
 /**
  * The known retailers for the store picker, best match first: the ones whose
  * name starts with what was typed, then an alias that does, then any that
@@ -292,15 +311,15 @@ export function badgeFor(store: Pick<StoreLink, "retailer" | "url">): Badge {
 export function searchRetailers(query: string): Retailer[] {
   const q = compact(query);
   if (!q) return RETAILERS;
-  const rank = (r: Retailer): number => {
-    const names = [r.name, ...(r.aliases ?? [])].map(compact);
+  const rank = ({ names, sites }: (typeof SEARCH)[number]): number => {
     if (names[0]!.startsWith(q)) return 0;
     if (names.some((n) => n.startsWith(q))) return 1;
     if (names.some((n) => n.includes(q))) return 2;
-    if (r.hosts.some((h) => compact(h).includes(q))) return 3;
+    // "depo" is inside homedepot; "homedepot.com" starts with it.
+    if (sites.some((h) => h.includes(q) || q.startsWith(h))) return 3;
     return 4;
   };
-  return RETAILERS.map((r) => ({ r, at: rank(r) }))
+  return SEARCH.map((x) => ({ r: x.r, at: rank(x) }))
     .filter((x) => x.at < 4)
     .sort((a, b) => a.at - b.at)
     .map((x) => x.r);

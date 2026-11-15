@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useState, type ComponentProps } from "react";
-import { searchRetailers } from "@/lib/parts/retailers";
+import { knownRetailer, searchRetailers } from "@/lib/parts/retailers";
 import { TextInput } from "./ui/Field";
 import { StoreBadge } from "./StoreBadge";
 
@@ -18,20 +18,31 @@ export function StorePicker({
 }: {
   value: string;
   onChange: (value: string) => void;
-} & Omit<ComponentProps<"input">, "value" | "onChange">) {
+} & Omit<
+  ComponentProps<"input">,
+  // Its own: the list needs them, and a caller's would be silently dropped.
+  "value" | "onChange" | "onFocus" | "onBlur" | "onKeyDown" | "role"
+>) {
   const id = useId();
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const matches = searchRetailers(value);
-  // Nothing to offer once the box already says exactly one of them.
+  // Nothing to offer once the box already names the one match ("lowes", "Lowe's").
   const shown =
-    matches.length === 1 && matches[0]!.name === value ? [] : matches;
+    matches.length === 1 &&
+    knownRetailer({ retailer: value, url: "" }) === matches[0]
+      ? []
+      : matches;
   const expanded = open && shown.length > 0;
 
-  const pick = (name: string) => {
-    onChange(name);
+  // Closing forgets the highlight, so a later Enter saves the form rather than picking.
+  const close = () => {
     setOpen(false);
     setActive(-1);
+  };
+  const pick = (name: string) => {
+    onChange(name);
+    close();
   };
 
   return (
@@ -52,20 +63,26 @@ export function StorePicker({
           setActive(-1);
         }}
         onFocus={() => setOpen(true)}
-        onBlur={() => setOpen(false)}
+        onBlur={close}
         onKeyDown={(e) => {
           if (e.key === "ArrowDown" || e.key === "ArrowUp") {
             e.preventDefault();
             if (!expanded) return setOpen(true);
             const step = e.key === "ArrowDown" ? 1 : -1;
             setActive((a) => (a + step + shown.length) % shown.length);
-          } else if (e.key === "Enter" && expanded && active >= 0) {
+          } else if (
+            e.key === "Enter" &&
+            expanded &&
+            active >= 0 &&
+            // Enter that finishes a word on a CJK keyboard isn't a pick.
+            !e.nativeEvent.isComposing
+          ) {
             // Picks; doesn't submit the form.
             e.preventDefault();
             pick(shown[active]!.name);
           } else if (e.key === "Escape" && expanded) {
             e.preventDefault();
-            setOpen(false);
+            close();
           }
         }}
       />
@@ -76,7 +93,8 @@ export function StorePicker({
         hidden={!expanded}
         className="absolute inset-x-0 top-full z-20 mt-1 max-h-64 overflow-y-auto rounded-control border border-line bg-card py-1 shadow-lg"
       >
-        {shown.map((r, i) => (
+        {/* Only built while open: ten blank rows needn't each draw every badge. */}
+        {(expanded ? shown : []).map((r, i) => (
           <li
             key={r.key}
             id={`${id}-${i}`}

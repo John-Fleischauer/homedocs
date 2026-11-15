@@ -70,6 +70,10 @@ describe("retailers", () => {
     expect(key("Home-Depot")).toBe("home-depot");
     expect(key("BestBuy")).toBe("best-buy");
     expect(key("Sams Club on 5th")).toBe("sams-club");
+    // Single letters aren't run together: these are local stores.
+    expect(key("B&M Hardware")).toBe(undefined);
+    expect(key("S & W Supply")).toBe(undefined);
+    expect(key("E Bay Electric")).toBe(undefined);
   });
 
   it("finds known stores for the picker, best match first", () => {
@@ -82,6 +86,8 @@ describe("retailers", () => {
     expect(names("depot")).toEqual(["Home Depot"]);
     expect(names("homedepot.com")).toEqual(["Home Depot"]);
     expect(names("zzz")).toEqual([]);
+    // A site's ending isn't a match: "Community Hardware" doesn't offer every store.
+    expect(names("com")).toEqual([]);
   });
 
   it("goes by the name the family typed, not the link, when there is one", () => {
@@ -137,10 +143,10 @@ describe("retailers", () => {
   });
 
   it("has no two retailers claiming the same name or host", () => {
-    const names = RETAILERS.flatMap((r) => [r.name, ...(r.aliases ?? [])]).map(
-      (n) => n.toLowerCase(),
-    );
-    expect(new Set(names).size).toBe(names.length);
+    // Matched the way the app matches, so a name that runs together into another's is caught.
+    for (const r of RETAILERS)
+      for (const n of [r.name, ...(r.aliases ?? [])])
+        expect(knownRetailer({ retailer: n, url: "" })?.key, n).toBe(r.key);
     const hosts = RETAILERS.flatMap((r) => r.hosts);
     expect(new Set(hosts).size).toBe(hosts.length);
   });
