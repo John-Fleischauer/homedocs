@@ -9,7 +9,19 @@ import { z } from "zod";
 import { createNote } from "../../notes/notes";
 import { addUse, createPart } from "../../parts/parts";
 import { HOW } from "../../parts/retailers";
-import { CATEGORIES, TEMPLATES } from "../../parts/templates";
+import {
+  CATEGORIES,
+  choiceValue,
+  TEMPLATES,
+  type TemplateField,
+} from "../../parts/templates";
+
+/* "dimmable (Yes/No)", "base (E26|E12|…)": a field and the answers the form offers. */
+function fieldHint(f: TemplateField): string {
+  if (f.yesNo) return `${f.key} (Yes/No)`;
+  if (f.choices) return `${f.key} (${f.choices.map(choiceValue).join("|")})`;
+  return f.key;
+}
 import { createContact } from "../../contacts/contacts";
 import { createSpace } from "../../places/places";
 import { addMaterial } from "../../projects/materials";
@@ -140,7 +152,8 @@ export const writeTools = [
     title: "Create a part",
     description:
       `Define a reusable part once (then link it with link_part). Categories: ${CATEGORIES.join(", ")}. ` +
-      `Fields by category — ${CATEGORIES.map((c) => `${c}: ${TEMPLATES[c].fields.map((f) => f.key).join(", ")}`).join("; ")}. ` +
+      `Fields by category — ${CATEGORIES.map((c) => `${c}: ${TEMPLATES[c].fields.map(fieldHint).join(", ")}`).join("; ")}. ` +
+      "Where a field lists its usual answers, use one of them when it fits; another is kept as given. " +
       "Paint `sheen` is what the can says; the sheen on a wall goes as `finish` on link_part.",
     scope: "homedocs:write",
     input: z.object({

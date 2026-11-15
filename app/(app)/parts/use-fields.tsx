@@ -1,5 +1,6 @@
 "use client";
 
+import { ChoiceInput } from "@/components/ui/Choice";
 import { Field, TextInput } from "@/components/ui/Field";
 
 /* How a part is used by one fixture or place. Shown when adding a part from a page. */
@@ -56,17 +57,13 @@ export function UseFields({
       )}
       {finishes?.length ? (
         <Field label="Finish">
-          <TextInput
+          <ChoiceInput
             name="finish"
-            list="finishes"
+            label="Finish"
+            choices={finishes}
             defaultValue={initial?.finish}
             placeholder="Eggshell"
           />
-          <datalist id="finishes">
-            {finishes.map((f) => (
-              <option key={f} value={f} />
-            ))}
-          </datalist>
         </Field>
       ) : (
         <input type="hidden" name="finish" value={initial?.finish ?? ""} />
