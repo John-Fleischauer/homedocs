@@ -271,7 +271,7 @@ export default async function HomePage() {
                 href={`/projects/${p.id}`}
                 icon="project"
                 title={p.title}
-                detail={`${STATUS_LABEL[p.status]}${p.openItems ? ` · ${p.openItems} to do` : ""}`}
+                detail={`${STATUS_LABEL[p.status]}${p.openItems ? ` · ${p.openItems} to-do${p.openItems === 1 ? "" : "s"} left` : ""}`}
               />
             ))}
           </List>

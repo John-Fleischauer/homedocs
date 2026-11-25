@@ -46,11 +46,12 @@ export default async function EditSeriesPage({
         }}
         submit="Save"
       />
-      <div className="mt-8 border-t border-line pt-6">
-        <p className="mb-2 px-1 text-sm text-ink-3">
+      <div className="mt-6 flex items-center justify-between gap-3 border-t border-line pt-3">
+        <p className="px-1 text-sm text-ink-3">
           Its projects stay, with their to-dos and materials
         </p>
         <DeleteButton
+          compact
           action={deleteSeriesAction.bind(null, id)}
           what={`“${series.title}”`}
         />

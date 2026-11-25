@@ -55,7 +55,7 @@ export function ChoiceInput({
           setValue(e.target.value);
         }}
       >
-        <option value="">—</option>
+        <option value="">Not set</option>
         {choices.map((c) => (
           <option key={choiceValue(c)} value={choiceValue(c)}>
             {choiceLabel(c)}

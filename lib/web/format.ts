@@ -56,7 +56,8 @@ export function plural(unit: string): string {
     unit.endsWith("s")
   )
     return unit;
-  if (unit.endsWith("y")) return `${unit.slice(0, -1)}ies`;
+  if (/[^aeiou]y$/.test(unit)) return `${unit.slice(0, -1)}ies`;
+  if (/(x|ch|sh)$/.test(unit)) return `${unit}es`;
   return `${unit}s`;
 }
 

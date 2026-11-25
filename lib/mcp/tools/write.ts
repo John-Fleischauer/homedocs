@@ -211,7 +211,7 @@ export const writeTools = [
     title: "Link a part",
     description:
       "Say that a fixture or place uses a part: the overhead light takes 3 of this bulb; the bedroom walls are this " +
-      "paint in eggshell; the front bed took 12 bags (really needs 15).",
+      "paint in eggshell; the front bed took 12 bags (actually needs 15).",
     scope: "homedocs:write",
     input: z.object({
       part: ref("part"),

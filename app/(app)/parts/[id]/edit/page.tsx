@@ -29,8 +29,9 @@ export default async function EditPartPage({
         initial={{ ...part, updatedAt: part.updatedAt.toISOString() }}
         submit="Save"
       />
-      <div className="mt-8 border-t border-line pt-6">
+      <div className="mt-6 flex justify-end border-t border-line pt-3">
         <DeleteButton
+          compact
           action={deletePartAction.bind(null, id)}
           what={`“${part.name}”`}
         />

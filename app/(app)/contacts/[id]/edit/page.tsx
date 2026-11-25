@@ -31,8 +31,9 @@ export default async function EditContactPage({
         initial={{ ...contact, updatedAt: contact.updatedAt.toISOString() }}
         submit="Save"
       />
-      <div className="mt-8 border-t border-line pt-6">
+      <div className="mt-6 flex justify-end border-t border-line pt-3">
         <DeleteButton
+          compact
           action={deleteContactAction.bind(null, id)}
           what={`“${contact.name}”`}
         />

@@ -110,7 +110,7 @@ export function FixtureForm({
             guessSystem(e.target.value, name);
           }}
         >
-          <option value="">—</option>
+          <option value="">Choose Kind</option>
           {kinds.map((k) => (
             <option key={k} value={k}>
               {k}
