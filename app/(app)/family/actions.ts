@@ -12,8 +12,7 @@ import {
 import { act, type ActionResult } from "@/lib/web/action";
 import { GONE, id, oneOf, raw, text, withForm } from "@/lib/web/fields";
 
-const role = () =>
-  oneOf(["admin", "member", "viewer"], "Choose a role.");
+const role = () => oneOf(["admin", "member", "viewer"], "Choose a role.");
 const byUser = z.object({ userId: id() });
 
 export async function inviteAction(

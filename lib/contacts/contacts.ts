@@ -224,10 +224,7 @@ export async function updateContact(
     assertFresh("contact", current, expectedUpdatedAt);
     const patch: Partial<Contact> = {};
     if (input.name !== undefined)
-      patch.name = requireText(
-        input.name,
-        "Give the contact a name.",
-      );
+      patch.name = requireText(input.name, "Give the contact a name.");
     if (input.company !== undefined)
       patch.company = cleanText(input.company, 200);
     if (input.phones !== undefined) patch.phones = cleanMethods(input.phones);
