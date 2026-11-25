@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { requireRole } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { supplyUses } from "@/lib/db/schema";
-import { listUses } from "@/lib/parts/parts";
+import { listUses, partUnits } from "@/lib/parts/parts";
 import { TEMPLATES } from "@/lib/parts/templates";
 import { viewer } from "@/lib/web/context";
 import { removeUseAction, updateUseAction } from "../../parts/actions";
@@ -46,12 +46,15 @@ export default async function EditUsePage({
         title={`${use.part.name} in ${use.owner.name}`}
         back={{ href: back, label: use.part.name }}
         actions={
-          <LinkButton href={ownerHref}>Open {use.owner.kind}</LinkButton>
+          <LinkButton href={ownerHref}>
+            {use.owner.kind === "fixture" ? "Open Fixture" : "Open Place"}
+          </LinkButton>
         }
       />
       <ActionFormClient
         action={updateUseAction.bind(null, id, back)}
-        unit={template.unit}
+        unit={use.part.unit || template.unit}
+        units={partUnits(use.part)}
         finishes={template.finishes}
         ownerKind={use.owner.kind}
         initial={use}
@@ -59,7 +62,7 @@ export default async function EditUsePage({
       <div className="mt-8 border-t border-line pt-6">
         <DeleteButton
           action={removeUseAction.bind(null, id, back)}
-          what={`this from ${use.owner.name}`}
+          what={`this part from ${use.owner.name}`}
           label="Remove"
         />
       </div>

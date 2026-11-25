@@ -37,7 +37,7 @@ export async function addLinkAction(
         url: input.url,
         title: input.title,
       });
-      return { message: "Linked." };
+      return { message: "Linked" };
     },
   );
 }

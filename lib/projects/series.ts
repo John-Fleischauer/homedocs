@@ -631,7 +631,9 @@ export async function appendLessonToHowTo(
       .where(liveIn(logs, scope.propertyId, noteId));
     if (!note) throw new NotFoundError("note");
     if (!note.nextTime)
-      throw new ValidationError("That note has no “next time” lesson to add.");
+      throw new ValidationError(
+        "That log entry has no “next time” lesson to add.",
+      );
     const [project] = note.projectId
       ? await tx
           .select({ seriesId: projects.seriesId })
@@ -639,7 +641,9 @@ export async function appendLessonToHowTo(
           .where(liveIn(projects, scope.propertyId, note.projectId))
       : [];
     if (!project?.seriesId)
-      throw new ValidationError("That note isn’t from a project in a series.");
+      throw new ValidationError(
+        "That log entry isn’t from a project in a series.",
+      );
     const [series] = await tx
       .select()
       .from(projectSeries)

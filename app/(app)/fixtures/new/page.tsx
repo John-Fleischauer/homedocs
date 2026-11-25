@@ -2,7 +2,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { requireRole } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { buildTree, flattenTree, listSpaces } from "@/lib/places/places";
-import { FIXTURE_CATEGORIES } from "@/lib/fixtures/fixtures";
+import { getFixtureKinds } from "@/lib/fixtures/kinds";
 import { listSystemChoices } from "@/lib/systems/systems";
 import { viewer } from "@/lib/web/context";
 import { createFixtureAction } from "../actions";
@@ -17,9 +17,10 @@ export default async function NewFixturePage({
 }) {
   await requireRole("member");
   const { scope } = await viewer();
-  const [places, systems] = await Promise.all([
+  const [places, systems, kinds] = await Promise.all([
     listSpaces(db, scope).then((rows) => flattenTree(buildTree(rows))),
     listSystemChoices(db, scope),
+    getFixtureKinds(db, scope),
   ]);
   const { space, system } = await searchParams;
   return (
@@ -39,7 +40,7 @@ export default async function NewFixturePage({
         action={createFixtureAction}
         places={places}
         systems={systems}
-        categories={FIXTURE_CATEGORIES}
+        kinds={kinds}
         initial={{
           spaceId: space,
           systemId: systems.some((s) => s.id === system) ? system : undefined,

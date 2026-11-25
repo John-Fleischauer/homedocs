@@ -17,13 +17,16 @@ export function LinkForm({ action }: { action: FormAction }) {
         onClick={() => setOpen(true)}
       >
         <Icon name="link" />
-        Paste Link
+        Link by Address
       </button>
     );
   }
   return (
     <ActionForm action={action} resetOnSuccess onSuccess={() => setOpen(false)}>
-      <Field label="Address" hint="Homebox, paperless or Home Assistant">
+      <Field
+        label="Address"
+        hint="Of an item in Homebox, paperless or Home Assistant"
+      >
         <TextInput
           name="url"
           type="url"

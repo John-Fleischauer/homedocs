@@ -404,7 +404,7 @@ export async function buildGuide(
       id: t.id,
       systemId: t.systemId,
       name: t.name,
-      where: path.map((p) => p.name).join(" › ") || "Whole house",
+      where: path.map((p) => p.name).join(" › ") || "Whole House",
       note: t.guideNote || t.notes,
       photos: photoRows
         .filter((p) => p.fixtureId === t.id && p.mime.startsWith("image/"))

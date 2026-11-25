@@ -1,16 +1,23 @@
 "use client";
 
+import { useState } from "react";
 import { ChoiceInput } from "@/components/ui/Choice";
 import { Field, TextInput } from "@/components/ui/Field";
+import { tidyUnit, unitChoices } from "@/lib/parts/templates";
+import { formatQty } from "@/lib/web/format";
+import { UnitInput } from "./unit-input";
 
 /* How a part is used by one fixture or place. Shown when adding a part from a page. */
 export function UseFields({
   unit,
+  units = [],
   finishes,
   ownerKind,
   initial,
 }: {
+  /** The part's usual unit, and everything it is sold by: the Unit list leads with these. */
   unit: string;
+  units?: string[];
   finishes?: string[];
   ownerKind: "fixture" | "place";
   initial?: {
@@ -22,25 +29,31 @@ export function UseFields({
     notes?: string;
   };
 }) {
+  const own = [unit, ...units];
+  const [useUnit, setUseUnit] = useState(() =>
+    tidyUnit(initial?.unit ?? unit, own),
+  );
   return (
     <fieldset className="flex flex-col gap-4 rounded-card border border-line bg-card p-4">
       <legend className="px-1 text-sm font-semibold text-ink-2">
-        How it’s used {ownerKind === "fixture" ? "by this fixture" : "here"}
+        How It’s Used
       </legend>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 items-start gap-3">
         <Field label="Amount">
           <TextInput
             name="quantity"
             inputMode="decimal"
-            defaultValue={initial?.quantity ?? ""}
+            defaultValue={formatQty(initial?.quantity)}
             placeholder="3"
           />
         </Field>
         <Field label="Unit">
-          <TextInput
+          <UnitInput
             name="useUnit"
-            defaultValue={initial?.unit ?? unit}
-            placeholder="bulb, gal, bag"
+            label="Unit"
+            choices={unitChoices(own)}
+            value={useUnit}
+            onChange={setUseUnit}
           />
         </Field>
       </div>
@@ -49,7 +62,7 @@ export function UseFields({
           <TextInput
             name="surface"
             defaultValue={initial?.surface}
-            placeholder="Walls, trim, north bed"
+            placeholder="Walls"
           />
         </Field>
       ) : (
@@ -72,10 +85,10 @@ export function UseFields({
         <TextInput
           name="quantityNeeded"
           inputMode="decimal"
-          defaultValue={initial?.quantityNeeded ?? ""}
+          defaultValue={formatQty(initial?.quantityNeeded)}
         />
       </Field>
-      <Field label="Note">
+      <Field label="Notes">
         <TextInput name="useNotes" defaultValue={initial?.notes} />
       </Field>
     </fieldset>

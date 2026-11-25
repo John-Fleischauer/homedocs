@@ -36,27 +36,27 @@ export function addItems(pathname = "/"): AddItem[] {
     {
       href: `/notes/new${noteFor}`,
       icon: "note",
-      title: "Note",
-      detail: "A repair, a filter change",
+      title: "Log Entry",
+      detail: "A repair, service visit or filter change",
     },
     {
       href: `/fixtures/new${space ? `?space=${space}` : system ? `?system=${system}` : ""}`,
       icon: "fixture",
       title: "Fixture",
-      detail: "A light, a shutoff, the water heater",
+      detail: "A light, shutoff or appliance",
     },
     space || fixture
       ? {
           href: `/use?${space ? `space=${space}` : `fixture=${fixture}`}`,
           icon: "part",
           title: "Part",
-          detail: "A bulb, paint, mulch",
+          detail: "A bulb, paint or filter used here",
         }
       : {
           href: "/parts/new",
           icon: "part",
           title: "Part",
-          detail: "A bulb, paint, a filter",
+          detail: "A bulb, paint or filter",
         },
     {
       href: `/places/new${space ? `?parent=${space}` : ""}`,
@@ -68,7 +68,7 @@ export function addItems(pathname = "/"): AddItem[] {
       href: "/contacts/new",
       icon: "contact",
       title: "Contact",
-      detail: "A plumber, a utility",
+      detail: "A plumber or utility",
     },
     {
       href: "/projects/new",

@@ -49,7 +49,7 @@ export default async function LoginPage({
         ) : null}
         {options.password ? <LoginForm next={next} /> : null}
         <p className="mt-2 text-sm text-ink-3">
-          New here? Ask for an invite link.
+          No account? Ask an admin for an invite link
         </p>
       </div>
     </>

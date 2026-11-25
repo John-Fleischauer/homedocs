@@ -14,7 +14,7 @@ export default function AuthLayout({
           homedocs
         </h1>
         <p className="mt-1 text-[15px] text-ink-3">
-          Everything about our house, in one place.
+          Everything about our house, in one place
         </p>
       </div>
       {children}

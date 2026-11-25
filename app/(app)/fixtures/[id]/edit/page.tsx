@@ -3,7 +3,8 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { requireRole } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
 import { buildTree, flattenTree, listSpaces } from "@/lib/places/places";
-import { getFixture, FIXTURE_CATEGORIES } from "@/lib/fixtures/fixtures";
+import { getFixture } from "@/lib/fixtures/fixtures";
+import { getFixtureKinds } from "@/lib/fixtures/kinds";
 import { listSystemChoices } from "@/lib/systems/systems";
 import { viewer } from "@/lib/web/context";
 import { deleteFixtureAction, updateFixtureAction } from "../../actions";
@@ -20,9 +21,10 @@ export default async function EditFixturePage({
   const { id } = await params;
   const { scope } = await viewer();
   const fixture = await getFixture(db, scope, id);
-  const [places, systems] = await Promise.all([
+  const [places, systems, kinds] = await Promise.all([
     listSpaces(db, scope).then((rows) => flattenTree(buildTree(rows))),
     listSystemChoices(db, scope),
+    getFixtureKinds(db, scope),
   ]);
   return (
     <>
@@ -34,12 +36,13 @@ export default async function EditFixturePage({
         action={updateFixtureAction.bind(null, id)}
         places={places}
         systems={systems}
-        categories={FIXTURE_CATEGORIES}
+        kinds={kinds}
         initial={{ ...fixture, updatedAt: fixture.updatedAt.toISOString() }}
         submit="Save"
       />
-      <div className="mt-8 border-t border-line pt-6">
+      <div className="mt-6 flex justify-end border-t border-line pt-3">
         <DeleteButton
+          compact
           action={deleteFixtureAction.bind(
             null,
             id,

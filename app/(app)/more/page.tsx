@@ -19,7 +19,12 @@ export default async function MorePage() {
         <Row href="/systems" icon="system" title="Systems" />
         <Row href="/parts" icon="part" title="Parts" />
         <Row href="/fixtures" icon="fixture" title="Fixtures" />
-        <Row href="/notes" icon="note" title="Notes" />
+        <Row
+          href="/notes"
+          icon="note"
+          title="Log"
+          detail="Repairs and service history"
+        />
         <Row
           href="/guide"
           icon="guide"
@@ -34,7 +39,7 @@ export default async function MorePage() {
               href="/share"
               icon="link"
               title="Share Links"
-              detail="Send house guide"
+              detail="Send the house guide"
             />
           ) : null}
           {admin ? (
@@ -42,7 +47,7 @@ export default async function MorePage() {
               href="/family"
               icon="contact"
               title="Family"
-              detail={waiting ? `${waiting} waiting to be let in` : undefined}
+              detail={waiting ? `${waiting} waiting for access` : undefined}
             />
           ) : null}
           <Row href="/deleted" icon="trash" title="Recently Deleted" />

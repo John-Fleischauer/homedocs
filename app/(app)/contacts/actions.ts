@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { OTHER_CHOICE } from "@/lib/core/choices";
 import { db } from "@/lib/db";
 import {
   createContact,
@@ -42,7 +43,11 @@ const contactFields = {
 
 function input(f: z.output<z.ZodObject<typeof contactFields>>) {
   const methods = (labels: string[], values: string[]) =>
-    values.map((value, i) => ({ label: labels[i] ?? "", value }));
+    values.map((value, i) => ({
+      // "Other…" picked before the page had loaded its text box: no label.
+      label: labels[i] === OTHER_CHOICE ? "" : (labels[i] ?? ""),
+      value,
+    }));
   return {
     name: f.name,
     company: f.company,

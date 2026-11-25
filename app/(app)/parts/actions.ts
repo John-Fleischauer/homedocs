@@ -19,6 +19,7 @@ import {
   formValues,
   id,
   localPath,
+  many,
   optionalId,
   text,
   timestamp,
@@ -45,7 +46,8 @@ const partFields = {
   category: text(200),
   name: text(),
   fields: z.record(z.string(), text()),
-  units: text(),
+  unit: text(200),
+  extraUnit: many(20),
   storeRetailer: each(20),
   storeUrl: each(20),
   storeHow: each(20),
@@ -57,13 +59,13 @@ function partInput(f: z.output<z.ZodObject<typeof partFields>>) {
   if (isCategory(f.category))
     for (const t of TEMPLATES[f.category].fields)
       fields[t.key] = f.fields[t.key] ?? "";
-  const [unit = "", ...extraUnits] = f.units.split(",").map((u) => u.trim());
   return {
     category: f.category,
     name: f.name,
     fields,
-    unit,
-    extraUnits,
+    // "Sold By", then the ticked and typed "Also Sold By"; the domain tidies both.
+    unit: f.unit,
+    extraUnits: f.extraUnit,
     // Rows sent in step, as many as the longest list; the domain drops blank ones and checks the rest.
     stores: Array.from(
       {
@@ -193,7 +195,7 @@ export async function addUseAction(
     fd,
     z.object({
       ...useFields,
-      supplyId: optionalId().pipe(z.string({ error: "Pick a part." })),
+      supplyId: optionalId().pipe(z.string({ error: "Choose a part." })),
       fixtureId: optionalId(),
       spaceId: optionalId(),
     }),

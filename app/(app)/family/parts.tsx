@@ -9,18 +9,48 @@ import { Field, Select, SubmitButton, TextInput } from "@/components/ui/Field";
 import type { ActionResult } from "@/lib/web/action";
 import { keepFormValues, useClearOnSuccess } from "@/lib/keep-form-values";
 
-export const ROLE_HELP = {
-  admin: "Admin — can change anything, invite people, share the guide",
-  member: "Member — can look things up, add and change them",
-  viewer: "Viewer — can look things up",
+const ROLE_NAME = {
+  admin: "Admin",
+  member: "Member",
+  viewer: "Viewer",
 } as const;
 
+const ROLE_HINT = {
+  admin: "Changes anything, adds people, shares the guide",
+  member: "Looks things up, adds and changes them",
+  viewer: "Looks things up only",
+} as const;
+
+type Role = keyof typeof ROLE_NAME;
+
+const roleOptions = Object.entries(ROLE_NAME).map(([value, name]) => (
+  <option key={value} value={value}>
+    {name}
+  </option>
+));
+
+/* The role alone in the dropdown, so it fits a phone; what it allows sits beneath. */
+function RoleField() {
+  const [role, setRole] = useState<Role>("member");
+  return (
+    <Field label="Role" hint={ROLE_HINT[role]}>
+      <Select
+        name="role"
+        value={role}
+        onChange={(e) => setRole(e.target.value as Role)}
+      >
+        {roleOptions}
+      </Select>
+    </Field>
+  );
+}
+
 /* A made link is shown once, with a copy button: it is not stored anywhere readable. */
-function MadeLink({ url, kind }: { url: string; kind: string }) {
+function MadeLink({ url }: { url: string }) {
   return (
     <div className="flex flex-col gap-2 rounded-control bg-accent-soft p-3">
       <p className="text-sm text-accent">
-        Send this {kind} link — it works once, for 7 days:
+        Send them this link. Works once, for 7 days
       </p>
       <code className="break-all rounded bg-card px-2 py-1.5 text-xs text-ink">
         {url}
@@ -43,22 +73,18 @@ export function InviteForm({ action }: { action: FormAction }) {
       className="flex flex-col gap-3"
     >
       <Field label="Name">
-        <TextInput name="label" placeholder="Mom" />
+        <TextInput name="label" />
       </Field>
-      <Field label="Role">
-        <Select name="role" defaultValue="member">
-          {Object.entries(ROLE_HELP).map(([v, l]) => (
-            <option key={v} value={v}>
-              {l}
-            </option>
-          ))}
-        </Select>
-      </Field>
+      <RoleField />
       {state.error ? (
-        <p className="text-sm text-danger">{state.error}</p>
+        <p role="alert" className="text-sm text-danger">
+          {state.error}
+        </p>
       ) : null}
-      {state.message ? <MadeLink url={state.message} kind="invite" /> : null}
-      <SubmitButton pendingText="Making link…">Make Invite Link</SubmitButton>
+      {state.message ? <MadeLink url={state.message} /> : null}
+      <SubmitButton variant="secondary" pendingText="Making link…">
+        Make Invite Link
+      </SubmitButton>
     </form>
   );
 }
@@ -86,7 +112,7 @@ export function AddMemberForm({
       className="flex flex-col gap-3"
     >
       <Field label="Name">
-        <TextInput name="displayName" required placeholder="Mom" />
+        <TextInput name="displayName" required />
       </Field>
       <Field
         label="Email"
@@ -99,25 +125,22 @@ export function AddMemberForm({
       >
         <TextInput name="email" type="email" inputMode="email" required />
       </Field>
-      <Field label="Role">
-        <Select name="role" defaultValue="member">
-          {Object.entries(ROLE_HELP).map(([v, l]) => (
-            <option key={v} value={v}>
-              {l}
-            </option>
-          ))}
-        </Select>
-      </Field>
+      <RoleField />
       {password ? (
         <Field
           label="Password"
           hint={
             sso
               ? `Blank if they use ${sso}`
-              : "Or leave blank and send a password link"
+              : "Blank to send them a password link instead"
           }
         >
-          <TextInput name="password" type="password" minLength={8} />
+          <TextInput
+            name="password"
+            type="password"
+            autoComplete="new-password"
+            minLength={8}
+          />
         </Field>
       ) : null}
       {state.error ? (
@@ -135,13 +158,8 @@ export function AddMemberForm({
   );
 }
 
-export function ResetLink({
-  action,
-  label = "Make Password Reset Link",
-}: {
-  action: FormAction;
-  label?: string;
-}) {
+/* One link for both cases: it sets a first password, or replaces a forgotten one. */
+export function ResetLink({ action }: { action: FormAction }) {
   const [state, formAction] = useActionState<ActionResult, FormData>(
     action,
     {},
@@ -150,21 +168,21 @@ export function ResetLink({
     <form
       action={formAction}
       onReset={keepFormValues}
-      className="flex flex-col gap-2"
+      className="flex min-w-0 flex-col gap-2"
     >
-      {state.message ? (
-        <MadeLink url={state.message} kind="password reset" />
-      ) : null}
+      {state.message ? <MadeLink url={state.message} /> : null}
       {state.error ? (
-        <p className="text-sm text-danger">{state.error}</p>
+        <p role="alert" className="text-sm text-danger">
+          {state.error}
+        </p>
       ) : null}
       {!state.message ? (
         <SubmitButton
-          variant="ghost"
-          className="min-h-9 self-start px-2 text-sm"
-          pendingText="…"
+          variant="secondary"
+          className="self-start whitespace-nowrap text-sm"
+          pendingText="Making link…"
         >
-          {label}
+          Make Password Link
         </SubmitButton>
       ) : null}
     </form>
@@ -210,9 +228,7 @@ export function RoleSelect({
         }}
         className="max-w-32"
       >
-        <option value="admin">Admin</option>
-        <option value="member">Member</option>
-        <option value="viewer">Viewer</option>
+        {roleOptions}
       </Select>
       <InlineError className="max-w-56 text-right">{error}</InlineError>
     </span>
@@ -225,7 +241,7 @@ export function RevokeButton({ action }: { action: () => Promise<unknown> }) {
     <button
       type="button"
       disabled={pending}
-      className={buttonClass("ghost", "min-h-9 px-2 text-sm")}
+      className={buttonClass("secondary", "shrink-0 text-sm")}
       onClick={() => start(async () => void (await action()))}
     >
       Cancel Link
@@ -249,9 +265,7 @@ export function PlaceForm({
         defaultValue={suggested}
         className="max-w-32 shrink-0"
       >
-        <option value="admin">Admin</option>
-        <option value="member">Member</option>
-        <option value="viewer">Viewer</option>
+        {roleOptions}
       </Select>
       <SubmitButton variant="secondary" pendingText="Letting in…">
         Let In

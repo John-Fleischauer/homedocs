@@ -36,6 +36,7 @@ import {
   supplies,
 } from "../db/schema";
 import { rebuildLog } from "../search/rebuild";
+import { tidyUnit } from "../parts/templates";
 import { localDay } from "../web/format";
 
 export type Note = typeof logs.$inferSelect;
@@ -100,8 +101,8 @@ export async function createNote(
       .insert(logs)
       .values({
         propertyId: scope.propertyId,
-        title: requireText(input.title, "Say what happened in a few words."),
-        happenedOn: parseDate(input.happenedOn, "When") ?? today(),
+        title: requireText(input.title, "Give the entry a title."),
+        happenedOn: parseDate(input.happenedOn, "Date") ?? today(),
         body: cleanText(input.body),
         spaceId: input.spaceId || null,
         fixtureId: input.fixtureId || null,
@@ -109,10 +110,10 @@ export async function createNote(
         contactId: input.contactId || null,
         projectId: input.projectId || null,
         quantity: parseQuantity(input.quantity),
-        unit: cleanText(input.unit, 30),
+        unit: tidyUnit(cleanText(input.unit, 30)),
         cost: parseMoney(input.cost),
         nextTime: cleanText(input.nextTime, 2000),
-        remindAfter: parseDate(input.remindAfter, "Remind me"),
+        remindAfter: parseDate(input.remindAfter, "Reminder date"),
         createdBy: actor.userId,
         updatedBy: actor.userId,
       })
@@ -143,17 +144,14 @@ export async function updateNote(
       .from(logs)
       .where(liveIn(logs, scope.propertyId, id))
       .for("update");
-    assertFresh("note", current, expectedUpdatedAt);
+    assertFresh("log entry", current, expectedUpdatedAt);
     await assertLinks(tx, scope, input);
     const patch: Partial<Note> = {};
     if (input.title !== undefined)
-      patch.title = requireText(
-        input.title,
-        "Say what happened in a few words.",
-      );
+      patch.title = requireText(input.title, "Give the entry a title.");
     if (input.happenedOn !== undefined)
       patch.happenedOn =
-        parseDate(input.happenedOn, "When") ?? current!.happenedOn;
+        parseDate(input.happenedOn, "Date") ?? current!.happenedOn;
     if (input.body !== undefined) patch.body = cleanText(input.body);
     for (const key of [
       "spaceId",
@@ -166,12 +164,13 @@ export async function updateNote(
     }
     if (input.quantity !== undefined)
       patch.quantity = parseQuantity(input.quantity);
-    if (input.unit !== undefined) patch.unit = cleanText(input.unit, 30);
+    if (input.unit !== undefined)
+      patch.unit = tidyUnit(cleanText(input.unit, 30));
     if (input.cost !== undefined) patch.cost = parseMoney(input.cost);
     if (input.nextTime !== undefined)
       patch.nextTime = cleanText(input.nextTime, 2000);
     if (input.remindAfter !== undefined)
-      patch.remindAfter = parseDate(input.remindAfter, "Remind me");
+      patch.remindAfter = parseDate(input.remindAfter, "Reminder date");
     const changes = diff(current!, patch);
     if (Object.keys(changes.after).length === 0) return current!;
     const [row] = await tx
@@ -210,7 +209,7 @@ export async function getNote(
     .select()
     .from(logs)
     .where(liveIn(logs, scope.propertyId, id));
-  if (!row) throw new NotFoundError("note");
+  if (!row) throw new NotFoundError("log entry");
   return row;
 }
 

@@ -7,7 +7,6 @@ import { NoteList } from "@/components/NoteList";
 import { PhotoUpload } from "@/components/PhotoUpload";
 import { Photos } from "@/components/Photos";
 import { UseList } from "@/components/UseList";
-import { LinkButton } from "@/components/ui/Button";
 import { List, Row, Section } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/icons";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -18,6 +17,7 @@ import { lessons, listNotes } from "@/lib/notes/notes";
 import { listUses } from "@/lib/parts/parts";
 import { getSpace } from "@/lib/places/places";
 import { listFixtures } from "@/lib/fixtures/fixtures";
+import { fixtureIcon } from "@/lib/fixtures/kind-labels";
 import { editedBy } from "@/lib/web/attribution";
 import { viewer } from "@/lib/web/context";
 import { removeAttachmentAction } from "@/lib/web/shared-actions";
@@ -57,52 +57,22 @@ export default async function PlacePage({
         }
         actions={
           canEdit ? (
-            <LinkButton href={`/places/${id}/edit`}>Edit</LinkButton>
+            <Link
+              href={`/places/${id}/edit`}
+              aria-label="Edit"
+              title="Edit"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control border border-line bg-card text-ink hover:bg-sunk"
+            >
+              <Icon name="edit" className="h-5 w-5" />
+            </Link>
           ) : null
         }
       />
 
-      {canEdit ? (
-        <div
-          className="grid grid-cols-3 gap-2"
-          role="group"
-          aria-label="Add to This Place"
-        >
-          {[
-            {
-              href: `/fixtures/new?space=${id}`,
-              label: "Add Fixture",
-              icon: "fixture" as const,
-            },
-            {
-              href: `/use?space=${id}`,
-              label: "Add Part",
-              icon: "part" as const,
-            },
-            {
-              href: `/notes/new?space=${id}`,
-              label: "Add Note",
-              icon: "note" as const,
-            },
-          ].map((a) => (
-            <Link
-              key={a.href}
-              href={a.href}
-              className="flex flex-col items-center gap-1 rounded-card border border-line bg-card px-2 py-3 text-center hover:bg-sunk"
-            >
-              <Icon name={a.icon} className="h-6 w-6 text-accent" />
-              <span className="text-[13px] font-medium leading-tight text-ink">
-                {a.label}
-              </span>
-            </Link>
-          ))}
-        </div>
-      ) : null}
-
       <Lessons rows={tips} />
 
       {place.notes ? (
-        <p className="mt-4 whitespace-pre-wrap px-1 text-[15px] text-ink-2">
+        <p className="whitespace-pre-wrap px-1 text-[15px] text-ink-2">
           {place.notes}
         </p>
       ) : null}
@@ -116,7 +86,7 @@ export default async function PlacePage({
                 href={`/places/new?parent=${id}`}
                 className="text-sm text-accent"
               >
-                Add
+                Add Place
               </Link>
             ) : null
           }
@@ -132,29 +102,82 @@ export default async function PlacePage({
                 />
               ))}
             </List>
-          ) : (
-            <p className="px-1 text-sm text-ink-3">None</p>
-          )}
+          ) : null}
         </Section>
       ) : null}
 
-      <Section title="Fixtures">
+      <Section
+        title="Fixtures"
+        action={
+          canEdit ? (
+            <Link
+              href={`/fixtures/new?space=${id}`}
+              className="text-sm text-accent"
+            >
+              Add Fixture
+            </Link>
+          ) : null
+        }
+      >
         {fixtures.length ? (
           <List>
             {fixtures.map((t) => (
               <Row
                 key={t.id}
                 href={`/fixtures/${t.id}`}
-                icon="fixture"
+                icon={fixtureIcon(t)}
                 title={t.name}
-                detail={t.category}
+                detail={t.category || undefined}
               />
             ))}
           </List>
-        ) : (
-          <p className="px-1 text-sm text-ink-3">None yet</p>
-        )}
+        ) : null}
       </Section>
+
+      {uses.length || canEdit ? (
+        <Section
+          title="Parts Used Here"
+          action={
+            canEdit ? (
+              <Link href={`/use?space=${id}`} className="text-sm text-accent">
+                Add Part
+              </Link>
+            ) : null
+          }
+        >
+          {uses.length ? <UseList uses={uses} show="part" /> : null}
+        </Section>
+      ) : null}
+
+      {notes.length || canEdit ? (
+        <Section
+          title="Log"
+          action={
+            <>
+              {notes.length > 5 ? (
+                <Link
+                  href={`/notes?space=${id}`}
+                  className="text-sm text-accent"
+                >
+                  All
+                </Link>
+              ) : null}
+              {canEdit ? (
+                <Link
+                  href={`/notes/new?space=${id}`}
+                  className="text-sm text-accent"
+                >
+                  Add Entry
+                </Link>
+              ) : null}
+            </>
+          }
+        >
+          {notes.length ? (
+            <NoteList rows={notes.slice(0, 5)} on={{ spaceId: id }} />
+          ) : null}
+        </Section>
+      ) : null}
 
       <HomeboxHere spaceId={id} placeName={place.name} canEdit={canEdit} />
       <DocumentsSection
@@ -163,38 +186,17 @@ export default async function PlacePage({
         canEdit={canEdit}
       />
 
-      {uses.length ? (
-        <Section title="Parts Used Here">
-          <UseList uses={uses} show="part" />
+      {photos.length || canEdit ? (
+        <Section title="Photos">
+          <div className="flex flex-col gap-3">
+            <Photos
+              items={photos}
+              remove={canEdit ? removeAttachmentAction : undefined}
+            />
+            {canEdit ? <PhotoUpload owner={`space:${id}`} /> : null}
+          </div>
         </Section>
       ) : null}
-
-      {notes.length ? (
-        <Section
-          title="Notes"
-          action={
-            <Link href={`/notes?space=${id}`} className="text-sm text-accent">
-              All
-            </Link>
-          }
-        >
-          <NoteList rows={notes.slice(0, 5)} />
-        </Section>
-      ) : null}
-
-      <Section title="Photos">
-        <div className="flex flex-col gap-3">
-          <Photos
-            items={photos}
-            remove={canEdit ? removeAttachmentAction : undefined}
-          />
-          {canEdit ? (
-            <PhotoUpload owner={`space:${id}`} />
-          ) : photos.length ? null : (
-            <p className="px-1 text-sm text-ink-3">None</p>
-          )}
-        </div>
-      </Section>
 
       <LinksSection owner={{ kind: "space", id }} canEdit={canEdit} />
 

@@ -4,7 +4,6 @@ import { NoteList } from "@/components/NoteList";
 import { DocumentsSection } from "@/components/DocumentsSection";
 import { PhotoUpload } from "@/components/PhotoUpload";
 import { Photos } from "@/components/Photos";
-import { LinkButton } from "@/components/ui/Button";
 import { Card, Pill, Section } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/icons";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -132,7 +131,8 @@ export default async function ProjectPage({
       <PageHeader
         title={project.title}
         subtitle={[
-          STATUS_LABEL[project.status],
+          // Editors read the status off the control below.
+          canEdit ? "" : STATUS_LABEL[project.status],
           project.priority !== "normal" ? PRIORITY_LABEL[project.priority] : "",
           project.targetDate ? `by ${formatDay(project.targetDate)}` : "",
         ]
@@ -141,27 +141,30 @@ export default async function ProjectPage({
         back={{ href: "/projects", label: "Projects" }}
         actions={
           canEdit ? (
-            <LinkButton href={`/projects/${id}/edit`}>Edit</LinkButton>
+            <Link
+              href={`/projects/${id}/edit`}
+              aria-label="Edit"
+              title="Edit"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control border border-line bg-card text-ink hover:bg-sunk"
+            >
+              <Icon name="edit" className="h-5 w-5" />
+            </Link>
           ) : null
         }
       />
 
-      {project.status !== "dropped" ? (
-        <StatusStepper
-          status={project.status}
-          setStatus={setStatusAction.bind(null, id)}
-          canEdit={canEdit}
-        />
-      ) : (
-        <Pill tone="neutral">Dropped</Pill>
-      )}
+      <StatusStepper
+        status={project.status}
+        setStatus={setStatusAction.bind(null, id)}
+        canEdit={canEdit}
+      />
 
       {project.series ? (
-        <p className="mt-3 px-1 text-sm text-ink-3">
-          Part of{" "}
+        <p className="mt-1 flex flex-wrap items-center gap-x-1 px-1 text-sm text-ink-3">
+          Part of
           <Link
             href={`/projects/series/${project.series.id}`}
-            className="font-medium text-accent"
+            className="inline-flex min-h-11 items-center wrap-anywhere font-medium text-accent"
           >
             {project.series.title}
           </Link>
@@ -191,19 +194,6 @@ export default async function ProjectPage({
         </Card>
       ) : null}
 
-      {project.contact ? (
-        <p className="mt-3 px-1 text-sm text-ink-2">
-          Doing it:{" "}
-          <Link
-            href={`/contacts/${project.contact.id}`}
-            className="font-medium text-accent"
-          >
-            {project.contact.name}
-            {project.contact.company ? ` (${project.contact.company})` : ""}
-          </Link>
-        </p>
-      ) : null}
-
       {project.series ? (
         <SeriesBanner
           seriesTitle={project.series.title}
@@ -213,18 +203,28 @@ export default async function ProjectPage({
         />
       ) : null}
 
-      {project.places.length ? (
+      {project.places.length || project.contact ? (
         <div className="mt-3 flex flex-wrap gap-2">
           {project.places.map((p) => (
             <Link
               key={p.id}
               href={`/places/${p.id}`}
-              className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-card px-3 text-sm text-ink-2"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-line bg-card px-3 py-1.5 wrap-anywhere text-sm text-ink-2 hover:bg-sunk"
             >
-              <Icon name="place" className="h-4 w-4 text-accent" />
+              <Icon name="place" className="h-4 w-4 shrink-0 text-accent" />
               {p.name}
             </Link>
           ))}
+          {project.contact ? (
+            <Link
+              href={`/contacts/${project.contact.id}`}
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-line bg-card px-3 py-1.5 wrap-anywhere text-sm text-ink-2 hover:bg-sunk"
+            >
+              <Icon name="contact" className="h-4 w-4 shrink-0 text-accent" />
+              {project.contact.name}
+              {project.contact.company ? ` (${project.contact.company})` : ""}
+            </Link>
+          ) : null}
         </div>
       ) : null}
 
@@ -315,7 +315,7 @@ export default async function ProjectPage({
                         {contactCompany ? ` (${contactCompany})` : ""}
                       </Link>
                     ) : (
-                      "Unknown"
+                      "No contact"
                     )}
                     {quote.receivedOn
                       ? ` · ${formatDay(quote.receivedOn)}`
@@ -367,30 +367,24 @@ export default async function ProjectPage({
                 label: p.company ? `${p.name} (${p.company})` : p.name,
               }))}
             />
-          ) : project.quotes.length === 0 ? (
-            <p className="px-1 text-sm text-ink-3">No quotes yet</p>
           ) : null}
         </div>
       </Section>
 
       <Section
-        title="Notes"
+        title="Log"
         action={
           canEdit ? (
             <Link
               href={`/notes/new?project=${id}`}
-              className="text-sm text-accent"
+              className="inline-flex min-h-11 items-center text-sm text-accent"
             >
-              Add Note
+              Add Entry
             </Link>
           ) : null
         }
       >
-        {notes.length ? (
-          <NoteList rows={notes} />
-        ) : (
-          <p className="px-1 text-sm text-ink-3">None yet</p>
-        )}
+        {notes.length ? <NoteList rows={notes} /> : null}
       </Section>
 
       <DocumentsSection

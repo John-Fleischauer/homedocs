@@ -72,7 +72,7 @@ test("a turned-off link stops working", async ({ page, browser }) => {
     .getByRole("group", { name: "Turn Off this link?" })
     .getByRole("button", { name: "Turn Off" })
     .click();
-  await expect(page.getByText("Expired or Off")).toBeVisible();
+  await expect(page.getByText("Past Links")).toBeVisible();
 
   const ctx = await browser.newContext({ storageState: undefined });
   const res = await (await ctx.newPage()).goto(link);

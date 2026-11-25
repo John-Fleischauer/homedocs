@@ -3,56 +3,77 @@ import { LinkButton } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { roleAtLeast } from "@/lib/core/types";
 import { db } from "@/lib/db";
+import { fixtureIcon } from "@/lib/fixtures/kind-labels";
 import { buildTree, flattenTree, listSpaces } from "@/lib/places/places";
-import { listFixtures } from "@/lib/fixtures/fixtures";
+import { listFixtures, type Fixture } from "@/lib/fixtures/fixtures";
 import { viewer } from "@/lib/web/context";
 
 export const metadata = { title: "Fixtures" };
 
+/* By place, whole-house fixtures first, then places in the order the Places list has them. Each row says what kind it is, in its icon and under its name. */
 export default async function FixturesPage() {
   const { scope, user } = await viewer();
   const [fixtures, spaceRows] = await Promise.all([
     listFixtures(db, scope),
     listSpaces(db, scope),
   ]);
-  const labels = new Map(
-    flattenTree(buildTree(spaceRows)).map((p) => [p.id, p.label]),
-  );
+  const places = flattenTree(buildTree(spaceRows));
   const canEdit = roleAtLeast(user.role, "member");
-  const sorted = [...fixtures].sort((a, b) =>
-    `${labels.get(a.spaceId ?? "") ?? ""} ${a.name}`.localeCompare(
-      `${labels.get(b.spaceId ?? "") ?? ""} ${b.name}`,
-    ),
-  );
+  const groups: { key: string; label: string; items: Fixture[] }[] = [
+    { key: "", label: "Whole House" },
+    ...places.map((p) => ({ key: p.id, label: p.label })),
+  ]
+    .map((g) => ({
+      ...g,
+      items: fixtures.filter((f) => (f.spaceId ?? "") === g.key),
+    }))
+    .filter((g) => g.items.length);
   return (
     <>
       <PageHeader
         title="Fixtures"
         back={{ href: "/more", label: "More" }}
         actions={
-          canEdit ? (
+          canEdit && groups.length ? (
             <LinkButton href="/fixtures/new" variant="primary">
               Add
             </LinkButton>
           ) : null
         }
       />
-      {sorted.length ? (
-        <List>
-          {sorted.map((t) => (
-            <Row
-              key={t.id}
-              href={`/fixtures/${t.id}`}
-              icon="fixture"
-              title={t.name}
-              detail={[labels.get(t.spaceId ?? "") ?? "Whole house", t.category]
-                .filter(Boolean)
-                .join(" · ")}
-            />
+      {groups.length ? (
+        <div className="flex flex-col gap-4">
+          {groups.map((g) => (
+            <section key={g.key}>
+              <h2 className="mb-1.5 px-1 wrap-anywhere text-xs font-medium uppercase tracking-wide text-ink-3">
+                {g.label}
+              </h2>
+              <List>
+                {g.items.map((f) => (
+                  <Row
+                    key={f.id}
+                    href={`/fixtures/${f.id}`}
+                    icon={fixtureIcon(f)}
+                    title={f.name}
+                    detail={f.category || undefined}
+                  />
+                ))}
+              </List>
+            </section>
           ))}
-        </List>
+        </div>
       ) : (
-        <EmptyState>No fixtures yet</EmptyState>
+        <EmptyState
+          action={
+            canEdit ? (
+              <LinkButton href="/fixtures/new" variant="primary">
+                Add Fixture
+              </LinkButton>
+            ) : null
+          }
+        >
+          No fixtures yet
+        </EmptyState>
       )}
     </>
   );

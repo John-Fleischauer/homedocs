@@ -3,8 +3,7 @@ import { DocumentsSection } from "@/components/DocumentsSection";
 import { LinksSection } from "@/components/LinksSection";
 import { PhotoUpload } from "@/components/PhotoUpload";
 import { Photos } from "@/components/Photos";
-import { LinkButton } from "@/components/ui/Button";
-import { Card, Facts, Section } from "@/components/ui/Card";
+import { Card, Facts, List, Row, Section } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/icons";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { roleAtLeast } from "@/lib/core/types";
@@ -35,9 +34,9 @@ export default async function NotePage({
   ]);
   const canEdit = roleAtLeast(user.role, "member");
 
-  // The one-tap "really needs" update, when this note's lesson has a number in it.
+  // The one-tap "amount needed" update, when this entry's lesson has a number in it.
   const need = suggestedNeed(note);
-  let applicable: { where: string; unit: string } | null = null;
+  let applicable: { unit: string } | null = null;
   let remembered: string | null = null;
   if (need !== null && note.supplyId && (note.spaceId || note.fixtureId)) {
     const uses = await listUses(
@@ -50,8 +49,8 @@ export default async function NotePage({
     const use = uses.find((u) => u.part.id === note.supplyId);
     const unit = plural(use?.unit || note.unit || "");
     if (use && Number(use.quantityNeeded ?? NaN) === need)
-      remembered = `${use.owner.name} really needs ${need} ${unit}.`;
-    else if (use && canEdit) applicable = { where: use.owner.name, unit };
+      remembered = `Amount needed for ${use.owner.name}: ${need} ${unit}`;
+    else if (use && canEdit) applicable = { unit };
   }
 
   const about = [
@@ -60,6 +59,7 @@ export default async function NotePage({
           href: `/places/${note.spaceId}`,
           label: row.spaceName,
           icon: "place" as const,
+          kind: "Place",
         }
       : null,
     row.fixtureName && note.fixtureId
@@ -67,6 +67,7 @@ export default async function NotePage({
           href: `/fixtures/${note.fixtureId}`,
           label: row.fixtureName,
           icon: "fixture" as const,
+          kind: "Fixture",
         }
       : null,
     row.supplyName && note.supplyId
@@ -74,6 +75,7 @@ export default async function NotePage({
           href: `/parts/${note.supplyId}`,
           label: row.supplyName,
           icon: "part" as const,
+          kind: "Part",
         }
       : null,
     row.contactName && note.contactId
@@ -81,6 +83,7 @@ export default async function NotePage({
           href: `/contacts/${note.contactId}`,
           label: row.contactName,
           icon: "contact" as const,
+          kind: "Done By",
         }
       : null,
     row.projectTitle && note.projectId
@@ -88,6 +91,7 @@ export default async function NotePage({
           href: `/projects/${note.projectId}`,
           label: row.projectTitle,
           icon: "project" as const,
+          kind: "Project",
         }
       : null,
   ].filter((x): x is NonNullable<typeof x> => x !== null);
@@ -97,53 +101,64 @@ export default async function NotePage({
       <PageHeader
         title={note.title}
         subtitle={formatDay(note.happenedOn)}
-        back={{ href: "/notes", label: "Notes" }}
+        back={{ href: "/notes", label: "Log" }}
         actions={
           canEdit ? (
-            <LinkButton href={`/notes/${id}/edit`}>Edit</LinkButton>
+            <Link
+              href={`/notes/${id}/edit`}
+              aria-label="Edit"
+              title="Edit"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control border border-line bg-card text-ink hover:bg-sunk"
+            >
+              <Icon name="edit" className="h-5 w-5" />
+            </Link>
           ) : null
         }
       />
 
-      {about.length ? (
-        <div className="mb-4 flex flex-wrap gap-2">
-          {about.map((a) => (
-            <Link
-              key={a.href}
-              href={a.href}
-              className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-card px-3 text-sm text-ink-2 hover:bg-sunk"
-            >
-              <Icon name={a.icon} className="h-4 w-4 text-accent" />
-              {a.label}
-            </Link>
-          ))}
-        </div>
-      ) : null}
-
       {note.nextTime ? (
         <div className="rounded-card border border-warn/30 bg-warn-soft px-4 py-3 text-warn">
-          <p className="text-[15px]">
-            <span className="font-semibold">Next Time:</span> {note.nextTime}
+          <h2 className="text-xs font-semibold uppercase tracking-wide">
+            Next Time
+          </h2>
+          <p className="mt-0.5 whitespace-pre-wrap wrap-anywhere text-[15px]">
+            {note.nextTime}
           </p>
           {note.remindAfter ? (
             <p className="mt-1 text-xs">
-              Reminder around {formatDay(note.remindAfter)}
+              Reminder {formatDay(note.remindAfter)}
             </p>
           ) : null}
           {applicable && need !== null ? (
-            <ApplyNeed
-              noteId={id}
-              need={need}
-              unit={applicable.unit}
-              where={applicable.where}
-            />
+            <ApplyNeed noteId={id} need={need} unit={applicable.unit} />
           ) : null}
           {remembered ? (
-            <p className="mt-2 text-sm font-medium">
-              ✓ Remembered: {remembered}
+            <p className="mt-2 flex items-start gap-1.5 text-sm font-medium">
+              <Icon name="check" className="mt-0.5 h-4 w-4 shrink-0" />
+              {remembered}
             </p>
           ) : null}
         </div>
+      ) : note.remindAfter ? (
+        <Facts
+          items={[{ label: "Reminder", value: formatDay(note.remindAfter) }]}
+        />
+      ) : null}
+
+      {about.length ? (
+        <Section title="About">
+          <List>
+            {about.map((a) => (
+              <Row
+                key={a.href}
+                href={a.href}
+                icon={a.icon}
+                title={a.label}
+                detail={a.kind}
+              />
+            ))}
+          </List>
+        </Section>
       ) : null}
 
       <div className="mt-4">
@@ -156,7 +171,7 @@ export default async function NotePage({
       </div>
 
       {note.body ? (
-        <Section title="Details">
+        <Section title="Notes">
           <Card className="px-4 py-3">
             <p className="whitespace-pre-wrap text-[15px] text-ink-2">
               {note.body}

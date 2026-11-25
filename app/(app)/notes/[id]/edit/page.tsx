@@ -8,7 +8,7 @@ import { noteOptions } from "@/lib/web/note-options";
 import { deleteNoteAction, updateNoteAction } from "../../actions";
 import { NoteForm } from "../../note-form";
 
-export const metadata = { title: "Edit Note" };
+export const metadata = { title: "Edit Entry" };
 
 export default async function EditNotePage({
   params,
@@ -22,7 +22,7 @@ export default async function EditNotePage({
   return (
     <>
       <PageHeader
-        title="Edit Note"
+        title="Edit Entry"
         back={{ href: `/notes/${id}`, label: note.title }}
       />
       <NoteForm
@@ -31,10 +31,11 @@ export default async function EditNotePage({
         initial={{ ...note, updatedAt: note.updatedAt.toISOString() }}
         submit="Save"
       />
-      <div className="mt-8 border-t border-line pt-6">
+      <div className="mt-6 flex justify-end border-t border-line pt-3">
         <DeleteButton
+          compact
           action={deleteNoteAction.bind(null, id)}
-          what="this note"
+          what="this log entry"
         />
       </div>
     </>

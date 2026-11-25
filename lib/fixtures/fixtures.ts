@@ -19,31 +19,16 @@ import {
 import { fixtures, spaces, systems } from "../db/schema";
 import { cascadeFixture, rebuildFixture, spacePath } from "../search/rebuild";
 import { assertSystem, guessSystemId } from "../systems/systems";
+import { fixtureKind } from "./kinds";
 
 export type Fixture = typeof fixtures.$inferSelect;
-
-/** Suggestions for the category box; free text is fine too. */
-export const FIXTURE_CATEGORIES = [
-  "Light fixture",
-  "Ceiling fan",
-  "Shutoff valve",
-  "Electrical panel",
-  "Water heater",
-  "HVAC",
-  "Appliance",
-  "Plumbing fixture",
-  "Smoke / CO detector",
-  "Door / lock",
-  "Window",
-  "Irrigation",
-  "Other",
-];
 
 export type FixtureInput = {
   name: string;
   spaceId?: string | null;
   /** Undefined on create means "guess from the kind and name" (guessSystemKey); null means none. */
   systemId?: string | null;
+  /** Its kind. Free text: spelled as the family's list spells it when the list has it (lib/fixtures/kinds.ts), kept as typed otherwise. */
   category?: string;
   notes?: string;
   inGuide?: boolean;
@@ -60,7 +45,8 @@ async function assertSpace(
     .select({ id: spaces.id })
     .from(spaces)
     .where(liveIn(spaces, scope.propertyId, spaceId));
-  if (!row) throw new ValidationError("That place no longer exists.");
+  if (!row)
+    throw new ValidationError("That place no longer exists. Pick another.");
 }
 
 export async function listFixtures(
@@ -115,9 +101,14 @@ export async function createFixture(
   return inTransaction(exec, async (tx) => {
     const spaceId = input.spaceId || null;
     await assertSpace(tx, scope, spaceId);
+    const category = await fixtureKind(
+      tx,
+      scope,
+      cleanText(input.category, 100),
+    );
     const systemId =
       input.systemId === undefined
-        ? await guessSystemId(tx, scope, input.category, input.name)
+        ? await guessSystemId(tx, scope, category, input.name)
         : input.systemId || null;
     await assertSystem(tx, scope, systemId);
     const [row] = await tx
@@ -127,7 +118,7 @@ export async function createFixture(
         spaceId,
         systemId,
         name: requireText(input.name, "Give the fixture a name."),
-        category: cleanText(input.category, 100),
+        category,
         notes: cleanText(input.notes),
         inGuide: input.inGuide ?? false,
         guideNote: cleanText(input.guideNote, 2000),
@@ -166,7 +157,11 @@ export async function updateFixture(
     if (input.name !== undefined)
       patch.name = requireText(input.name, "Give the fixture a name.");
     if (input.category !== undefined)
-      patch.category = cleanText(input.category, 100);
+      patch.category = await fixtureKind(
+        tx,
+        scope,
+        cleanText(input.category, 100),
+      );
     if (input.notes !== undefined) patch.notes = cleanText(input.notes);
     if (input.inGuide !== undefined) patch.inGuide = input.inGuide;
     if (input.guideNote !== undefined)

@@ -9,7 +9,7 @@ import { viewer } from "@/lib/web/context";
 import { createShareAction, revokeShareAction } from "./actions";
 import { RevokeLink, ShareForm } from "./forms";
 
-export const metadata = { title: "Share Links" };
+export const metadata = { title: "Share House Guide" };
 
 const EVENT = {
   view: "opened",
@@ -44,7 +44,7 @@ export default async function SharePage() {
     <>
       <PageHeader
         title="Share House Guide"
-        subtitle="No account needed"
+        subtitle="A link that opens the guide without an account"
         back={{ href: "/guide", label: "House Guide" }}
       />
       <Card className="p-4">
@@ -60,8 +60,8 @@ export default async function SharePage() {
             {live.map(({ link }) => (
               <Card key={link.id} className="p-4">
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-[15px] font-semibold text-ink">
+                  <div className="min-w-0">
+                    <p className="wrap-anywhere text-[15px] font-semibold text-ink">
                       {link.label}
                     </p>
                     <p className="text-sm text-ink-3">
@@ -70,7 +70,7 @@ export default async function SharePage() {
                         month: "short",
                         day: "numeric",
                       })}
-                      {link.pinHash ? " · has a PIN" : " · no PIN"}
+                      {link.pinHash ? " · has PIN" : " · no PIN"}
                     </p>
                     {link.lockedAt ? (
                       <Pill tone="danger">PIN Locked</Pill>
@@ -97,10 +97,10 @@ export default async function SharePage() {
       ) : null}
 
       {past.length ? (
-        <Section title="Expired or Off">
+        <Section title="Past Links">
           <List>
             {past.map(({ link, views: n }) => (
-              <li key={link.id} className="px-4 py-3 text-sm">
+              <li key={link.id} className="wrap-anywhere px-4 py-3 text-sm">
                 <span className="text-ink">{link.label}</span>
                 <span className="text-ink-3">
                   {" "}

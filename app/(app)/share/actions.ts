@@ -15,7 +15,7 @@ export async function createShareAction(
     z.object({
       label: text(),
       /* The domain says which lengths it allows; this only keeps it a whole number. */
-      days: int(0, 100_000, "Pick how long the link lasts.", 7),
+      days: int(0, 100_000, "Choose how long the link lasts.", 7),
       pin: text(200),
       rootSpaceId: optionalId(),
     }),

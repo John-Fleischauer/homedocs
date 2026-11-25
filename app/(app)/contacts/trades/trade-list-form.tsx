@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ActionForm, type FormAction } from "@/components/ActionForm";
 import { Button } from "@/components/ui/Button";
-import { SubmitButton, TextInput } from "@/components/ui/Field";
+import { Field, SubmitButton, TextInput } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/icons";
 import { tradeKey, type TradeGroup } from "@/lib/contacts/trade-labels";
 
@@ -38,23 +38,24 @@ export function TradeListForm({
           key={i}
           className="flex flex-col gap-2 rounded-card border border-line bg-card p-3"
         >
-          <TextInput
-            value={g.label}
-            onChange={(e) => update(i, { label: e.target.value })}
-            aria-label="Group Name"
-            className="font-medium"
-          />
+          <Field label="Group Name">
+            <TextInput
+              value={g.label}
+              onChange={(e) => update(i, { label: e.target.value })}
+              placeholder="Other"
+            />
+          </Field>
           <ul className="flex flex-wrap gap-2">
             {g.trades.map((t) => (
               <li
                 key={t}
-                className="inline-flex min-h-11 items-center rounded-full border border-line bg-card pl-3 text-sm text-ink-2"
+                className="inline-flex min-h-11 min-w-0 items-center rounded-full border border-line bg-card pl-3 text-sm text-ink-2"
               >
-                {t}
+                <span className="min-w-0 wrap-anywhere">{t}</span>
                 <button
                   type="button"
                   aria-label={`Remove ${t}`}
-                  className="flex h-11 w-10 items-center justify-center rounded-full text-ink-3 hover:text-danger"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink-3 hover:text-danger"
                   onClick={() =>
                     update(i, { trades: g.trades.filter((x) => x !== t) })
                   }
@@ -78,16 +79,16 @@ export function TradeListForm({
                   add(i);
                 }
               }}
-              placeholder="Add one"
-              aria-label={`Add to ${g.label || "this group"}`}
+              placeholder="New trade"
+              aria-label={`New Trade in ${g.label || "This Group"}`}
             />
             <Button className="shrink-0" onClick={() => add(i)}>
-              Add
+              Add Trade
             </Button>
           </div>
           {g.trades.length === 0 ? (
             <Button
-              variant="ghost"
+              variant="danger"
               className="self-start"
               onClick={() => {
                 setGroups((gs) => gs.filter((_, j) => j !== i));
@@ -100,13 +101,12 @@ export function TradeListForm({
         </section>
       ))}
       <Button
-        variant="ghost"
-        className="self-start"
         onClick={() => {
           setGroups((gs) => [...gs, { label: "", trades: [] }]);
           setAdding((a) => [...a, ""]);
         }}
       >
+        <Icon name="plus" className="h-[18px] w-[18px]" />
         Add Group
       </Button>
       <SubmitButton>Save</SubmitButton>

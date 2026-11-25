@@ -254,6 +254,13 @@ export const properties = pgTable("properties", {
    */
   tradeGroups:
     jsonb("trade_groups").$type<{ label: string; trades: string[] }[]>(),
+  /**
+   * The family's list of what a fixture can be, in the order the fixture form
+   * offers it; null until they change it, meaning DEFAULT_FIXTURE_KINDS. A
+   * fixture stores its kind as text (`fixtures.category`), spelled as the list
+   * spells it; one removed from the list stays on the fixtures that have it.
+   */
+  fixtureKinds: jsonb("fixture_kinds").$type<string[]>(),
   ...authored,
 });
 

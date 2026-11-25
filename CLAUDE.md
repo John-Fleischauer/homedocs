@@ -47,8 +47,10 @@ training data: read the guide in `node_modules/next/dist/docs/` before using an 
   always built with `unlocked: false`). `resolveVisit()` (`lib/guide/viewing.ts`) decides "at home
   or unlocked"; `buildGuide()` alone decides what that reveals, and the offline copy stays on a
   phone whoever holds it.
-- **The UI's words are Place, System, Fixture, Part, Note, Contact, Project.** The family reads
-  them; the tables keep older names (`spaces`, `supplies`, `logs`), mapped in ARCHITECTURE.
+- **The UI's words are Place, System, Fixture, Part, Log (a Log Entry), Contact, Project.** The
+  family reads them; the tables keep older names (`spaces`, `supplies`, `logs`), mapped in
+  ARCHITECTURE. "Notes" in the UI is only the free-text box on a form and the guide's sections;
+  the code, the URLs (`/notes`) and the MCP tools still say note for a log entry.
 - **A server action's first statement hands its input to `act()` (`lib/web/action.ts`) with a
   zod schema, and a form posting to one says what happens on reset** (`keepFormValues`,
   `useClearOnSuccess`, or `ActionForm`). An action is a public endpoint: the `app/(app)/`

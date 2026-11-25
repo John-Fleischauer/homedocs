@@ -17,8 +17,7 @@ export function PinForm({ token }: { token: string }) {
         Codes and Address Hidden
       </p>
       <p className="mb-3 text-sm text-ink-3">
-        Shown on the house Wi-Fi. Away from the house, enter the PIN you were
-        sent.
+        Shown on the house Wi-Fi, or with the PIN you were sent
       </p>
       <form
         action={action}
@@ -36,7 +35,7 @@ export function PinForm({ token }: { token: string }) {
             aria-label="PIN"
             required
           />
-          <SubmitButton pendingText="…">Unlock</SubmitButton>
+          <SubmitButton pendingText="Checking…">Unlock</SubmitButton>
         </div>
         <FormError>{state.error}</FormError>
       </form>

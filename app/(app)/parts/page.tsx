@@ -4,10 +4,29 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { roleAtLeast } from "@/lib/core/types";
 import { db } from "@/lib/db";
 import { listParts } from "@/lib/parts/parts";
-import { CATEGORIES, summarize, TEMPLATES } from "@/lib/parts/templates";
+import {
+  CATEGORIES,
+  summarize,
+  TEMPLATES,
+  type Category,
+} from "@/lib/parts/templates";
 import { viewer } from "@/lib/web/context";
 
 export const metadata = { title: "Parts" };
+
+/* A part's details for its row, less whatever its name already says ("A19 E26 2700K bulb"). */
+function beyondName(
+  name: string,
+  category: Category,
+  fields: Record<string, string>,
+): string {
+  // Whole words, so a count of "2" isn't hidden by the 2 in "CR2032".
+  const said = ` ${name.toLowerCase().replace(/\s+/g, " ")} `;
+  return summarize(category, fields)
+    .split(" · ")
+    .filter((piece) => piece && !said.includes(` ${piece.toLowerCase()} `))
+    .join(" · ");
+}
 
 export default async function PartsPage() {
   const { scope, user } = await viewer();
@@ -21,7 +40,7 @@ export default async function PartsPage() {
         actions={
           canEdit ? (
             <LinkButton href="/parts/new" variant="primary">
-              Add
+              Add Part
             </LinkButton>
           ) : null
         }
@@ -42,10 +61,10 @@ export default async function PartsPage() {
                       icon="part"
                       title={part.name}
                       detail={[
-                        summarize(part.category, part.fields),
+                        beyondName(part.name, part.category, part.fields),
                         uses
-                          ? `used in ${uses} place${uses === 1 ? "" : "s"}`
-                          : "not linked yet",
+                          ? `Used in ${uses} place${uses === 1 ? "" : "s"}`
+                          : "Not used anywhere",
                       ]
                         .filter(Boolean)
                         .join(" · ")}

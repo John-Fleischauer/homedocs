@@ -23,6 +23,8 @@
  *   system renamed / deleted /     it, and every fixture in it
  *     restored
  *   fixture's system changed       the fixture (its own rebuild)
+ *   fixture kind renamed in the    every fixture that has it (lib/fixtures/kinds.ts)
+ *     family's list
  *
  * Weights: A = the record's own name, B = where it is and what it is, C = notes.
  */

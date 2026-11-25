@@ -11,6 +11,7 @@ type PartOption = {
   name: string;
   category: Category;
   summary: string;
+  units: string[];
 };
 
 export function UseForm({
@@ -35,7 +36,7 @@ export function UseForm({
         name={owner.kind === "fixture" ? "fixtureId" : "spaceId"}
         value={owner.id}
       />
-      <Field label="Which Part?">
+      <Field label="Part">
         <Select
           name="supplyId"
           value={selected}
@@ -53,12 +54,13 @@ export function UseForm({
       {template ? (
         <UseFields
           key={selected}
-          unit={template.unit}
+          unit={part?.units[0] ?? template.unit}
+          units={part?.units}
           finishes={template.finishes}
           ownerKind={owner.kind}
         />
       ) : null}
-      <SubmitButton>Add</SubmitButton>
+      <SubmitButton>Add Part</SubmitButton>
     </ActionForm>
   );
 }

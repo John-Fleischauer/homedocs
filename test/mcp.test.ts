@@ -146,7 +146,7 @@ describe("mcp", () => {
       }[];
     }>(await m.call("find_part_for", { place: "Bedroom" }));
     expect(paint.used_here[0]).toMatchObject({
-      details: { "Colour code": "SW 7015" },
+      details: { "Colour Code": "SW 7015" },
       finish: "Eggshell",
       surface: "walls",
     });

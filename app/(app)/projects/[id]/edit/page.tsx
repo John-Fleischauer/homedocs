@@ -9,7 +9,7 @@ import { viewer } from "@/lib/web/context";
 import { deleteProjectAction, updateProjectAction } from "../../actions";
 import { ProjectForm } from "../../project-form";
 
-export const metadata = { title: "Edit project" };
+export const metadata = { title: "Edit Project" };
 
 export default async function EditProjectPage({
   params,
@@ -47,8 +47,9 @@ export default async function EditProjectPage({
         }}
         submit="Save"
       />
-      <div className="mt-8 border-t border-line pt-6">
+      <div className="mt-6 flex justify-end border-t border-line pt-3">
         <DeleteButton
+          compact
           action={deleteProjectAction.bind(null, id)}
           what={`“${project.title}”`}
         />

@@ -3,10 +3,11 @@ import type { SystemSummary } from "@/lib/systems/systems";
 import { systemIcon } from "@/lib/systems/seeds";
 import { Icon } from "./ui/icons";
 
+/** The line under a system's name; nothing for a system with no fixtures. */
 export function systemDetail(s: { fixtures: number; guide: number }) {
-  if (s.fixtures === 0) return "Nothing yet";
+  if (s.fixtures === 0) return undefined;
   const n = `${s.fixtures} fixture${s.fixtures === 1 ? "" : "s"}`;
-  return s.guide ? `${n} · ${s.guide} on the guide` : n;
+  return s.guide ? `${n} · ${s.guide} on house guide` : n;
 }
 
 /* Home's second way in, beside places: one tile per system that has something in it. */

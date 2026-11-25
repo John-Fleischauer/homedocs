@@ -21,6 +21,13 @@ export const HOW_LABEL: Record<How, string> = {
   either: "In store or online",
 };
 
+/** The same, as the form's three buttons say it. */
+export const HOW_BUTTON: Record<How, string> = {
+  in_store: "In Store",
+  online: "Online",
+  either: "Either",
+};
+
 export function isHow(value: unknown): value is How {
   return (
     typeof value === "string" && (HOW as readonly string[]).includes(value)

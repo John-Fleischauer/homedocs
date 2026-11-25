@@ -15,6 +15,7 @@ export default async function TradesPage() {
     <>
       <PageHeader
         title="Trades"
+        subtitle="Choices on the contact and system forms"
         back={{ href: "/contacts", label: "Contacts" }}
       />
       <TradeListForm

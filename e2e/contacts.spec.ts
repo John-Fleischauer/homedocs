@@ -12,6 +12,8 @@ test("the list of what contacts do can be edited, and typed trades join it", asy
 }) => {
   await page.goto("/contacts/new");
   await expect(page.getByText("HVAC", { exact: true })).toBeVisible();
+  // Groups after the first open on a tap.
+  await page.getByText("Other", { exact: true }).click();
   await expect(page.getByText("HOA", { exact: true })).toBeVisible();
 
   await page.getByRole("link", { name: "Edit List" }).click();
@@ -31,5 +33,6 @@ test("the list of what contacts do can be edited, and typed trades join it", asy
   await expect(page.getByText("Chimney sweep", { exact: true })).toBeVisible();
 
   await page.goto("/contacts/new");
+  await page.getByText("Other", { exact: true }).click();
   await expect(page.getByText("Chimney sweep", { exact: true })).toBeVisible();
 });

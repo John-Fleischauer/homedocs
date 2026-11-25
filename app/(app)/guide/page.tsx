@@ -2,6 +2,7 @@ import Link from "next/link";
 import { GuideView } from "@/components/guide/GuideView";
 import { LinkButton, buttonClass } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Icon } from "@/components/ui/icons";
 import { roleAtLeast } from "@/lib/core/types";
 import { db } from "@/lib/db";
 import { auditReveal, buildGuide } from "@/lib/guide/guide";
@@ -26,17 +27,31 @@ export default async function GuidePage({
 
   return (
     <>
-      <div className="no-print mb-4 flex flex-wrap gap-2">
-        {canEdit ? (
-          <LinkButton href="/guide/edit">Edit Guide</LinkButton>
-        ) : null}
-        {user.role === "admin" ? (
-          <LinkButton href="/share">Share with Housesitter</LinkButton>
-        ) : null}
-      </div>
       <GuideView
         guide={guide}
         fileBase="/api/files"
+        actions={
+          canEdit ? (
+            <Link
+              href="/guide/edit"
+              aria-label="Edit Guide"
+              title="Edit Guide"
+              className="flex h-11 w-11 items-center justify-center rounded-control border border-line bg-card text-ink hover:bg-sunk"
+            >
+              <Icon name="edit" className="h-[18px] w-[18px]" />
+            </Link>
+          ) : null
+        }
+        intro={
+          user.role === "admin" ? (
+            <div className="no-print mb-4">
+              <LinkButton href="/share" className="w-full">
+                <Icon name="link" className="h-[18px] w-[18px]" />
+                Share Guide
+              </LinkButton>
+            </div>
+          ) : null
+        }
         lockSlot={
           <Card className="flex items-center justify-between gap-3 p-4">
             <p className="text-sm text-ink-3">

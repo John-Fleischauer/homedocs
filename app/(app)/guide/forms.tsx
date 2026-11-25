@@ -33,7 +33,7 @@ export function SectionForm({
         <TextInput
           name="title"
           defaultValue={initial?.title}
-          placeholder="Trash day, The dog, Thermostat"
+          placeholder="Trash day"
           required
           ref={initial ? undefined : focusUnlessTouch}
         />
@@ -44,7 +44,7 @@ export function SectionForm({
       <Checkbox
         name="sensitive"
         label="Private"
-        hint="Only at the house, or with the link’s PIN"
+        hint="A share link shows it only with the PIN, or on the house Wi-Fi"
         defaultChecked={initial?.sensitive}
       />
       <SubmitButton>Save</SubmitButton>
@@ -95,7 +95,13 @@ export function SecretForm({
       {kind === "wifi" ? (
         <>
           <Field label="Network Name">
-            <TextInput name="ssid" defaultValue={initial?.ssid} required />
+            <TextInput
+              name="ssid"
+              defaultValue={initial?.ssid}
+              autoCapitalize="none"
+              spellCheck={false}
+              required
+            />
           </Field>
           <Field label="Security">
             <Select name="security" defaultValue={initial?.security ?? "WPA"}>
@@ -111,18 +117,17 @@ export function SecretForm({
       </Field>
       <Field
         label={kind === "wifi" ? "Password" : "Code"}
-        hint={
-          editing ? "Leave blank to keep the current one" : "Stored encrypted"
-        }
+        hint={editing ? "Blank keeps the current one" : "Stored encrypted"}
       >
         <TextInput
           name="value"
           type="text"
           autoComplete="off"
+          autoCapitalize="none"
           spellCheck={false}
         />
       </Field>
-      <Field label="Who Sees It on a Shared Link">
+      <Field label="Shown on a Share Link">
         {/* Keyed by kind: an uncontrolled select keeps its first default, so
             switching Wi-Fi → Alarm would otherwise leave the code visible to
             anyone with the link. */}
@@ -138,14 +143,14 @@ export function SecretForm({
           }
         >
           <option value="home_or_pin">
-            Only at the house, or with the link’s PIN
+            With the PIN, or on the house Wi-Fi
           </option>
-          <option value="always">Anyone with the link</option>
+          <option value="always">To anyone with the link</option>
         </Select>
       </Field>
       {kind === "wifi" ? (
         <p className="-mt-2 text-xs text-ink-3">
-          They need the password before they’re on the Wi-Fi.
+          Guests need it before they can join the house Wi-Fi
         </p>
       ) : null}
       <Checkbox

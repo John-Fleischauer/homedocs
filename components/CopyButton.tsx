@@ -14,14 +14,14 @@ export function CopyButton({
   return (
     <button
       type="button"
-      className={buttonClass("secondary", "min-h-9 self-start px-3 text-sm")}
+      className={buttonClass("secondary", "self-start px-3 text-sm")}
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(text);
           setCopied(true);
           setTimeout(() => setCopied(false), 2000);
         } catch {
-          prompt("Copy this:", text);
+          prompt("Copy:", text);
         }
       }}
     >

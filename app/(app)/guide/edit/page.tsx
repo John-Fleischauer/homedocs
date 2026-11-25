@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { LinkButton } from "@/components/ui/Button";
-import { EmptyState, List, Pill, Row, Section } from "@/components/ui/Card";
+import { List, Pill, Row, Section } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { requireRole } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
@@ -35,7 +34,20 @@ export default async function EditGuidePage() {
         back={{ href: "/guide", label: "House Guide" }}
       />
 
-      <Section title="Emergency Fixtures">
+      <Section
+        title="Fixtures"
+        action={
+          <Link
+            href="/fixtures"
+            className="-my-3 flex min-h-11 items-center px-1 text-sm text-accent"
+          >
+            All Fixtures
+          </Link>
+        }
+      >
+        <p className="mb-2 px-1 text-sm text-ink-3">
+          Fixtures with Show on House Guide ticked
+        </p>
         {guideFixtures.length ? (
           <List>
             {guideFixtures.map((t) => (
@@ -44,22 +56,26 @@ export default async function EditGuidePage() {
                 href={`/fixtures/${t.id}/edit`}
                 icon="fixture"
                 title={t.name}
-                detail={t.guideNote || "No note"}
+                detail={t.guideNote || "No guide note"}
               />
             ))}
           </List>
-        ) : (
-          <EmptyState
-            action={<LinkButton href="/fixtures">Pick Fixtures</LinkButton>}
-          >
-            None yet
-          </EmptyState>
-        )}
+        ) : null}
       </Section>
 
-      <Section title="Contacts">
+      <Section
+        title="Contacts"
+        action={
+          <Link
+            href="/contacts"
+            className="-my-3 flex min-h-11 items-center px-1 text-sm text-accent"
+          >
+            All Contacts
+          </Link>
+        }
+      >
         <p className="mb-2 px-1 text-sm text-ink-3">
-          Go-to contacts show automatically
+          Go-to contacts, and any with Show on House Guide ticked
         </p>
         {guideContacts.length ? (
           <List>
@@ -73,20 +89,17 @@ export default async function EditGuidePage() {
               />
             ))}
           </List>
-        ) : (
-          <EmptyState
-            action={<LinkButton href="/contacts">Go to Contacts</LinkButton>}
-          >
-            None yet
-          </EmptyState>
-        )}
+        ) : null}
       </Section>
 
       <Section
         title="Codes"
         action={
-          <Link href="/guide/codes/new" className="text-sm text-accent">
-            Add
+          <Link
+            href="/guide/codes/new"
+            className="-my-3 flex min-h-11 items-center px-1 text-sm text-accent"
+          >
+            Add Code
           </Link>
         }
       >
@@ -102,26 +115,21 @@ export default async function EditGuidePage() {
                     ? `Wi-Fi: ${c.meta.ssid}`
                     : c.label
                 }
-                detail={`${SECRET_KINDS.find((k) => k.value === c.kind)?.label} · ${c.gate === "always" ? "anyone with the link" : "at the house or with PIN"}${c.inGuide ? "" : " · not on guide"}`}
+                detail={`${SECRET_KINDS.find((k) => k.value === c.kind)?.label} · ${c.gate === "always" ? "no PIN needed" : "needs PIN or house Wi-Fi"}${c.inGuide ? "" : " · not on guide"}`}
               />
             ))}
           </List>
-        ) : (
-          <EmptyState
-            action={
-              <LinkButton href="/guide/codes/new">Add Wi-Fi or Code</LinkButton>
-            }
-          >
-            No codes yet
-          </EmptyState>
-        )}
+        ) : null}
       </Section>
 
       <Section
         title="Notes"
         action={
-          <Link href="/guide/sections/new" className="text-sm text-accent">
-            Add
+          <Link
+            href="/guide/sections/new"
+            className="-my-3 flex min-h-11 items-center px-1 text-sm text-accent"
+          >
+            Add Note
           </Link>
         }
       >
@@ -139,15 +147,7 @@ export default async function EditGuidePage() {
               />
             ))}
           </List>
-        ) : (
-          <EmptyState
-            action={
-              <LinkButton href="/guide/sections/new">Add Note</LinkButton>
-            }
-          >
-            None yet
-          </EmptyState>
-        )}
+        ) : null}
       </Section>
     </>
   );

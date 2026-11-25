@@ -30,6 +30,8 @@ type Place = { id: string; label: string };
 
 const LINK =
   "inline-flex min-h-11 items-center text-sm font-medium text-accent";
+const ICON_BUTTON =
+  "flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink-3 hover:bg-sunk hover:text-ink";
 
 export function Materials({
   rows,
@@ -93,11 +95,11 @@ export function Materials({
             return (
               <li
                 key={m.id}
-                className={`flex flex-col gap-1 px-4 py-3 ${differs ? "border-l-4 border-l-warn bg-warn-soft" : ""}`}
+                className={`flex flex-col gap-1 py-2 pl-4 pr-2 ${differs ? "border-l-4 border-l-warn bg-warn-soft" : ""}`}
               >
-                <div className="flex items-start gap-3">
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[15px] font-medium text-ink">
+                <div className="flex items-center gap-1">
+                  <span className="min-w-0 flex-1 py-1">
+                    <span className="block wrap-anywhere text-[15px] font-medium text-ink">
                       {[m.name, amountOf(m.quantity || null, m.unit)]
                         .filter(Boolean)
                         .join(" · ")}
@@ -105,7 +107,7 @@ export function Materials({
                     {m.notes ||
                     m.spaceName ||
                     (m.partName && m.partName !== m.name) ? (
-                      <span className="block text-sm text-ink-3">
+                      <span className="block wrap-anywhere text-sm text-ink-3">
                         {[
                           m.notes,
                           m.spaceName,
@@ -117,16 +119,41 @@ export function Materials({
                           .join(" · ")}
                       </span>
                     ) : null}
+                    {differs || m.oneOff ? (
+                      <span className="mt-1 flex flex-wrap gap-1.5">
+                        {m.status === "changed" ? (
+                          <Pill tone="warn">{m.was}</Pill>
+                        ) : null}
+                        {m.status === "added" ? (
+                          <Pill tone="warn">Not in Series</Pill>
+                        ) : null}
+                        {m.oneOff ? <Pill>This Project Only</Pill> : null}
+                      </span>
+                    ) : null}
                   </span>
-                  {m.status === "changed" ? (
-                    <Pill tone="warn">{m.was}</Pill>
+                  {canEdit ? (
+                    <>
+                      <button
+                        type="button"
+                        aria-label={`Edit “${m.name}”`}
+                        title="Edit"
+                        className={ICON_BUTTON}
+                        onClick={() => setEditing(m.id)}
+                      >
+                        <Icon name="edit" className="h-[18px] w-[18px]" />
+                      </button>
+                      <DeleteButton
+                        compact
+                        className="h-11 w-11"
+                        recoverable={false}
+                        what={`“${m.name}”`}
+                        label="Remove"
+                        action={() => remove(m.id)}
+                      />
+                    </>
                   ) : null}
-                  {m.status === "added" ? (
-                    <Pill tone="warn">Not in Series</Pill>
-                  ) : null}
-                  {m.oneOff ? <Pill>This Project Only</Pill> : null}
                 </div>
-                {canEdit ? (
+                {canEdit && (differs || m.oneOff) ? (
                   <div className="flex flex-wrap items-center gap-x-4">
                     {differs && sendToSeries ? (
                       <button
@@ -162,22 +189,6 @@ export function Materials({
                         Not Just This Project
                       </button>
                     ) : null}
-                    <button
-                      type="button"
-                      className={LINK}
-                      onClick={() => setEditing(m.id)}
-                    >
-                      Edit
-                    </button>
-                    <span className="ml-auto">
-                      <DeleteButton
-                        compact
-                        recoverable={false}
-                        what={`“${m.name}”`}
-                        label="Remove"
-                        action={() => remove(m.id)}
-                      />
-                    </span>
                   </div>
                 ) : null}
                 <InlineError>{at === m.id ? error : null}</InlineError>
@@ -190,7 +201,7 @@ export function Materials({
               className="flex flex-col gap-1 border-l-4 border-l-warn bg-warn-soft px-4 py-3"
             >
               <div className="flex items-start gap-3">
-                <span className="min-w-0 flex-1 text-[15px] text-ink-2 line-through decoration-ink-3">
+                <span className="min-w-0 flex-1 wrap-anywhere text-[15px] text-ink-2 line-through decoration-ink-3">
                   {m.label}
                 </span>
                 <Pill tone="warn">In Series, Not Here</Pill>
@@ -223,9 +234,7 @@ export function Materials({
             </li>
           ))}
         </ul>
-      ) : (
-        <p className="px-1 text-sm text-ink-3">No materials yet</p>
-      )}
+      ) : null}
       {canEdit ? (
         adding ? (
           <Card>
@@ -295,7 +304,7 @@ function MaterialForm({
             value={partId}
             onChange={(e) => setPartId(e.target.value)}
           >
-            <option value="">—</option>
+            <option value="">None</option>
             {parts.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
@@ -304,7 +313,7 @@ function MaterialForm({
           </Select>
         </Field>
       ) : null}
-      <Field label="What">
+      <Field label="Name">
         <TextInput
           key={partId}
           name="name"
@@ -359,7 +368,7 @@ function MaterialForm({
       {places.length ? (
         <Field label="Place">
           <Select name="spaceId" defaultValue={initial?.spaceId ?? ""}>
-            <option value="">—</option>
+            <option value="">None</option>
             {places.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.label}
@@ -376,7 +385,7 @@ function MaterialForm({
         />
       ) : null}
       <div className="flex gap-2">
-        <SubmitButton>{submit}</SubmitButton>
+        <SubmitButton variant="secondary">{submit}</SubmitButton>
         <button type="button" className={buttonClass("ghost")} onClick={onDone}>
           Cancel
         </button>
@@ -417,7 +426,7 @@ export function SeriesBanner({
           className={buttonClass("secondary", "self-start")}
           onClick={() => ask(changes, () => run(sendAll))}
         >
-          Update Series with All Changes
+          Update Series with All
         </button>
       ) : null}
       <InlineError>{at ? null : error}</InlineError>

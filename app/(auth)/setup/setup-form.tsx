@@ -23,7 +23,7 @@ export function SetupForm() {
       <Field label="Home Name" hint="Shown at the top of every page">
         <TextInput
           name="homeName"
-          placeholder="The Maple Street house"
+          placeholder="Our House"
           required
           ref={focusUnlessTouch}
         />
@@ -32,7 +32,13 @@ export function SetupForm() {
         <TextInput name="displayName" autoComplete="name" required />
       </Field>
       <Field label="Email">
-        <TextInput name="email" type="email" autoComplete="username" required />
+        <TextInput
+          name="email"
+          type="email"
+          inputMode="email"
+          autoComplete="username"
+          required
+        />
       </Field>
       <Field
         label="Password"

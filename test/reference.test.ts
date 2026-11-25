@@ -96,7 +96,7 @@ describe("places, fixtures and parts", () => {
         fixtureId: fixture.id,
         spaceId: room.id,
       }),
-    ).rejects.toThrow(/which fixture or place/);
+    ).rejects.toThrow(/fixture or place that uses/);
     await expect(
       db.insert(supplyUses).values({
         propertyId: scope.propertyId,

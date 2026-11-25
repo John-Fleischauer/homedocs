@@ -14,7 +14,7 @@ const LABEL = {
   system: "System",
   fixture: "Fixture",
   part: "Part",
-  note: "Note",
+  note: "Log Entry",
   contact: "Contact",
   project: "Project",
   series: "Series",
@@ -42,7 +42,7 @@ export default async function DeletedPage() {
                 <span className="block wrap-anywhere text-[15px] font-medium text-ink">
                   {r.title}
                 </span>
-                <span className="block text-sm text-ink-3">
+                <span className="block wrap-anywhere text-sm text-ink-3">
                   {LABEL[r.kind]} · deleted {timeAgo(r.deletedAt)}
                   {r.by ? ` by ${r.by}` : ""}
                 </span>

@@ -29,10 +29,10 @@ housesitter.
 |---|---|---|
 | Place | `spaces` | A tree of rooms, floors and outdoor areas, shaped like Home Assistant's floor › area. |
 | System | `systems` | One part of how the house works: water & plumbing, electrical, heating & cooling. Seeded per property from `lib/systems/seeds.ts` (`seed_key`); the family can rename, add and delete them. `trades` name who to call. |
-| Fixture | `fixtures` | Something installed: a light, a shutoff, the water heater. In at most one system (`system_id`); left out on create, it is guessed from the kind and name (`guessSystemKey`). Serial numbers and warranties belong in Homebox; link to it. |
+| Fixture | `fixtures` | Something installed: a light, a shutoff, the water heater. In at most one system (`system_id`); left out on create, it is guessed from the kind and name (`guessSystemKey`). Its kind (`category`, text) is picked from `properties.fixture_kinds`, the family's own list, edited at `/fixtures/kinds` (null means `DEFAULT_FIXTURE_KINDS` in `lib/fixtures/kind-labels.ts`); the form picks it from the name until someone picks one (`guessFixtureKind`), and it chooses the fixture's icon (`fixtureIcon`). It is saved as the list spells it; free text from the connector that the list doesn't have is kept as typed. Renaming a kind renames it on its fixtures; one removed from the list stays on them (`lib/fixtures/kinds.ts`). Serial numbers and warranties belong in Homebox; link to it. |
 | Part | `supplies` | A reusable spec, defined once: a bulb type, a paint colour, a filter. `fields` jsonb is validated by the category template in `lib/parts/templates.ts`, whose `view` groups them on the part's page and whose `choices` / `yesNo` make a field a dropdown (with "Other…") or yes/no buttons; answers stay text, saved as the list spells them and otherwise as typed (`lib/core/choices.ts`). `stores` jsonb is where it's bought: retailer, link and in store / online / either; known retailers are recognised by name or link host and drawn as monogram badges in their colours (`lib/parts/retailers.ts`), never fetched. |
-| (use) | `supply_uses` | A part used by exactly one fixture **or** one place. Holds the quantity, `quantity_needed` (the "really takes 15 bags" figure), surface and finish. Paint sheen lives here. |
-| Note | `logs` | A dated record of what happened, with a "next time" lesson and a `remind_after` date. |
+| (use) | `supply_uses` | A part used by exactly one fixture **or** one place. Holds the quantity, `quantity_needed` (the "actually needs 15 bags" figure), surface and finish. Paint sheen lives here. |
+| Log (a Log Entry) | `logs` | A dated record of what happened, with a "next time" lesson and a `remind_after` date. The UI says Log; the code (`lib/notes/`, `NoteList`), the URLs (`/notes/...`), the search kind and the MCP tools (`add_note`, `get_note`) keep "note". "Notes" in the UI means only a record's free-text box and the guide's sections. `unit` is picked from the part's units or `UNITS` (`lib/parts/templates.ts`) and saved as that list spells it (`tidyUnit`). |
 | Contact | `contacts` + `contact_trades` | One preferred contact per trade, which is what "our plumber" means. Trades are stored lower-cased; the labels ("HVAC") and the chips offered come from `properties.trade_groups`, the family's own list (null means `DEFAULT_TRADE_GROUPS` in `lib/contacts/trade-labels.ts`). A trade typed on a contact or system joins the list. |
 | Project | `projects`, `project_items`, `quotes` | Status, a checklist, materials and quotes. Accepting a quote schedules the project. `contact_id` is who is doing it. |
 | Series | `project_series`, `project_series_spaces`, `project_series_items` | A job done again and again (pine straw every spring). Holds the `how_to` every round shows (never copied), and the places, checklist, materials and usual contact a new project starts from (`lib/projects/series.ts`). |
@@ -111,7 +111,7 @@ access until an admin lets it in from Family).
 
 - **Where it lives:** each searchable table has a `search_doc` tsvector, rebuilt in app code inside the
   same transaction as the write (`lib/search/rebuild.ts`).
-- **What a fixture's document holds:** the path of its place, its system's name, and the names and
+- **What a fixture's document holds:** its kind, the path of its place, its system's name, and the names and
   fields of the parts it uses, which is how "living room bulb" finds the overhead light and "plumbing
   shutoff" finds the main shutoff.
 - **Cascades:** the cascade table at the top of `rebuild.ts` is the contract. A rename of a place, part
@@ -203,7 +203,7 @@ anyway, so that gains nothing.
     (`documentsFor`, `components/DocumentsSection.tsx`): the ones linked one by one first, then the
     rest of what its tag or correspondent holds, each document once (a linked one keeps its Remove).
     Fixtures, parts and notes follow no tag and list only linked documents. No paperless row shows
-    under Linked, which is left to Homebox, Home Assistant and pasted addresses.
+    under Linked Items, which is left to Homebox, Home Assistant and pasted addresses.
   - **The house's tag:** `integrations.required_tags` (Settings → paperless, admin) lists tags every
     document must also have — for a paperless that also holds another home's papers. They are added
     to every Documents list (`tags__id__all=<filter>,<required>`), to "Add a document" searches,

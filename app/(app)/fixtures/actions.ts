@@ -8,10 +8,13 @@ import {
   deleteFixture,
   updateFixture,
 } from "@/lib/fixtures/fixtures";
+import { saveFixtureKinds } from "@/lib/fixtures/kinds";
 import { act, type ActionResult } from "@/lib/web/action";
 import {
+  RELOAD,
   checked,
   id,
+  json,
   keptId,
   localPath,
   optionalId,
@@ -79,4 +82,34 @@ export async function deleteFixtureAction(
   );
   if (r.error) return r;
   redirect(to);
+}
+
+/* The kinds editor sends its rows as JSON: each kind's name now, and what it
+   was called when the page loaded, which is how a rename is told from a new
+   kind. Its shape is checked here; the domain trims, de-duplicates and caps it
+   (`saveFixtureKinds`). */
+const kindEdits = z
+  .array(
+    z.object(
+      {
+        name: z.string().max(1_000),
+        was: z.string().max(1_000).optional(),
+      },
+      { error: RELOAD },
+    ),
+    { error: RELOAD },
+  )
+  .max(200, { error: RELOAD });
+
+export async function saveFixtureKindsAction(
+  _: ActionResult,
+  fd: FormData,
+): Promise<ActionResult> {
+  return act(
+    fd,
+    z.object({ kinds: json(kindEdits) }),
+    async (input, { scope, actor }) => {
+      await saveFixtureKinds(db, scope, actor, input.kinds);
+    },
+  );
 }

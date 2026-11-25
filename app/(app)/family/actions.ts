@@ -12,8 +12,7 @@ import {
 import { act, type ActionResult } from "@/lib/web/action";
 import { GONE, id, oneOf, raw, text, withForm } from "@/lib/web/fields";
 
-const role = () =>
-  oneOf(["admin", "member", "viewer"], "Pick what they can do.");
+const role = () => oneOf(["admin", "member", "viewer"], "Choose a role.");
 const byUser = z.object({ userId: id() });
 
 export async function inviteAction(
@@ -44,7 +43,7 @@ export async function addMemberAction(
     }),
     async (input, { actor }) => {
       const user = await addFamilyMember(input, actor);
-      return { message: `${user.displayName} can sign in now.` };
+      return { message: `${user.displayName} can sign in now` };
     },
   );
 }
@@ -103,7 +102,7 @@ export async function placeAction(
     z.object({ userId: id(), role: role() }),
     async (input, { actor }) => {
       await placeUser(input.userId, input.role, actor);
-      return { message: "Let in." };
+      return { message: "Let in" };
     },
   );
 }

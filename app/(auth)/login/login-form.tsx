@@ -24,6 +24,7 @@ export function LoginForm({ next }: { next?: string }) {
         <TextInput
           name="email"
           type="email"
+          inputMode="email"
           autoComplete="username"
           required
           ref={focusUnlessTouch}

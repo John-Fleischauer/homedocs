@@ -27,6 +27,7 @@ const SCREENS = [
   "/deleted",
   "/places/new",
   "/fixtures/new",
+  "/fixtures/kinds",
   "/parts/new",
   "/systems/new",
   "/contacts/new",

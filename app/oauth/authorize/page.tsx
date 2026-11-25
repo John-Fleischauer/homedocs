@@ -85,7 +85,7 @@ export default async function AuthorizePage({
           homedocs
         </h1>
         <p className="mt-1 text-[15px] text-ink-3">
-          Everything about our house, in one place.
+          Everything about our house, in one place
         </p>
       </header>
 
@@ -94,8 +94,7 @@ export default async function AuthorizePage({
         to homedocs?
       </h2>
       <p className="mt-2 text-[15px] text-ink-2">
-        It is asking to act as {user.displayName} ({user.email}). It will be
-        able to:
+        Acting as {user.displayName} ({user.email}), it can:
       </p>
 
       <ul className="mt-5 flex flex-col gap-4 border-y border-line py-5">
@@ -124,8 +123,8 @@ export default async function AuthorizePage({
       ) : null}
 
       <p className="mt-4 text-sm text-ink-3">
-        Every change it makes is recorded under your name, and it can never see
-        codes or passwords.
+        Its changes are recorded under your name. It never sees codes or
+        passwords.
       </p>
 
       <form className="mt-8 flex flex-col gap-3">

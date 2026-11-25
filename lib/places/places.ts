@@ -33,7 +33,7 @@ export const SPACE_KINDS: { value: SpaceKind; label: string }[] = [
   { value: "room", label: "Room" },
   { value: "floor", label: "Floor or Building" },
   { value: "outdoor", label: "Outdoors" },
-  { value: "area", label: "Area (closet, nook, crawlspace)" },
+  { value: "area", label: "Closet, Nook or Crawlspace" },
   { value: "other", label: "Other" },
 ];
 

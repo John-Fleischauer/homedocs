@@ -175,11 +175,7 @@ export async function createSystem(
       .insert(systems)
       .values({
         propertyId: scope.propertyId,
-        name: requireText(
-          input.name,
-          "Give the system a name, like “Pool” or “Solar”.",
-          100,
-        ),
+        name: requireText(input.name, "Give the system a name.", 100),
         icon: cleanIcon(input.icon),
         trades: cleanTrades([
           ...cleanTrades(input.trades),
@@ -327,7 +323,7 @@ export async function systemOverview(
       id: f.id,
       name: f.name,
       category: f.category,
-      where: path.map((p) => p.name).join(" › ") || "Whole house",
+      where: path.map((p) => p.name).join(" › ") || "Whole House",
       spaceId: f.spaceId,
       inGuide: f.inGuide,
       guideNote: f.guideNote,

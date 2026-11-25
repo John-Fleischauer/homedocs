@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useOptimistic, useState, useTransition } from "react";
 import { ActionForm, type FormAction } from "@/components/ActionForm";
 import { DeleteButton } from "@/components/DeleteButton";
 import { buttonClass } from "@/components/ui/Button";
 import { Pill } from "@/components/ui/Card";
+import { Icon } from "@/components/ui/icons";
 import {
   Checkbox,
   Field,
@@ -13,64 +14,100 @@ import {
   TextArea,
   TextInput,
 } from "@/components/ui/Field";
-import { Icon } from "@/components/ui/icons";
 import type { ActionResult } from "@/lib/web/action";
 import { InlineError, useRun } from "@/components/useRun";
 import { useSeriesConfirm } from "@/components/SeriesConfirm";
 import type { ItemView, MissingView } from "../series-view";
 
-const FLOW = [
+const STATUSES = [
   ["idea", "Idea"],
   ["planning", "Planning"],
-  ["quoted", "Quotes"],
+  ["quoted", "Getting Quotes"],
   ["scheduled", "Scheduled"],
-  ["in_progress", "Doing"],
+  ["in_progress", "In Progress"],
   ["done", "Done"],
+  ["dropped", "Dropped"],
 ] as const;
 
-/* The status as a row of steps; tapping one moves the project there. */
+/* The steps a job goes through, in order. Dropped is off the line. */
+const FLOW = STATUSES.slice(0, 6).map(([s]) => s as string);
+
+/* The usual next step from each status, as the one-tap button. */
+const NEXT: Record<string, [to: string, verb: string]> = {
+  idea: ["planning", "Start Planning"],
+  planning: ["quoted", "Get Quotes"],
+  quoted: ["scheduled", "Mark Scheduled"],
+  scheduled: ["in_progress", "Start Work"],
+  in_progress: ["done", "Mark Done"],
+};
+
+/*
+ * The status as a labelled dropdown (any step, or Dropped), the usual next
+ * step as one button beside it, and how far along the job is as a bar.
+ */
 export function StatusStepper({
   status,
   setStatus,
   canEdit,
 }: {
   status: string;
-  setStatus: (s: string) => Promise<unknown>;
+  setStatus: (s: string) => Promise<ActionResult>;
   canEdit: boolean;
 }) {
   const [pending, start] = useTransition();
-  const index = FLOW.findIndex(([s]) => s === status);
+  const [shown, setShown] = useOptimistic(status);
+  const [error, setError] = useState<string | null>(null);
+  const move = (to: string) =>
+    start(async () => {
+      setShown(to);
+      setError(null);
+      const result = await setStatus(to);
+      if (result?.error) setError(result.error);
+    });
+  const index = FLOW.indexOf(shown);
+  const next = NEXT[shown];
   return (
-    <ol className="grid grid-cols-6 gap-1" aria-label="Status">
-      {FLOW.map(([s, label], i) => {
-        const current = s === status;
-        const past = index >= 0 && i < index;
-        return (
-          <li key={s}>
+    <div className="flex flex-col gap-2">
+      {canEdit ? (
+        <div className="flex items-end gap-2">
+          <label className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <span className="px-1 text-sm font-medium text-ink-2">Status</span>
+            <Select
+              value={shown}
+              disabled={pending}
+              onChange={(e) => move(e.target.value)}
+            >
+              {STATUSES.map(([s, label]) => (
+                <option key={s} value={s}>
+                  {label}
+                </option>
+              ))}
+            </Select>
+          </label>
+          {next ? (
             <button
               type="button"
-              disabled={!canEdit || pending || current}
-              aria-current={current ? "step" : undefined}
-              onClick={() => start(async () => void (await setStatus(s)))}
-              className={`flex w-full flex-col items-center gap-1 rounded-control px-0.5 py-2 text-[10.5px] font-medium leading-tight ${
-                current
-                  ? "bg-accent text-accent-ink"
-                  : past
-                    ? "bg-accent-soft text-accent"
-                    : "bg-sunk text-ink-3"
-              } disabled:cursor-default`}
+              disabled={pending}
+              className={buttonClass("primary", "shrink-0")}
+              onClick={() => move(next[0])}
             >
-              {past ? (
-                <Icon name="check" className="h-4 w-4" />
-              ) : (
-                <span className="h-4 w-4 text-center">{i + 1}</span>
-              )}
-              {label}
+              {next[1]}
             </button>
-          </li>
-        );
-      })}
-    </ol>
+          ) : null}
+        </div>
+      ) : null}
+      {index >= 0 ? (
+        <div aria-hidden="true" className="grid grid-cols-6 gap-1">
+          {FLOW.map((s, i) => (
+            <span
+              key={s}
+              className={`h-1.5 rounded-full ${i <= index ? "bg-accent" : "bg-line"}`}
+            />
+          ))}
+        </div>
+      ) : null}
+      <InlineError>{error}</InlineError>
+    </div>
   );
 }
 
@@ -108,7 +145,7 @@ export function Checklist({
 }) {
   const { pending, run, error, at } = useRun();
   const [ask, dialog] = useSeriesConfirm();
-  const [details, setDetails] = useState(false);
+  const [more, setMore] = useState(false);
   const link =
     "inline-flex min-h-11 items-center text-sm font-medium text-accent";
   return (
@@ -139,7 +176,7 @@ export function Checklist({
                   ) : null}
                   <span className="min-w-0 flex-1">
                     <span
-                      className={`block text-[15px] ${item.done ? "text-ink-3 line-through" : "text-ink"}`}
+                      className={`block wrap-anywhere text-[15px] ${item.done ? "text-ink-3 line-through" : "text-ink"}`}
                     >
                       {item.text}
                     </span>
@@ -155,17 +192,22 @@ export function Checklist({
                           .join(" · ")}
                       </span>
                     ) : null}
+                    {differs || item.oneOff ? (
+                      <span className="mt-1 flex flex-wrap gap-1.5">
+                        {item.status === "changed" ? (
+                          <Pill tone="warn">Changed</Pill>
+                        ) : null}
+                        {item.status === "added" ? (
+                          <Pill tone="warn">Not in Series</Pill>
+                        ) : null}
+                        {item.oneOff ? <Pill>This Project Only</Pill> : null}
+                      </span>
+                    ) : null}
                   </span>
-                  {item.status === "changed" ? (
-                    <Pill tone="warn">Changed</Pill>
-                  ) : null}
-                  {item.status === "added" ? (
-                    <Pill tone="warn">Not in Series</Pill>
-                  ) : null}
-                  {item.oneOff ? <Pill>This Project Only</Pill> : null}
                   {canEdit ? (
                     <DeleteButton
                       compact
+                      className="h-11 w-11"
                       what={`“${item.text}”`}
                       label="Remove"
                       action={() => remove(item.id)}
@@ -226,7 +268,7 @@ export function Checklist({
               className="flex flex-col gap-1 border-l-4 border-l-warn bg-warn-soft px-4 py-3"
             >
               <div className="flex items-start gap-3">
-                <span className="min-w-0 flex-1 text-[15px] text-ink-2 line-through decoration-ink-3">
+                <span className="min-w-0 flex-1 wrap-anywhere text-[15px] text-ink-2 line-through decoration-ink-3">
                   {m.label}
                 </span>
                 <Pill tone="warn">In Series, Not Here</Pill>
@@ -269,16 +311,30 @@ export function Checklist({
               aria-label="New To-Do"
               required
             />
-            <SubmitButton pendingText="…">Add</SubmitButton>
+            <SubmitButton variant="secondary" pendingText="…">
+              Add
+            </SubmitButton>
           </div>
           {inSeries ? (
             <Checkbox name="oneOff" label="Only This Project" />
           ) : null}
-          {details ? (
+          <button
+            type="button"
+            aria-expanded={more}
+            className="flex min-h-11 items-center gap-1 self-start text-sm font-medium text-accent"
+            onClick={() => setMore(!more)}
+          >
+            <Icon
+              name="chevron"
+              className={`h-4 w-4 shrink-0 transition-transform ${more ? "rotate-90" : ""}`}
+            />
+            More Options
+          </button>
+          {more ? (
             <div
               className={`grid gap-2 ${quotes.length ? "grid-cols-2" : "grid-cols-1"}`}
             >
-              <Select name="spaceId" aria-label="Where" defaultValue="">
+              <Select name="spaceId" aria-label="Place" defaultValue="">
                 <option value="">Choose Place</option>
                 {places.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -301,15 +357,7 @@ export function Checklist({
                 </Select>
               ) : null}
             </div>
-          ) : (
-            <button
-              type="button"
-              className="min-h-11 self-start text-sm text-accent"
-              onClick={() => setDetails(true)}
-            >
-              {quotes.length ? "+ where, and which quote covers it" : "+ where"}
-            </button>
-          )}
+          ) : null}
         </ActionForm>
       ) : null}
       <InlineError>{at ? null : error}</InlineError>
@@ -344,7 +392,7 @@ export function QuoteForm({
         hint={contacts.length ? undefined : "Add the contact first"}
       >
         <Select name="contactId" defaultValue="">
-          <option value="">—</option>
+          <option value="">Choose Contact</option>
           {contacts.map((p) => (
             <option key={p.id} value={p.id}>
               {p.label}
@@ -364,7 +412,7 @@ export function QuoteForm({
         <TextArea name="notes" />
       </Field>
       <div className="flex gap-2">
-        <SubmitButton>Add Quote</SubmitButton>
+        <SubmitButton variant="secondary">Add Quote</SubmitButton>
         <button
           type="button"
           className={buttonClass("ghost")}
@@ -393,7 +441,7 @@ export function QuoteButtons({
         <button
           type="button"
           disabled={pending}
-          className={buttonClass("primary", "min-h-9 px-3 text-sm")}
+          className={buttonClass("secondary")}
           onClick={() => start(async () => void (await setStatus("accepted")))}
         >
           Accept
@@ -403,7 +451,7 @@ export function QuoteButtons({
         <button
           type="button"
           disabled={pending}
-          className={buttonClass("secondary", "min-h-9 px-3 text-sm")}
+          className={buttonClass("secondary")}
           onClick={() => start(async () => void (await setStatus("declined")))}
         >
           Decline
@@ -412,7 +460,7 @@ export function QuoteButtons({
         <button
           type="button"
           disabled={pending}
-          className={buttonClass("ghost", "min-h-9 px-3 text-sm")}
+          className={buttonClass("ghost")}
           onClick={() => start(async () => void (await setStatus("pending")))}
         >
           Undo
@@ -420,6 +468,7 @@ export function QuoteButtons({
       )}
       <DeleteButton
         compact
+        className="ml-auto h-11 w-11"
         what="this quote"
         recoverable={false}
         label="Remove"

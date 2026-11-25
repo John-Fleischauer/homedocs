@@ -43,6 +43,7 @@ export function JoinForm({
             <TextInput
               name="email"
               type="email"
+              inputMode="email"
               autoComplete="username"
               required
             />
@@ -50,7 +51,7 @@ export function JoinForm({
         </>
       ) : null}
       <Field
-        label={kind === "invite" ? "Choose Password" : "New Password"}
+        label={kind === "invite" ? "Password" : "New Password"}
         hint={`At least ${MIN_PASSWORD_LENGTH} characters`}
       >
         <TextInput
@@ -63,7 +64,7 @@ export function JoinForm({
         />
       </Field>
       <FormError>{state.error}</FormError>
-      <SubmitButton pendingText="One moment…">
+      <SubmitButton pendingText={kind === "invite" ? "Joining…" : "Saving…"}>
         {kind === "invite" ? "Join" : "Set Password"}
       </SubmitButton>
     </form>

@@ -13,7 +13,7 @@ export function RestoreButton({ kind, id }: { kind: string; id: string }) {
       <button
         type="button"
         disabled={pending}
-        className={buttonClass("secondary", "min-h-9 px-3 text-sm")}
+        className={buttonClass("secondary", "px-3 text-sm")}
         onClick={() =>
           start(async () => {
             setError(null);
