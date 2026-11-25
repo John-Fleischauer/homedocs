@@ -149,7 +149,7 @@ export function PartForm({
                   return (
                     <label
                       key={u}
-                      className={`inline-flex min-h-11 cursor-pointer items-center rounded-full border px-3 text-sm ${
+                      className={`inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-full border px-3 text-sm ${
                         on
                           ? "border-accent bg-accent-soft text-accent"
                           : "border-line bg-card text-ink-2"

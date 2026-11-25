@@ -9,7 +9,7 @@ import { tradeLabeler } from "@/lib/contacts/trade-labels";
 import { getTradeGroups } from "@/lib/contacts/trades";
 import { roleAtLeast } from "@/lib/core/types";
 import { db } from "@/lib/db";
-import { kindIcon } from "@/lib/fixtures/kind-labels";
+import { fixtureIcon } from "@/lib/fixtures/kind-labels";
 import { listNotes } from "@/lib/notes/notes";
 import { systemOverview, type SystemFixture } from "@/lib/systems/systems";
 import { viewer } from "@/lib/web/context";
@@ -174,7 +174,7 @@ export default async function SystemPage({
                       <Row
                         key={f.id}
                         href={`/fixtures/${f.id}`}
-                        icon={kindIcon(f.category)}
+                        icon={fixtureIcon(f)}
                         title={f.name}
                         detail={f.category || undefined}
                       />

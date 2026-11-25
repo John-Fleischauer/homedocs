@@ -8,6 +8,11 @@ import { Card, Pill, Section } from "../ui/Card";
 import { Icon } from "../ui/icons";
 import { PrintButton } from "./PrintButton";
 
+/* A number to ring: tinted, not filled, so a screen of them leaves the one
+   filled button to the lock card (standards design.md, Actions). */
+const CALL =
+  "inline-flex min-h-11 max-w-full items-center gap-2 rounded-full bg-accent-soft px-4 py-1.5 text-[15px] font-medium text-accent hover:underline";
+
 const KIND_ICON = {
   wifi: "link",
   alarm: "alert",
@@ -34,7 +39,9 @@ function FixtureCard({ t, fileBase }: { t: GuideFixture; fileBase: string }) {
         </a>
       ) : null}
       <div className="px-4 py-3">
-        <p className="text-[17px] font-semibold text-ink">{t.name}</p>
+        <p className="wrap-anywhere text-[17px] font-semibold text-ink">
+          {t.name}
+        </p>
         <p className="text-sm text-ink-3">{t.where}</p>
         {t.note ? (
           <p className="mt-2 whitespace-pre-wrap text-[15px] text-ink-2">
@@ -88,6 +95,7 @@ export async function GuideView({
   fileBase,
   lockSlot,
   intro,
+  actions,
 }: {
   guide: Guide;
   /** Where photos are served from: /api/files for family, /g/<token>/files for a link. */
@@ -95,6 +103,8 @@ export async function GuideView({
   /** Shown when something is held back: the PIN form, or a "show codes" button. */
   lockSlot?: ReactNode;
   intro?: ReactNode;
+  /** Beside Print, for the family: the pencil to the guide's editor. */
+  actions?: ReactNode;
 }) {
   const qrs = new Map<string, string>();
   for (const s of guide.secrets) {
@@ -110,18 +120,21 @@ export async function GuideView({
   return (
     <div className="guide">
       <div className="mb-4 flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-ink">
+        <div className="min-w-0">
+          <h1 className="wrap-anywhere text-2xl font-semibold tracking-tight text-ink">
             {guide.homeName}
           </h1>
           <p className="text-[15px] text-ink-3">House Guide</p>
           {guide.address ? (
-            <p className="mt-1 whitespace-pre-wrap text-[15px] text-ink-2">
+            <p className="mt-1 whitespace-pre-wrap wrap-anywhere text-[15px] text-ink-2">
               {guide.address}
             </p>
           ) : null}
         </div>
-        <PrintButton />
+        <div className="no-print flex shrink-0 items-center gap-2">
+          {actions}
+          <PrintButton />
+        </div>
       </div>
 
       {intro}
@@ -156,13 +169,11 @@ export async function GuideView({
                 {g.calls.length ? (
                   <div className="flex flex-wrap gap-2">
                     {g.calls.map((c) => (
-                      <a
-                        key={c.id}
-                        href={telHref(c.phone)}
-                        className="inline-flex min-h-11 items-center gap-2 rounded-full bg-accent px-4 text-[15px] font-medium text-accent-ink hover:bg-accent-strong"
-                      >
-                        <Icon name="phone" className="h-4 w-4" />
-                        Call {c.name}
+                      <a key={c.id} href={telHref(c.phone)} className={CALL}>
+                        <Icon name="phone" className="h-4 w-4 shrink-0" />
+                        <span className="min-w-0 wrap-anywhere">
+                          Call {c.name}
+                        </span>
                       </a>
                     ))}
                   </div>
@@ -193,12 +204,8 @@ export async function GuideView({
                   ) : null}
                   <div className="mt-2 flex flex-wrap gap-2">
                     {p.phones.map((ph, i) => (
-                      <a
-                        key={i}
-                        href={telHref(ph.value)}
-                        className="inline-flex min-h-11 items-center gap-2 rounded-full bg-accent px-4 text-[15px] font-medium text-accent-ink hover:bg-accent-strong"
-                      >
-                        <Icon name="phone" className="h-4 w-4" />
+                      <a key={i} href={telHref(ph.value)} className={CALL}>
+                        <Icon name="phone" className="h-4 w-4 shrink-0" />
                         {ph.value}
                         {ph.label ? <span>({ph.label})</span> : null}
                       </a>
@@ -224,7 +231,7 @@ export async function GuideView({
                     />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[15px] font-medium text-ink">
+                    <p className="wrap-anywhere text-[15px] font-medium text-ink">
                       {s.kind === "wifi" && s.ssid
                         ? `Wi-Fi: ${s.ssid}`
                         : s.label}
@@ -236,9 +243,7 @@ export async function GuideView({
                     ) : s.error ? (
                       <p className="text-sm text-danger">{s.error}</p>
                     ) : (
-                      <p className="text-sm text-ink-3">
-                        Hidden; shown at the house or with the PIN
-                      </p>
+                      <p className="text-sm text-ink-3">Hidden</p>
                     )}
                     {s.notes ? (
                       <p className="mt-1 text-sm text-ink-2">{s.notes}</p>
@@ -263,7 +268,7 @@ export async function GuideView({
           <Card className="px-4 py-3">
             {s.hidden ? (
               <p className="flex items-center gap-2 text-sm text-ink-3">
-                <Pill tone="warn">Private</Pill> Shown at the house or with PIN
+                <Pill tone="warn">Private</Pill> Hidden
               </p>
             ) : (
               <p className="whitespace-pre-wrap text-[15px] text-ink-2">

@@ -17,15 +17,14 @@ export default async function SetupPage() {
     <>
       <h2 className="mb-2 text-xl font-semibold text-ink">Welcome</h2>
       <p className="mb-6 text-[15px] text-ink-3">
-        Create the first account. You’ll be the admin and can invite the family
-        later
+        Create the first account, the admin. Invite the family later
       </p>
       <SetupForm />
       {sso ? (
         /* The first account is made here, never by a sign-on (docs/DECISIONS.md). */
         <p className="mt-4 text-sm text-ink-3">
           To use {sso.name}, set up with a password first, then sign in with{" "}
-          {sso.name} using the same email address. It links to this account.
+          {sso.name} under the same email; it links to this account
         </p>
       ) : null}
     </>

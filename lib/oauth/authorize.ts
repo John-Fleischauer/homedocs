@@ -308,11 +308,11 @@ export const SCOPE_DESCRIPTIONS: Record<
   "homedocs:read": {
     label: "Look Things Up",
     detail:
-      "Search and read places, fixtures, parts, notes, people and projects. Never codes or passwords.",
+      "Search and read places, systems, fixtures, parts, the log, contacts and projects",
   },
   "homedocs:write": {
     label: "Add and Change Things",
     detail:
-      "Add notes, fixtures, parts and people, link parts, and update projects. Nothing is deleted.",
+      "Add log entries, fixtures, parts and contacts, link parts, and update projects. Nothing is deleted",
   },
 };

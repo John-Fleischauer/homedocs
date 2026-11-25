@@ -71,9 +71,9 @@ const NAME_RULES: [kind: string, pattern: RegExp][] = [
 
 /**
  * The kind on the family's list a fixture's name suggests ("Hall light" →
- * Light); null when nothing is clear. A kind the family added is suggested
- * when the name says it outright; the default kinds also go by NAME_RULES,
- * for as long as they are on the list.
+ * Light); null when nothing is clear. A kind the family added wins when the
+ * name says it outright ("Back sprinkler valve" → their Sprinkler Valve); then
+ * the default kinds go by NAME_RULES, for as long as they are on the list.
  */
 export function guessFixtureKind(
   name: string | null | undefined,
@@ -81,10 +81,15 @@ export function guessFixtureKind(
 ): string | null {
   const text = kindKey(name ?? "");
   if (!text) return null;
-  const said = kinds
-    .filter((k) => kindKey(k) !== "other" && ` ${text} `.includes(` ${kindKey(k)} `))
+  const added = kinds
+    .filter(
+      (k) =>
+        !NAME_RULES.some(([d]) => kindKey(d) === kindKey(k)) &&
+        kindKey(k) !== "other" &&
+        ` ${text} `.includes(` ${kindKey(k)} `),
+    )
     .sort((a, b) => b.length - a.length)[0];
-  if (said) return said;
+  if (added) return added;
   for (const [kind, pattern] of NAME_RULES) {
     const listed = listedKind(kinds, kind);
     if (listed && pattern.test(text)) return listed;
@@ -127,4 +132,14 @@ export function kindIcon(kind: string | null | undefined): KindIcon {
   const text = kindKey(kind ?? "");
   for (const [icon, pattern] of ICON_RULES) if (pattern.test(text)) return icon;
   return "fixture";
+}
+
+/** A fixture's icon: its kind's, or for a fixture with no kind, the one its name suggests. */
+export function fixtureIcon(fixture: {
+  category: string;
+  name: string;
+}): KindIcon {
+  return kindIcon(
+    fixture.category || guessFixtureKind(fixture.name, DEFAULT_FIXTURE_KINDS),
+  );
 }

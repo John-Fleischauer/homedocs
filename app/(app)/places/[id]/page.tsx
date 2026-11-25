@@ -17,7 +17,7 @@ import { lessons, listNotes } from "@/lib/notes/notes";
 import { listUses } from "@/lib/parts/parts";
 import { getSpace } from "@/lib/places/places";
 import { listFixtures } from "@/lib/fixtures/fixtures";
-import { kindIcon } from "@/lib/fixtures/kind-labels";
+import { fixtureIcon } from "@/lib/fixtures/kind-labels";
 import { editedBy } from "@/lib/web/attribution";
 import { viewer } from "@/lib/web/context";
 import { removeAttachmentAction } from "@/lib/web/shared-actions";
@@ -125,7 +125,7 @@ export default async function PlacePage({
               <Row
                 key={t.id}
                 href={`/fixtures/${t.id}`}
-                icon={kindIcon(t.category)}
+                icon={fixtureIcon(t)}
                 title={t.name}
                 detail={t.category || undefined}
               />

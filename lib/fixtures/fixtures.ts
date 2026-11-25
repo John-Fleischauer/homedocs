@@ -45,7 +45,8 @@ async function assertSpace(
     .select({ id: spaces.id })
     .from(spaces)
     .where(liveIn(spaces, scope.propertyId, spaceId));
-  if (!row) throw new ValidationError("That place no longer exists. Pick another.");
+  if (!row)
+    throw new ValidationError("That place no longer exists. Pick another.");
 }
 
 export async function listFixtures(

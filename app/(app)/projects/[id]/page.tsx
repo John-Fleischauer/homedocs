@@ -315,7 +315,7 @@ export default async function ProjectPage({
                         {contactCompany ? ` (${contactCompany})` : ""}
                       </Link>
                     ) : (
-                      "Unknown"
+                      "No contact"
                     )}
                     {quote.receivedOn
                       ? ` · ${formatDay(quote.receivedOn)}`

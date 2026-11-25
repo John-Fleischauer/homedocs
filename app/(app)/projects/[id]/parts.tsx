@@ -5,6 +5,7 @@ import { ActionForm, type FormAction } from "@/components/ActionForm";
 import { DeleteButton } from "@/components/DeleteButton";
 import { buttonClass } from "@/components/ui/Button";
 import { Pill } from "@/components/ui/Card";
+import { Icon } from "@/components/ui/icons";
 import {
   Checkbox,
   Field,
@@ -16,7 +17,6 @@ import {
 import type { ActionResult } from "@/lib/web/action";
 import { InlineError, useRun } from "@/components/useRun";
 import { useSeriesConfirm } from "@/components/SeriesConfirm";
-import { MoreOptions } from "../project-form";
 import type { ItemView, MissingView } from "../series-view";
 
 const STATUSES = [
@@ -145,6 +145,7 @@ export function Checklist({
 }) {
   const { pending, run, error, at } = useRun();
   const [ask, dialog] = useSeriesConfirm();
+  const [more, setMore] = useState(false);
   const link =
     "inline-flex min-h-11 items-center text-sm font-medium text-accent";
   return (
@@ -317,7 +318,19 @@ export function Checklist({
           {inSeries ? (
             <Checkbox name="oneOff" label="Only This Project" />
           ) : null}
-          <MoreOptions>
+          <button
+            type="button"
+            aria-expanded={more}
+            className="flex min-h-11 items-center gap-1 self-start text-sm font-medium text-accent"
+            onClick={() => setMore(!more)}
+          >
+            <Icon
+              name="chevron"
+              className={`h-4 w-4 shrink-0 transition-transform ${more ? "rotate-90" : ""}`}
+            />
+            More Options
+          </button>
+          {more ? (
             <div
               className={`grid gap-2 ${quotes.length ? "grid-cols-2" : "grid-cols-1"}`}
             >
@@ -344,7 +357,7 @@ export function Checklist({
                 </Select>
               ) : null}
             </div>
-          </MoreOptions>
+          ) : null}
         </ActionForm>
       ) : null}
       <InlineError>{at ? null : error}</InlineError>

@@ -11,11 +11,7 @@ import {
   TextArea,
   TextInput,
 } from "@/components/ui/Field";
-import {
-  SYSTEM_ICONS,
-  systemIcon,
-  type SystemIcon,
-} from "@/lib/systems/seeds";
+import { SYSTEM_ICONS, systemIcon, type SystemIcon } from "@/lib/systems/seeds";
 import { focusUnlessTouch } from "@/components/ui/focus";
 
 const ICON_LABEL: Record<SystemIcon, string> = {

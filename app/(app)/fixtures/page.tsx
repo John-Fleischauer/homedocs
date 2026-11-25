@@ -3,7 +3,7 @@ import { LinkButton } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { roleAtLeast } from "@/lib/core/types";
 import { db } from "@/lib/db";
-import { kindIcon } from "@/lib/fixtures/kind-labels";
+import { fixtureIcon } from "@/lib/fixtures/kind-labels";
 import { buildTree, flattenTree, listSpaces } from "@/lib/places/places";
 import { listFixtures, type Fixture } from "@/lib/fixtures/fixtures";
 import { viewer } from "@/lib/web/context";
@@ -53,7 +53,7 @@ export default async function FixturesPage() {
                   <Row
                     key={f.id}
                     href={`/fixtures/${f.id}`}
-                    icon={kindIcon(f.category)}
+                    icon={fixtureIcon(f)}
                     title={f.name}
                     detail={f.category || undefined}
                   />

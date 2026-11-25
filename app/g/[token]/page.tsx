@@ -33,7 +33,7 @@ export default async function SharedGuidePage({
   if (!guideLimiter.take(clientIp(h) ?? "unknown")) {
     return (
       <p className="py-16 text-center text-ink-3">
-        Too many requests. Wait a few minutes and reload.
+        Too many requests. Wait a few minutes, then reload.
       </p>
     );
   }
@@ -51,12 +51,11 @@ export default async function SharedGuidePage({
     visit.link.lockedAt || visit.link.pinFailures >= MAX_PIN_FAILURES;
   const lockSlot = !visit.link.pinHash ? (
     <Card className="p-4 text-sm text-ink-3">
-      Codes and the address appear when you’re on the house Wi-Fi
+      Codes and address show on the house Wi-Fi
     </Card>
   ) : locked ? (
     <Card className="p-4 text-sm text-ink-3">
-      PIN locked after too many tries; codes appear when you’re on the house
-      Wi-Fi
+      PIN locked after too many tries. Codes and address show on the house Wi-Fi
     </Card>
   ) : (
     <PinForm token={token} />
@@ -69,13 +68,13 @@ export default async function SharedGuidePage({
         fileBase={`/g/${token}/files`}
         lockSlot={lockSlot}
         intro={
-          <p className="no-print mb-4 text-xs text-ink-3">
-            Shared with {visit.link.label}. This link works until{" "}
+          <p className="no-print mb-4 wrap-anywhere text-xs text-ink-3">
+            Shared with {visit.link.label} until{" "}
             {visit.link.expiresAt.toLocaleDateString("en-US", {
               month: "long",
               day: "numeric",
             })}
-            .{visit.atHome ? " You’re at the house, so codes are shown." : ""}
+            {visit.atHome ? " · on the house Wi-Fi, so codes show" : ""}
           </p>
         }
       />

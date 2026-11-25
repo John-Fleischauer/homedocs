@@ -5,7 +5,7 @@ import { ActionForm, type FormAction } from "@/components/ActionForm";
 import { Button } from "@/components/ui/Button";
 import { SubmitButton, TextInput } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/icons";
-import { cleanKindNames, kindIcon, kindKey } from "@/lib/fixtures/kind-labels";
+import { cleanKindNames, kindKey } from "@/lib/fixtures/kind-labels";
 
 /* `was` is the name the server has, so it can tell a rename from a new kind. */
 type Row = { id: number; name: string; was?: string };
@@ -73,9 +73,6 @@ export function KindListForm({
           const label = r.name.trim() || "kind";
           return (
             <li key={r.id} className="flex items-center gap-1">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
-                <Icon name={kindIcon(r.name)} className="h-[18px] w-[18px]" />
-              </span>
               <TextInput
                 value={r.name}
                 onChange={(e) =>

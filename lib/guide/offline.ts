@@ -66,18 +66,18 @@ export function offlineHtml(guide: Guide, expiresAt: Date): string {
     .join("");
 
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex"><title>${esc(guide.homeName)} · house guide (offline)</title>
+<meta name="robots" content="noindex"><title>${esc(guide.homeName)} · House Guide (Offline)</title>
 <style>body{font:16px/1.5 system-ui,sans-serif;margin:0;padding:16px;background:#f6f5f2;color:#1c1b19}
 @media(prefers-color-scheme:dark){body{background:#141412;color:#f2f0ea}a{color:#5cc4ae}}
 h1{font-size:1.5rem;margin:.2em 0}h3{font-size:1rem;margin:1em 0 0}h2{font-size:1rem;text-transform:uppercase;letter-spacing:.04em;margin-top:1.5em}
 ul{padding:0;list-style:none}li{padding:10px 0;border-bottom:1px solid #8883}.m{opacity:.7;font-size:.9em}
 .b{background:#fdf1df;color:#8a4b00;padding:10px 12px;border-radius:10px;font-size:.9em}a{color:#0f6b5c;font-weight:600}</style></head>
-<body><p class="b">Offline copy. Codes are not saved on this phone — reconnect to see them. Saved copy works until ${esc(
+<body><p class="b">Offline copy, without codes: reconnect to see them. Works until ${esc(
     expiresAt.toLocaleDateString("en-US", { month: "long", day: "numeric" }),
   )}.</p>
 <h1>${esc(guide.homeName)}</h1>
-${fixtures ? `<h2>In an emergency</h2>${fixtures}` : ""}
-${contacts ? `<h2>Who to call</h2><ul>${contacts}</ul>` : ""}
+${fixtures ? `<h2>In an Emergency</h2>${fixtures}` : ""}
+${contacts ? `<h2>Who to Call</h2><ul>${contacts}</ul>` : ""}
 ${wifi ? `<h2>Wi-Fi</h2><ul>${wifi}</ul>` : ""}
 ${sections}
 </body></html>`;

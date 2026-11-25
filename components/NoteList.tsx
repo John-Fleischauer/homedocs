@@ -34,7 +34,8 @@ export function NoteList({
                 {[
                   formatDay(note.happenedOn),
                   about,
-                  formatQty(note.quantity, note.unit),
+                  // Kept on one line: "12" at a line's end with "bags" below reads as a date.
+                  formatQty(note.quantity, note.unit).replace(" ", "\u00a0"),
                 ]
                   .filter(Boolean)
                   .join(" · ")}

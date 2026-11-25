@@ -8,7 +8,7 @@ export function PrintButton() {
   return (
     <button
       type="button"
-      className={buttonClass("secondary", "no-print shrink-0")}
+      className={buttonClass("secondary", "shrink-0")}
       onClick={() => window.print()}
     >
       <Icon name="printer" />

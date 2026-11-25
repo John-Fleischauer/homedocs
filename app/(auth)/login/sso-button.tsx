@@ -18,7 +18,7 @@ export function SsoButton({
       href={href}
       className={buttonClass(only ? "primary" : "secondary", "w-full")}
     >
-      Sign in with {name}
+      Sign In with {name}
     </a>
   );
 }

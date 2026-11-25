@@ -54,7 +54,8 @@ export function FixtureForm({
   function guessSystem(kind: string, name: string) {
     if (!followSystem) return;
     const key = guessSystemKey(kind, name);
-    setSystemId(systems.find((s) => s.seedKey === key)?.id ?? "");
+    // A system the family added has no seed key, so "no guess" must not match it.
+    setSystemId((key && systems.find((s) => s.seedKey === key)?.id) || "");
   }
   function rename(next: string) {
     setName(next);

@@ -66,15 +66,15 @@ export function StoreFields({ initial }: { initial?: StoreLink[] }) {
               }
               aria-label={`Store ${i + 1}`}
             />
-            <Button
-              variant="ghost"
-              className="w-11 shrink-0 px-0 text-ink-3 hover:text-danger"
+            <button
+              type="button"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink-3 hover:bg-sunk hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               aria-label={`Remove Store ${i + 1}`}
               title="Remove"
               onClick={() => remove(r.key)}
             >
               <Icon name="trash" className="h-[18px] w-[18px]" />
-            </Button>
+            </button>
           </div>
           <TextInput
             name="storeUrl"

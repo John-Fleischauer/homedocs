@@ -97,7 +97,7 @@ export function Materials({
                 key={m.id}
                 className={`flex flex-col gap-1 py-2 pl-4 pr-2 ${differs ? "border-l-4 border-l-warn bg-warn-soft" : ""}`}
               >
-                <div className="flex items-start gap-1">
+                <div className="flex items-center gap-1">
                   <span className="min-w-0 flex-1 py-1">
                     <span className="block wrap-anywhere text-[15px] font-medium text-ink">
                       {[m.name, amountOf(m.quantity || null, m.unit)]
