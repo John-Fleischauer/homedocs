@@ -173,7 +173,9 @@ export default async function PlacePage({
             </>
           }
         >
-          {notes.length ? <NoteList rows={notes.slice(0, 5)} /> : null}
+          {notes.length ? (
+            <NoteList rows={notes.slice(0, 5)} on={{ spaceId: id }} />
+          ) : null}
         </Section>
       ) : null}
 

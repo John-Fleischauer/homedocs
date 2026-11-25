@@ -91,8 +91,12 @@ export function PartForm({
             onChange={(e) => {
               const next = e.target.value as Category;
               setCategory(next);
-              // A new part takes the kind's usual unit; a saved one keeps its own.
-              setUnit(tidyUnit(initial?.unit ?? TEMPLATES[next].unit, own));
+              // The kind's usual unit follows the kind only until a unit is picked by hand; a saved part keeps its own.
+              if (
+                !initial?.unit &&
+                unit === tidyUnit(TEMPLATES[category].unit, own)
+              )
+                setUnit(tidyUnit(TEMPLATES[next].unit, own));
             }}
           >
             {CATEGORIES.map((c) => (

@@ -20,10 +20,11 @@ function beyondName(
   category: Category,
   fields: Record<string, string>,
 ): string {
-  const said = name.toLowerCase();
+  // Whole words, so a count of "2" isn't hidden by the 2 in "CR2032".
+  const said = ` ${name.toLowerCase().replace(/\s+/g, " ")} `;
   return summarize(category, fields)
     .split(" · ")
-    .filter((piece) => piece && !said.includes(piece.toLowerCase()))
+    .filter((piece) => piece && !said.includes(` ${piece.toLowerCase()} `))
     .join(" · ");
 }
 

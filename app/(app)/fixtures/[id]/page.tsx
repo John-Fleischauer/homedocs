@@ -133,7 +133,7 @@ export default async function FixturePage({
           ) : null
         }
       >
-        {notes.length ? <NoteList rows={notes} /> : null}
+        {notes.length ? <NoteList rows={notes} on={{ fixtureId: id }} /> : null}
       </Section>
 
       {canEdit ? (

@@ -37,7 +37,8 @@ export async function getFixtureKinds(
     .select({ fixtureKinds: properties.fixtureKinds })
     .from(properties)
     .where(eq(properties.id, scope.propertyId));
-  return row?.fixtureKinds ?? DEFAULT_FIXTURE_KINDS;
+  // An emptied list goes back to the defaults: a form with nothing to pick is no use.
+  return row?.fixtureKinds?.length ? row.fixtureKinds : DEFAULT_FIXTURE_KINDS;
 }
 
 /** A kind as a fixture stores it: the list's spelling when the list has it, as typed otherwise. */
@@ -82,8 +83,10 @@ export async function saveFixtureKinds(
     const renames = rows.flatMap((e) => {
       const from = e.was === undefined ? undefined : listedKind(before, e.was);
       const to = cleanKindNames([e.name])[0];
-      if (!from || !to || from === to) return [];
-      return [{ from, to: listedKind(kinds, to) ?? to }];
+      // A row the list's cap dropped renames nothing: its fixtures keep their kind.
+      const kept = to ? listedKind(kinds, to) : undefined;
+      if (!from || !kept || from === kept) return [];
+      return [{ from, to: kept }];
     });
     /* Found before any is changed, so two kinds can swap names. */
     const moved: { id: string; to: string }[] = [];
@@ -105,14 +108,18 @@ export async function saveFixtureKinds(
         .update(fixtures)
         .set({ category: to, updatedAt: new Date(), updatedBy: actor.userId })
         .where(
-          and(eq(fixtures.id, id), eq(fixtures.propertyId, scope.propertyId)),
+          and(
+            eq(fixtures.id, id),
+            eq(fixtures.propertyId, scope.propertyId),
+            isNull(fixtures.deletedAt),
+          ),
         );
       await rebuildFixture(tx, id);
     }
     await tx
       .update(properties)
       .set({
-        fixtureKinds: kinds,
+        fixtureKinds: kinds.length ? kinds : null,
         updatedAt: new Date(),
         updatedBy: actor.userId,
       })

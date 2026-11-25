@@ -52,17 +52,17 @@ export function cleanKindNames(names: string[]): string[] {
 const NAME_RULES: [kind: string, pattern: RegExp][] = [
   ["Water Heater", /water heater|tankless/],
   ["Shutoff Valve", /shut-?off|valve/],
-  ["Smoke Detector", /smoke|carbon monoxide|\bco\b|detector/],
+  ["Smoke Detector", /smoke|carbon monoxide|\bco\b/],
   ["Electrical Panel", /breaker|\bpanel\b|subpanel|fuse box/],
   ["Switch or Outlet", /switch|outlet|gfci|dimmer|receptacle/],
   ["Fan", /\bfan\b/],
-  ["Light", /light|lamp|sconce|chandelier|pendant/],
+  ["Light", /\blights?\b|\blamps?\b|sconce|chandelier|pendant/],
   [
     "Heating or Cooling",
     /hvac|furnace|air handler|\ba\/?c\b|air condition|heat pump|thermostat|boiler|mini-?split|radiator/,
   ],
   ["Faucet or Toilet", /faucet|toilet|sink|shower|\btub\b|spigot|hose bib/],
-  ["Door or Lock", /\bdoor\b|lock|deadbolt/],
+  ["Door or Lock", /\bdoors?\b|\blocks?\b|deadbolt/],
   [
     "Appliance",
     /dishwasher|refrigerator|fridge|freezer|\boven\b|\brange\b|stove|cooktop|washer|dryer|microwave|disposal/,
@@ -117,14 +117,14 @@ const ICON_RULES: [icon: KindIcon, pattern: RegExp][] = [
   ["drain", /faucet|toilet|sink|plumb|drain|shower|\btub\b/],
   ["bolt", /switch|outlet|electric|panel|breaker/],
   ["shield", /smoke|detector|alarm|camera|security/],
-  ["key", /door|lock/],
-  ["climate", /\bfan\b|heat|cool|hvac|thermostat|furnace|air/],
+  ["key", /\bdoors?\b|\blocks?\b/],
+  ["climate", /\bfan\b|heat|cool|hvac|thermostat|furnace|\bair\b/],
   ["flame", /\bgas\b|fireplace|grill|stove/],
   ["leaf", /irrigation|sprinkler|garden|yard/],
   ["wifi", /wi-?fi|network|router|internet/],
   ["water", /water/],
   ["system", /appliance/],
-  ["fixture", /light|lamp/],
+  ["fixture", /\blights?\b|\blamps?\b/],
 ];
 
 /** The icon for a kind; the plain fixture icon for none, Other, or one nothing matches. */

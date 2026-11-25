@@ -394,7 +394,10 @@ export function tidyUnit(value: string, own: readonly string[] = []): string {
   const choices = unitChoices(own);
   const listed =
     matchChoice(choices, value) ??
-    (/s$/i.test(value) ? matchChoice(choices, value.slice(0, -1)) : undefined);
+    (/s$/i.test(value)
+      ? matchChoice(choices, value.slice(0, -1))
+      : undefined) ??
+    (/es$/i.test(value) ? matchChoice(choices, value.slice(0, -2)) : undefined);
   return listed ?? tidyChoice(undefined, value);
 }
 

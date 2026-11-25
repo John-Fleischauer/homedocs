@@ -53,7 +53,8 @@ export function plural(unit: string): string {
   if (
     unit === "" ||
     ABBREVIATIONS.has(unit.toLowerCase()) ||
-    unit.endsWith("s")
+    unit.endsWith("s") ||
+    unit.toLowerCase() === "each"
   )
     return unit;
   if (/[^aeiou]y$/.test(unit)) return `${unit.slice(0, -1)}ies`;

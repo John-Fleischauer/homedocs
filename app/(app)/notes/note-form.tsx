@@ -80,7 +80,12 @@ export function NoteForm({
   const part = options.parts.find((p) => p.id === supplyId);
   const [unit, setUnit] = useState(() => tidyUnit(v("unit"), part?.units));
   const fixtures = options.fixtures.filter(
-    (f) => !spaceId || f.within.includes(spaceId) || f.id === fixtureId,
+    // A fixture with no place (the furnace, the panel) belongs to the whole house, so it fits any place.
+    (f) =>
+      !spaceId ||
+      f.within.length === 0 ||
+      f.within.includes(spaceId) ||
+      f.id === fixtureId,
   );
   const kinds = [...new Set(options.parts.map((p) => p.kind))];
 
@@ -130,7 +135,12 @@ export function NoteForm({
             setSpaceId(next);
             // A fixture somewhere else isn't what this entry is about any more.
             const fixture = options.fixtures.find((f) => f.id === fixtureId);
-            if (next && fixture && !fixture.within.includes(next))
+            if (
+              next &&
+              fixture &&
+              fixture.within.length > 0 &&
+              !fixture.within.includes(next)
+            )
               setFixtureId("");
           }}
           options={options.places}
@@ -142,7 +152,7 @@ export function NoteForm({
           label="Fixture"
           hint={
             spaceId && fixtures.length < options.fixtures.length
-              ? "Only fixtures in this place"
+              ? "Fixtures here and whole-house ones"
               : undefined
           }
         >
