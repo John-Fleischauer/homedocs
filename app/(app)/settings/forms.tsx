@@ -7,7 +7,12 @@ import {
   TextArea,
   TextInput,
 } from "@/components/ui/Field";
+import { Icon } from "@/components/ui/icons";
 import { MIN_PASSWORD_LENGTH } from "@/lib/auth/password-policy";
+
+const SUMMARY =
+  "flex min-h-11 cursor-pointer list-none items-center gap-3 px-3 py-2 [&::-webkit-details-marker]:hidden";
+const CHEVRON = "h-4 w-4 shrink-0 text-ink-3 group-open:rotate-90";
 
 export function NameForm({
   action,
@@ -18,7 +23,7 @@ export function NameForm({
 }) {
   return (
     <ActionForm action={action}>
-      <Field label="Your Name">
+      <Field label="Name">
         <TextInput name="displayName" defaultValue={name} required />
       </Field>
       <SubmitButton variant="secondary">Save</SubmitButton>
@@ -27,6 +32,28 @@ export function NameForm({
 }
 
 export function PasswordForm({
+  action,
+  hasPassword,
+}: {
+  action: FormAction;
+  hasPassword: boolean;
+}) {
+  return (
+    <details className="group rounded-control border border-line">
+      <summary className={SUMMARY}>
+        <span className="min-w-0 flex-1 text-[15px] font-medium text-ink">
+          {hasPassword ? "Change Password" : "Set Password"}
+        </span>
+        <Icon name="chevron" className={CHEVRON} />
+      </summary>
+      <div className="border-t border-line p-3">
+        <PasswordFields action={action} hasPassword={hasPassword} />
+      </div>
+    </details>
+  );
+}
+
+function PasswordFields({
   action,
   hasPassword,
 }: {
@@ -86,37 +113,53 @@ export function HomeForm({
       <Field label="Address" hint="Shown on the house guide">
         <TextArea name="address" rows={2} defaultValue={initial.address} />
       </Field>
-      <fieldset className="flex flex-col gap-3 rounded-card border border-line p-4">
-        <legend className="px-1 text-sm font-semibold text-ink-2">
-          Home Network
-        </legend>
-        <p className="text-sm text-ink-3">
-          On the home network, the house guide shows codes without a PIN.
+      {/* Rarely touched, so folded; its fields still post with the form. */}
+      <details className="group rounded-control border border-line">
+        <summary className={SUMMARY}>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[15px] font-medium text-ink">
+              Home Network
+            </span>
+            <span className="block text-sm text-ink-3">
+              Where the house guide shows codes without a PIN
+            </span>
+          </span>
+          <Icon name="chevron" className={CHEVRON} />
+        </summary>
+        <div className="flex flex-col gap-3 border-t border-line p-3">
           {seenAs ? (
-            <>
-              {" "}
-              This device is seen as{" "}
-              <code className="rounded bg-sunk px-1">{seenAs}</code>.
-            </>
+            <p className="text-sm text-ink-3">
+              This device’s address:{" "}
+              <code className="rounded bg-sunk px-1 wrap-anywhere">
+                {seenAs}
+              </code>
+            </p>
           ) : null}
-        </p>
-        <Field
-          label="Home Network Ranges"
-          hint="E.g. 192.168.1.0/24, one per line"
-        >
-          <TextArea
-            name="homeNetworks"
-            rows={2}
-            defaultValue={initial.homeNetworks.join("\n")}
-          />
-        </Field>
-        <Field
-          label="Home Hostname"
-          hint="Dynamic-DNS name for the home’s internet address"
-        >
-          <TextInput name="homeHostname" defaultValue={initial.homeHostname} />
-        </Field>
-      </fieldset>
+          <Field label="Address Ranges" hint="One per line">
+            <TextArea
+              name="homeNetworks"
+              rows={2}
+              placeholder="192.168.1.0/24"
+              autoCapitalize="none"
+              spellCheck={false}
+              defaultValue={initial.homeNetworks.join("\n")}
+            />
+          </Field>
+          <Field
+            label="Dynamic DNS Name"
+            hint="Follows the home’s internet address when it changes"
+          >
+            <TextInput
+              name="homeHostname"
+              inputMode="url"
+              autoCapitalize="none"
+              spellCheck={false}
+              placeholder="home.example.com"
+              defaultValue={initial.homeHostname}
+            />
+          </Field>
+        </div>
+      </details>
       <SubmitButton variant="secondary">Save</SubmitButton>
     </ActionForm>
   );
@@ -138,18 +181,16 @@ export function IntegrationForm({
       {initial?.lastStatus ? (
         <p className="text-sm text-accent">Connected: {initial.lastStatus}</p>
       ) : null}
-      <Field
-        label="Address"
-        hint={
-          homebox
-            ? "E.g. https://homebox.example.com"
-            : "E.g. https://paperless.example.com"
-        }
-      >
+      <Field label="Address">
         <TextInput
           name="baseUrl"
           type="url"
           inputMode="url"
+          placeholder={
+            homebox
+              ? "https://homebox.example.com"
+              : "https://paperless.example.com"
+          }
           defaultValue={initial?.baseUrl}
           required
         />
@@ -158,10 +199,10 @@ export function IntegrationForm({
         label={homebox ? "API Key" : "API Token"}
         hint={
           initial
-            ? "Leave blank to keep the saved one"
+            ? "Blank keeps the saved one"
             : homebox
-              ? "In Homebox (0.26+): profile → API keys → create; starts with hb_"
-              : "In paperless: My Profile → API Auth Token; ideally from a user that sees only home documents"
+              ? "Homebox 0.26+: Profile → API Keys. Starts with hb_"
+              : "My Profile → API Auth Token. Safest from a user limited to home documents"
         }
       >
         <TextInput
@@ -182,7 +223,7 @@ export function RebuildSearch({ action }: { action: FormAction }) {
   return (
     <ActionForm action={action}>
       <p className="text-sm text-ink-3">
-        After restoring a backup, or if search misses something
+        After a restore, or when search misses something
       </p>
       <SubmitButton variant="secondary" pendingText="Rebuilding…">
         Rebuild Search

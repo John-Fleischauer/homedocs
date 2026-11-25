@@ -30,7 +30,7 @@ export async function nameAction(
     z.object({ displayName: text() }),
     async (input, { user, actor }) => {
       await setDisplayName(user.id, input.displayName, actor);
-      return { message: "Saved." };
+      return { message: "Saved" };
     },
   );
 }
@@ -72,7 +72,7 @@ export async function homeAction(
     }),
     async (input, { property, actor }) => {
       await updateProperty(property.id, input, actor);
-      return { message: "Saved." };
+      return { message: "Saved" };
     },
   );
 }
@@ -133,7 +133,7 @@ export async function rebuildSearchAction(): Promise<ActionResult> {
   return act({}, z.object({}), async (_input, { actor }) => {
     assertAdmin(actor);
     await rebuildAll(db);
-    return { message: "Search rebuilt." };
+    return { message: "Search rebuilt" };
   });
 }
 

@@ -89,7 +89,7 @@ export function StorePicker({
       <ul
         id={`${id}-list`}
         role="listbox"
-        aria-label="Known stores"
+        aria-label="Known Stores"
         hidden={!expanded}
         className="absolute inset-x-0 top-full z-20 mt-1 max-h-64 overflow-y-auto rounded-control border border-line bg-card py-1 shadow-lg"
       >

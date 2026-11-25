@@ -15,7 +15,7 @@ const KINDS = [
   { value: "room", label: "Room" },
   { value: "floor", label: "Floor or Building" },
   { value: "outdoor", label: "Outdoors" },
-  { value: "area", label: "Area (closet, nook, crawlspace)" },
+  { value: "area", label: "Closet, Nook or Crawlspace" },
   { value: "other", label: "Other" },
 ];
 
@@ -45,17 +45,17 @@ export function PlaceForm({
         <TextInput
           name="name"
           defaultValue={initial?.name}
-          placeholder="Living room, Front flowerbed, Garage"
+          placeholder="Living room"
           required
           ref={initial?.name ? undefined : focusUnlessTouch}
         />
       </Field>
-      <Field label="Inside" hint="E.g. a room on a floor">
+      <Field label="Inside Another Place">
         <PlaceSelect
           name="parentId"
           defaultValue={initial?.parentId ?? ""}
           options={places}
-          emptyLabel="Top level"
+          emptyLabel="No"
         />
       </Field>
       <Field label="Kind">

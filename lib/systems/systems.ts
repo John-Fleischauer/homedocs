@@ -327,7 +327,7 @@ export async function systemOverview(
       id: f.id,
       name: f.name,
       category: f.category,
-      where: path.map((p) => p.name).join(" › ") || "Whole house",
+      where: path.map((p) => p.name).join(" › ") || "Whole House",
       spaceId: f.spaceId,
       inGuide: f.inGuide,
       guideNote: f.guideNote,

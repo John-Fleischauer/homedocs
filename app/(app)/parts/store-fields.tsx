@@ -4,11 +4,11 @@ import { useState } from "react";
 import { StoreBadge } from "@/components/StoreBadge";
 import { StorePicker } from "@/components/StorePicker";
 import { Button } from "@/components/ui/Button";
-import { Select, TextInput } from "@/components/ui/Field";
+import { TextInput } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/icons";
 import {
   HOW,
-  HOW_LABEL,
+  HOW_BUTTON,
   MAX_STORES,
   knownRetailer,
   type How,
@@ -62,17 +62,18 @@ export function StoreFields({ initial }: { initial?: StoreLink[] }) {
               // Named from the link when it's a store the app knows.
               placeholder={
                 knownRetailer({ retailer: "", url: r.url })?.name ??
-                "Store name"
+                "Store Name"
               }
               aria-label={`Store ${i + 1}`}
             />
             <Button
               variant="ghost"
-              className="w-11 shrink-0 px-0"
-              aria-label={`Remove store ${i + 1}`}
+              className="w-11 shrink-0 px-0 text-ink-3 hover:text-danger"
+              aria-label={`Remove Store ${i + 1}`}
+              title="Remove"
               onClick={() => remove(r.key)}
             >
-              <Icon name="close" className="h-4 w-4" />
+              <Icon name="trash" className="h-[18px] w-[18px]" />
             </Button>
           </div>
           <TextInput
@@ -81,21 +82,33 @@ export function StoreFields({ initial }: { initial?: StoreLink[] }) {
             inputMode="url"
             value={r.url}
             onChange={(e) => set(r.key, { url: e.target.value })}
-            placeholder="Product link"
+            placeholder="Product Link"
             aria-label={`Store ${i + 1} link`}
           />
-          <Select
-            name="storeHow"
-            value={r.how}
-            onChange={(e) => set(r.key, { how: e.target.value as How })}
-            aria-label={`Store ${i + 1}: how it’s bought`}
+          {/* One tap, not a dropdown; the hidden field keeps it in step with the row's other two. */}
+          <input type="hidden" name="storeHow" value={r.how} />
+          <div
+            role="radiogroup"
+            aria-label={`Store ${i + 1}: Where It’s Bought`}
+            className="flex gap-2"
           >
             {HOW.map((h) => (
-              <option key={h} value={h}>
-                {HOW_LABEL[h]}
-              </option>
+              <button
+                key={h}
+                type="button"
+                role="radio"
+                aria-checked={r.how === h}
+                onClick={() => set(r.key, { how: h })}
+                className={`flex min-h-11 min-w-0 flex-1 items-center justify-center rounded-control border px-2 text-center text-[15px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+                  r.how === h
+                    ? "border-accent bg-accent-soft font-medium text-accent"
+                    : "border-line bg-card text-ink"
+                }`}
+              >
+                {HOW_BUTTON[h]}
+              </button>
             ))}
-          </Select>
+          </div>
         </div>
       ))}
       {rows.length < MAX_STORES ? (

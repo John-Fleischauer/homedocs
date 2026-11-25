@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { NoteList } from "@/components/NoteList";
 import { DocumentsSection } from "@/components/DocumentsSection";
-import { LinkButton } from "@/components/ui/Button";
 import { Card, List, Row, Section } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/icons";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -10,6 +9,7 @@ import { tradeLabeler } from "@/lib/contacts/trade-labels";
 import { getTradeGroups } from "@/lib/contacts/trades";
 import { roleAtLeast } from "@/lib/core/types";
 import { db } from "@/lib/db";
+import { kindIcon } from "@/lib/fixtures/kind-labels";
 import { listNotes } from "@/lib/notes/notes";
 import { systemOverview, type SystemFixture } from "@/lib/systems/systems";
 import { viewer } from "@/lib/web/context";
@@ -57,7 +57,14 @@ export default async function SystemPage({
         back={{ href: "/systems", label: "Systems" }}
         actions={
           canEdit ? (
-            <LinkButton href={`/systems/${id}/edit`}>Edit</LinkButton>
+            <Link
+              href={`/systems/${id}/edit`}
+              aria-label="Edit"
+              title="Edit"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control border border-line bg-card text-ink hover:bg-sunk"
+            >
+              <Icon name="edit" className="h-5 w-5" />
+            </Link>
           ) : null
         }
       />
@@ -71,7 +78,10 @@ export default async function SystemPage({
       ) : null}
 
       {first.length ? (
-        <Section title="Key Fixtures" action={rest.length ? null : addFixture}>
+        <Section
+          title="On House Guide"
+          action={rest.length ? null : addFixture}
+        >
           <div className="flex flex-col gap-3">
             {first.map((f) => (
               <Card key={f.id} className="overflow-hidden">
@@ -88,10 +98,12 @@ export default async function SystemPage({
                     />
                   ) : null}
                   <span className="block px-4 py-3">
-                    <span className="block text-[17px] font-semibold text-ink">
+                    <span className="block wrap-anywhere text-[17px] font-semibold text-ink">
                       {f.name}
                     </span>
-                    <span className="block text-sm text-ink-3">{f.where}</span>
+                    <span className="block wrap-anywhere text-sm text-ink-3">
+                      {[f.where, f.category].filter(Boolean).join(" · ")}
+                    </span>
                     {f.guideNote ? (
                       <span className="mt-2 block whitespace-pre-wrap text-[15px] text-ink-2">
                         {f.guideNote}
@@ -131,12 +143,16 @@ export default async function SystemPage({
           </List>
         </Section>
       ) : system.trades.length && canEdit ? (
-        <Section title="Who to Call">
-          <p className="px-1 text-sm text-ink-3">
-            No contact for {system.trades.map(label).join(" or ")} yet.{" "}
-            <Link href="/contacts/new" className="text-accent underline">
+        <Section
+          title="Who to Call"
+          action={
+            <Link href="/contacts/new" className="text-sm text-accent">
               Add Contact
             </Link>
+          }
+        >
+          <p className="px-1 text-sm text-ink-3">
+            No contact for {system.trades.map(label).join(" or ")}
           </p>
         </Section>
       ) : null}
@@ -146,9 +162,7 @@ export default async function SystemPage({
           title={first.length ? "Other Fixtures" : "Fixtures"}
           action={addFixture}
         >
-          {fixtures.length === 0 ? (
-            <p className="px-1 text-sm text-ink-3">None yet</p>
-          ) : (
+          {fixtures.length === 0 ? null : (
             <div className="flex flex-col gap-3">
               {[...byPlace].map(([where, items]) => (
                 <div key={where}>
@@ -160,7 +174,7 @@ export default async function SystemPage({
                       <Row
                         key={f.id}
                         href={`/fixtures/${f.id}`}
-                        icon="fixture"
+                        icon={kindIcon(f.category)}
                         title={f.name}
                         detail={f.category || undefined}
                       />
@@ -190,7 +204,7 @@ export default async function SystemPage({
       ) : null}
 
       {notes.length ? (
-        <Section title="Notes">
+        <Section title="Log">
           <NoteList rows={notes} />
         </Section>
       ) : null}

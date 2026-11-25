@@ -7,8 +7,8 @@ import { NoteList } from "@/components/NoteList";
 import { PhotoUpload } from "@/components/PhotoUpload";
 import { Photos } from "@/components/Photos";
 import { StoreList } from "@/components/StoreList";
-import { LinkButton } from "@/components/ui/Button";
 import { Card, Facts, List, Row, Section } from "@/components/ui/Card";
+import { Icon } from "@/components/ui/icons";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { roleAtLeast } from "@/lib/core/types";
 import { db } from "@/lib/db";
@@ -85,43 +85,17 @@ export default async function PartPage({
         back={{ href: "/parts", label: "Parts" }}
         actions={
           canEdit ? (
-            <LinkButton href={`/parts/${id}/edit`}>Edit</LinkButton>
-          ) : null
-        }
-      />
-
-      {groups.map((g) => (
-        <Section key={g.title} title={g.title}>
-          <Facts items={g.facts} />
-        </Section>
-      ))}
-
-      {formula ? (
-        <Section title="Tint Formula">
-          <FormulaTable formula={formula} />
-        </Section>
-      ) : null}
-
-      <Section
-        id="where-to-buy"
-        title="Where to Buy"
-        action={
-          canEdit && part.stores.length === 0 ? (
             <Link
-              href={`/parts/${id}/edit#stores`}
-              className="text-sm text-accent"
+              href={`/parts/${id}/edit`}
+              aria-label="Edit"
+              title="Edit"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control border border-line bg-card text-ink hover:bg-sunk"
             >
-              Add Store
+              <Icon name="edit" className="h-5 w-5" />
             </Link>
           ) : null
         }
-      >
-        {part.stores.length ? (
-          <StoreList stores={part.stores} />
-        ) : (
-          <p className="px-1 text-sm text-ink-3">No stores yet</p>
-        )}
-      </Section>
+      />
 
       <Lessons rows={tips} />
 
@@ -145,7 +119,7 @@ export default async function PartPage({
                   [u.surface, u.finish].filter(Boolean).join(", "),
                   formatQty(u.quantity, u.unit),
                   u.quantityNeeded
-                    ? `really needs ${formatQty(u.quantityNeeded, u.unit)}`
+                    ? `actually needs ${formatQty(u.quantityNeeded, u.unit)}`
                     : "",
                 ]
                   .filter(Boolean)
@@ -153,9 +127,31 @@ export default async function PartPage({
               />
             ))}
           </List>
-        ) : (
-          <p className="px-1 text-sm text-ink-3">Not used anywhere yet</p>
-        )}
+        ) : null}
+      </Section>
+
+      {groups.map((g) => (
+        <Section key={g.title} title={g.title}>
+          <Facts items={g.facts} />
+        </Section>
+      ))}
+
+      {formula ? (
+        <Section title="Tint Formula">
+          <FormulaTable formula={formula} />
+        </Section>
+      ) : null}
+
+      <Section
+        id="where-to-buy"
+        title="Where to Buy"
+        action={
+          canEdit && part.stores.length === 0 ? (
+            <Link href={`/parts/${id}/edit#stores`}>Add Store</Link>
+          ) : null
+        }
+      >
+        {part.stores.length ? <StoreList stores={part.stores} /> : null}
       </Section>
 
       {part.notes ? (
@@ -169,23 +165,12 @@ export default async function PartPage({
       ) : null}
 
       <Section
-        title="History"
+        title="Log"
         action={
-          canEdit ? (
-            <Link
-              href={`/notes/new?part=${id}`}
-              className="text-sm text-accent"
-            >
-              Add Note
-            </Link>
-          ) : null
+          canEdit ? <Link href={`/notes/new?part=${id}`}>Add Entry</Link> : null
         }
       >
-        {notes.length ? (
-          <NoteList rows={notes} />
-        ) : (
-          <p className="px-1 text-sm text-ink-3">None yet</p>
-        )}
+        {notes.length ? <NoteList rows={notes} on={{ supplyId: id }} /> : null}
       </Section>
 
       <Section title="Photos">

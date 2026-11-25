@@ -23,7 +23,7 @@ export default async function MorePage() {
           href="/notes"
           icon="note"
           title="Log"
-          detail="Repairs, service and what we used"
+          detail="Repairs and service history"
         />
         <Row
           href="/guide"

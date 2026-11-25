@@ -49,7 +49,7 @@ export default async function NotesPage({
               href={place ? `/notes/new?space=${place.id}` : "/notes/new"}
               variant="primary"
             >
-              Add
+              Add Entry
             </LinkButton>
           ) : null
         }

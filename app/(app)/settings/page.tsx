@@ -19,7 +19,8 @@ import {
 } from "./actions";
 import { LinkPicker } from "@/components/LinkPicker";
 import { listIntegrations } from "@/lib/integrations/integrations";
-import { DeleteButton } from "@/components/DeleteButton";
+import { ConfirmInline } from "@/components/ConfirmInline";
+import { Icon } from "@/components/ui/icons";
 import { List } from "@/components/ui/Card";
 import { listGrants } from "@/lib/oauth/grants";
 import { absoluteUrl } from "@/lib/web/urls";
@@ -35,6 +36,28 @@ import {
 } from "./forms";
 
 export const metadata = { title: "Settings" };
+
+/* The trash, asked in place; its name says what it disconnects or removes. */
+function TrashConfirm({
+  verb,
+  what,
+  action,
+}: {
+  verb: string;
+  what: string;
+  action: () => Promise<unknown>;
+}) {
+  return (
+    <ConfirmInline
+      action={action}
+      verb={verb}
+      subject={what}
+      trigger={<Icon name="trash" className="h-[18px] w-[18px]" />}
+      triggerLabel={`${verb} ${what}`}
+      triggerClass="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink-3 hover:bg-sunk hover:text-danger"
+    />
+  );
+}
 
 export default async function SettingsPage() {
   const { user, property, scope } = await viewer();
@@ -53,17 +76,24 @@ export default async function SettingsPage() {
       <Section title="You">
         <Card className="flex flex-col gap-6 p-4">
           <NameForm action={nameAction} name={user.displayName} />
+          <ThemeChoice />
           <PasswordForm
             action={passwordAction}
             hasPassword={Boolean(row?.hash)}
           />
-          <ThemeChoice />
         </Card>
       </Section>
+      {user.role === "admin" ? (
+        <Section title="Home">
+          <Card className="p-4">
+            <HomeForm action={homeAction} initial={property} seenAs={seenAs} />
+          </Card>
+        </Section>
+      ) : null}
       <Section title="Connected Apps">
         <Card className="flex flex-col gap-3 p-4">
           <p className="text-sm text-ink-3">
-            Add as a custom connector in Claude:
+            Custom connector address for Claude
           </p>
           <code className="break-all rounded bg-sunk px-2 py-1.5 text-xs text-ink">
             {mcpUrl}
@@ -84,16 +114,14 @@ export default async function SettingsPage() {
                     </span>
                     <span className="block text-sm text-ink-3">
                       {g.scopes.includes("homedocs:write")
-                        ? "Look Up and Change"
-                        : "Look Up"}
+                        ? "Looks up and changes"
+                        : "Looks up"}
                       {g.lastUsedAt ? ` · used ${timeAgo(g.lastUsedAt)}` : ""}
                     </span>
                   </span>
-                  <DeleteButton
-                    compact
+                  <TrashConfirm
+                    verb="Disconnect"
                     what={g.clientName}
-                    recoverable={false}
-                    label="Disconnect"
                     action={revokeConnectorAction.bind(null, g.clientId)}
                   />
                 </li>
@@ -103,16 +131,9 @@ export default async function SettingsPage() {
         ) : null}
       </Section>
       {user.role === "admin" ? (
-        <Section title="Home">
-          <Card className="p-4">
-            <HomeForm action={homeAction} initial={property} seenAs={seenAs} />
-          </Card>
-        </Section>
-      ) : null}
-      {user.role === "admin" ? (
-        <Section title="Homebox and paperless">
+        <Section title="Integrations">
           <p className="mb-2 px-1 text-sm text-ink-3">
-            For searching and linking items and documents
+            Link Homebox items and paperless documents
           </p>
           <div className="flex flex-col gap-3">
             {(["homebox", "paperless"] as const).map((system) => {
@@ -124,11 +145,9 @@ export default async function SettingsPage() {
                       {system === "homebox" ? "Homebox" : "paperless-ngx"}
                     </p>
                     {row ? (
-                      <DeleteButton
-                        compact
-                        recoverable={false}
-                        what={`the ${system} connection`}
-                        label="Disconnect"
+                      <TrashConfirm
+                        verb="Disconnect"
+                        what={system === "homebox" ? "Homebox" : "paperless"}
                         action={removeIntegrationAction.bind(null, system)}
                       />
                     ) : null}
@@ -148,22 +167,22 @@ export default async function SettingsPage() {
                         Only Documents Tagged
                       </p>
                       <p className="-mt-1 text-xs text-ink-3">
-                        E.g. this house’s tag, if paperless holds another home’s
-                        papers
+                        For when paperless also holds papers that aren’t this
+                        home’s
                       </p>
                       {row.requiredTags.length ? (
                         <ul className="flex flex-wrap gap-2">
                           {row.requiredTags.map((t) => (
                             <li
                               key={t.id}
-                              className="inline-flex min-h-11 items-center rounded-full border border-accent bg-accent-soft pl-3 text-sm text-accent"
+                              className="inline-flex min-h-11 min-w-0 items-center rounded-full border border-accent bg-accent-soft pl-3 text-sm text-accent"
                             >
-                              {t.name}
-                              <DeleteButton
-                                compact
-                                recoverable={false}
+                              <span className="min-w-0 wrap-anywhere">
+                                {t.name}
+                              </span>
+                              <TrashConfirm
+                                verb="Remove"
                                 what={`the ${t.name} filter`}
-                                label="Remove"
                                 action={unrequirePaperlessTagAction.bind(
                                   null,
                                   t.id,

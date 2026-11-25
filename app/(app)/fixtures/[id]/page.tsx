@@ -137,7 +137,7 @@ export default async function FixturePage({
       </Section>
 
       {canEdit ? (
-        <Section title={photos.length ? "More Photos" : "Photos"}>
+        <Section title="Photos">
           <PhotoUpload owner={`fixture:${id}`} />
         </Section>
       ) : null}

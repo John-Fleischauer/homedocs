@@ -11,14 +11,18 @@ import {
   TextArea,
   TextInput,
 } from "@/components/ui/Field";
-import { SYSTEM_ICONS, type SystemIcon } from "@/lib/systems/seeds";
+import {
+  SYSTEM_ICONS,
+  systemIcon,
+  type SystemIcon,
+} from "@/lib/systems/seeds";
 import { focusUnlessTouch } from "@/components/ui/focus";
 
 const ICON_LABEL: Record<SystemIcon, string> = {
   water: "Water",
   bolt: "Electric",
   climate: "Heating & Cooling",
-  flame: "Gas / fire",
+  flame: "Gas or Fire",
   drain: "Drain",
   leaf: "Yard",
   shield: "Safety",
@@ -55,21 +59,27 @@ export function SystemForm({
         <TextInput
           name="name"
           defaultValue={initial?.name}
-          placeholder="Pool, Solar, Water softener"
+          placeholder="Pool"
           required
           ref={initial?.name ? undefined : focusUnlessTouch}
         />
       </Field>
 
       <fieldset>
-        <legend className="mb-1.5 text-sm font-medium text-ink-2">Icon</legend>
+        <legend className="mb-1.5 text-sm font-medium text-ink-2">
+          Icon
+          <span className="ml-2 font-normal text-ink-3">
+            {ICON_LABEL[systemIcon(icon)]}
+          </span>
+        </legend>
         <div className="flex flex-wrap gap-2">
           {SYSTEM_ICONS.map((i) => (
             <label
               key={i}
-              className={`inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border ${
+              title={ICON_LABEL[i]}
+              className={`inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent ${
                 icon === i
-                  ? "border-accent bg-accent-soft text-accent"
+                  ? "border-accent bg-accent-soft text-accent ring-2 ring-accent"
                   : "border-line bg-card text-ink-2"
               }`}
             >

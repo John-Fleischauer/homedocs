@@ -55,7 +55,7 @@ export default async function PlacesPage() {
       <PageHeader
         title="Places"
         actions={
-          canEdit ? (
+          canEdit && tree.length ? (
             <LinkButton href="/places/new" variant="primary">
               Add
             </LinkButton>

@@ -20,7 +20,7 @@ export function UseList({
       {uses.map((u) => {
         const qty = formatQty(u.quantity, u.unit);
         const needed = u.quantityNeeded
-          ? `really needs ${formatQty(u.quantityNeeded, u.unit)}`
+          ? `actually needs ${formatQty(u.quantityNeeded, u.unit)}`
           : "";
         const where = [u.surface, u.finish].filter(Boolean).join(", ");
         if (show === "part") {
