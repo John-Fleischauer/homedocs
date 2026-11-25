@@ -1,5 +1,6 @@
-import { DeleteButton } from "@/components/DeleteButton";
+import { ConfirmInline } from "@/components/ConfirmInline";
 import { Card, List, Pill, Section } from "@/components/ui/Card";
+import { Icon } from "@/components/ui/icons";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { listOpenInvites } from "@/lib/auth/invites";
 import { requireRole } from "@/lib/auth/guards";
@@ -27,10 +28,31 @@ import {
   ResetLink,
   RevokeButton,
   RoleSelect,
-  ROLE_HELP,
+  ROLE_NAME,
 } from "./parts";
 
 export const metadata = { title: "Family" };
+
+/* The trash, asked in place; its name says whom it removes. */
+function RemoveButton({
+  who,
+  action,
+}: {
+  who: string;
+  action: () => Promise<unknown>;
+}) {
+  return (
+    <ConfirmInline
+      action={action}
+      verb="Remove"
+      subject={who}
+      note="They can no longer sign in"
+      trigger={<Icon name="trash" className="h-[18px] w-[18px]" />}
+      triggerLabel={`Remove ${who}`}
+      triggerClass="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink-3 hover:bg-sunk hover:text-danger"
+    />
+  );
+}
 
 export default async function FamilyPage() {
   const me = await requireRole("admin");
@@ -46,17 +68,17 @@ export default async function FamilyPage() {
       {awaiting.length ? (
         <Section title="Awaiting Placement">
           <p className="mb-2 px-1 text-sm text-ink-3">
-            Signed in with {signIn.sso?.name ?? "single sign-on"} and matched
-            nobody here. They can’t see anything until you let them in.
+            Signed in with {signIn.sso?.name ?? "single sign-on"} but not added
+            here. They see nothing until let in
           </p>
           <List>
             {awaiting.map((a) => (
               <li key={a.id} className="flex flex-col gap-2 px-4 py-3">
                 <span className="min-w-0">
-                  <span className="block break-words text-[15px] font-medium text-ink">
+                  <span className="block wrap-anywhere text-[15px] font-medium text-ink">
                     {a.displayName}
                   </span>
-                  <span className="block break-words text-sm text-ink-3">
+                  <span className="block wrap-anywhere text-sm text-ink-3">
                     {a.email} · signed in {formatDay(localDay(a.createdAt))}
                   </span>
                 </span>
@@ -65,11 +87,8 @@ export default async function FamilyPage() {
                     action={placeAction.bind(null, a.id)}
                     suggested={placementRole()}
                   />
-                  <DeleteButton
-                    compact
-                    what={a.displayName}
-                    recoverable={false}
-                    label="Remove"
+                  <RemoveButton
+                    who={a.displayName}
                     action={removeAwaitingAction.bind(null, a.id)}
                   />
                 </div>
@@ -103,21 +122,13 @@ export default async function FamilyPage() {
             </div>
             {p.id !== me.id ? (
               <div className="flex items-center justify-between gap-2">
-                {p.hasPassword ? (
+                {p.hasPassword || signIn.password ? (
                   <ResetLink action={resetAction.bind(null, p.id)} />
-                ) : signIn.password ? (
-                  <ResetLink
-                    action={resetAction.bind(null, p.id)}
-                    label="Make Set-Password Link"
-                  />
                 ) : (
                   <span />
                 )}
-                <DeleteButton
-                  compact
-                  what={p.displayName}
-                  recoverable={false}
-                  label="Remove"
+                <RemoveButton
+                  who={p.displayName}
                   action={removeUserAction.bind(null, p.id)}
                 />
               </div>
@@ -137,11 +148,27 @@ export default async function FamilyPage() {
         </Card>
       </Section>
 
-      <Section title="Invite by Link">
-        <Card className="p-4">
-          <InviteForm action={inviteAction} />
-        </Card>
-      </Section>
+      <Card className="mt-4">
+        <details className="group">
+          <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 px-4 py-2.5 [&::-webkit-details-marker]:hidden">
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15px] font-medium text-ink">
+                Invite by Link
+              </span>
+              <span className="block text-sm text-ink-3">
+                They enter their own email and password
+              </span>
+            </span>
+            <Icon
+              name="chevron"
+              className="h-4 w-4 shrink-0 text-ink-3 group-open:rotate-90"
+            />
+          </summary>
+          <div className="border-t border-line p-4">
+            <InviteForm action={inviteAction} />
+          </div>
+        </details>
+      </Card>
 
       {invites.length ? (
         <Section title="Open Invite Links">
@@ -158,9 +185,7 @@ export default async function FamilyPage() {
                       : i.label || "Invite"}
                   </span>
                   <span className="block text-sm text-ink-3">
-                    {i.kind === "invite"
-                      ? `${ROLE_HELP[i.role].split(" —")[0]} · `
-                      : ""}
+                    {i.kind === "invite" ? `${ROLE_NAME[i.role]} · ` : ""}
                     expires {formatDay(localDay(i.expiresAt))}
                   </span>
                 </span>

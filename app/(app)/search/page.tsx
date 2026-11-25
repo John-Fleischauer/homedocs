@@ -23,7 +23,7 @@ const KIND_LABEL: Record<SearchKind, string> = {
   system: "System",
   fixture: "Fixture",
   part: "Part",
-  note: "Note",
+  note: "Log Entry",
   contact: "Contact",
   project: "Project",
   series: "Series",
@@ -44,7 +44,7 @@ export default async function SearchPage({
       <SearchBox defaultValue={q} focus={!q} />
       <div className="mt-4">
         {q.trim() === "" ? null : hits.length === 0 ? (
-          <EmptyState>Nothing matches “{q}”.</EmptyState>
+          <EmptyState>Nothing matches “{q}”</EmptyState>
         ) : (
           <List>
             {hits.map((hit) => (

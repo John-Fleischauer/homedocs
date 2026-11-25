@@ -59,9 +59,11 @@ function SeriesDialog({
     >
       <div className="flex flex-col gap-3 p-4">
         <h2 id={titleId} className="text-[17px] font-semibold">
-          Update the Series?
+          Update Series?
         </h2>
-        <p className="text-sm text-ink-3">Next time starts from this</p>
+        <p className="text-sm text-ink-3">
+          The next project starts with these changes
+        </p>
         <ul className="flex list-disc flex-col gap-1 pl-5 text-[15px] text-ink-2">
           {asking?.changes.map((change, i) => (
             <li key={i} className="wrap-anywhere">

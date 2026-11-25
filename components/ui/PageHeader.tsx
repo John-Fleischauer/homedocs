@@ -18,7 +18,7 @@ export function PageHeader({
       {back ? (
         <Link
           href={back.href}
-          className="-ml-1 mb-1 inline-flex min-h-9 items-center gap-1 wrap-anywhere text-sm text-ink-3 hover:text-ink"
+          className="-ml-1 -mt-1 inline-flex min-h-11 min-w-11 items-center gap-1 wrap-anywhere text-sm text-ink-3 hover:text-ink"
         >
           <Icon name="back" className="h-4 w-4 shrink-0" />
           {back.label}

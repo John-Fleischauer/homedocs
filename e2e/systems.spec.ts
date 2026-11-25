@@ -55,7 +55,7 @@ test("a shutoff lands in Water & plumbing, and the system hands it over", async 
   await page.goto("/");
   await expect(
     page.getByRole("link", {
-      name: /Water & plumbing.*fixtures? · [0-9]+ on the guide/,
+      name: /Water & plumbing.*[0-9]+ fixtures?/,
     }),
   ).toBeVisible();
 

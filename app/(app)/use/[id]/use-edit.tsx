@@ -7,12 +7,14 @@ import { UseFields } from "../../parts/use-fields";
 export function ActionFormClient({
   action,
   unit,
+  units,
   finishes,
   ownerKind,
   initial,
 }: {
   action: FormAction;
   unit: string;
+  units: string[];
   finishes?: string[];
   ownerKind: "fixture" | "place";
   initial: {
@@ -28,6 +30,7 @@ export function ActionFormClient({
     <ActionForm action={action}>
       <UseFields
         unit={unit}
+        units={units}
         finishes={finishes}
         ownerKind={ownerKind}
         initial={initial}

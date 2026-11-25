@@ -25,7 +25,10 @@ export default async function ContactsPage() {
         title="Contacts"
         actions={
           canEdit ? (
-            <LinkButton href="/contacts/new" variant="primary">
+            <LinkButton
+              href="/contacts/new"
+              variant={contacts.length ? "primary" : "secondary"}
+            >
               Add
             </LinkButton>
           ) : null
@@ -35,10 +38,10 @@ export default async function ContactsPage() {
         <List>
           {contacts.map((p) => {
             const phone = p.phones[0]?.value;
-            // "★ Plumber, HVAC": the ones they're the go-to for first.
+            // "Go-to for Plumber, HVAC · Roofer": the ones they're called first for, then the rest.
             const ours = p.trades
               .filter((t) => t.preferred)
-              .map((t) => `★ ${label(t.trade)}`);
+              .map((t) => label(t.trade));
             const other = p.trades
               .filter((t) => !t.preferred)
               .map((t) => label(t.trade));
@@ -48,7 +51,11 @@ export default async function ContactsPage() {
                 href={`/contacts/${p.id}`}
                 icon="contact"
                 title={p.name}
-                detail={[p.company, [...ours, ...other].join(", ")]
+                detail={[
+                  p.company,
+                  ours.length ? `Go-to for ${ours.join(", ")}` : "",
+                  other.join(", "),
+                ]
                   .filter(Boolean)
                   .join(" · ")}
                 trailing={
@@ -56,7 +63,7 @@ export default async function ContactsPage() {
                     <a
                       href={telHref(phone)}
                       aria-label={`Call ${p.name}`}
-                      className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-soft text-accent"
+                      className="flex h-11 w-11 items-center justify-center rounded-full bg-accent-soft text-accent"
                     >
                       <Icon name="phone" />
                     </a>

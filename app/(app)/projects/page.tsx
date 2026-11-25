@@ -51,7 +51,7 @@ export default async function ProjectsPage() {
                     ? "1 project"
                     : `${s.projectCount} projects`,
                   s.lastStarted
-                    ? `last ${new Date(s.lastStarted).getFullYear()}`
+                    ? `last in ${new Date(s.lastStarted).getFullYear()}`
                     : "",
                 ]
                   .filter(Boolean)
@@ -59,12 +59,7 @@ export default async function ProjectsPage() {
               />
             ))}
           </List>
-        ) : (
-          <p className="px-1 text-sm text-ink-3">
-            None yet. A series is a recurring job: each new project starts from
-            its checklist and materials
-          </p>
-        )}
+        ) : null}
       </Section>
     ) : null;
   return (
@@ -110,7 +105,9 @@ export default async function ProjectsPage() {
                           ? PRIORITY_LABEL[p.priority]
                           : "",
                         p.targetDate ? `by ${formatDay(p.targetDate)}` : "",
-                        p.openItems ? `${p.openItems} to do` : "",
+                        p.openItems && s !== "done" && s !== "dropped"
+                          ? `${p.openItems} ${p.openItems === 1 ? "to-do" : "to-dos"} left`
+                          : "",
                         p.quoteCount
                           ? `${p.quoteCount} quote${p.quoteCount === 1 ? "" : "s"}`
                           : "",

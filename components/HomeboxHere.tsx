@@ -92,7 +92,7 @@ export async function HomeboxHere({
                   {item.fixture ? (
                     <Link
                       href={`/fixtures/${item.fixture.id}`}
-                      className="block wrap-anywhere text-sm text-accent"
+                      className="-my-3 flex min-h-11 items-center wrap-anywhere text-sm text-accent"
                     >
                       Fixture: {item.fixture.name}
                     </Link>
@@ -117,13 +117,11 @@ export async function HomeboxHere({
           </List>
           {here.total > here.items.length ? (
             <p className="mt-2 px-1 text-xs text-ink-3">
-              First {here.items.length} of {here.total}.
+              First {here.items.length} of {here.total}
             </p>
           ) : null}
         </>
-      ) : (
-        <p className="px-1 text-sm text-ink-3">Nothing stored here</p>
-      )}
+      ) : null}
     </Section>
   );
 }

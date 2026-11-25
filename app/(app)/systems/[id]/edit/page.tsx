@@ -31,10 +31,11 @@ export default async function EditSystemPage({
         initial={{ ...system, updatedAt: system.updatedAt.toISOString() }}
         submit="Save"
       />
-      <div className="mt-8 border-t border-line pt-6">
+      <div className="mt-6 flex justify-end border-t border-line pt-3">
         <DeleteButton
+          compact
           action={deleteSystemAction.bind(null, id)}
-          what={`“${system.name}” (its fixtures stay where they are)`}
+          what={`“${system.name}” (its fixtures stay)`}
         />
       </div>
     </>

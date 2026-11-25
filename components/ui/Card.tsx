@@ -16,7 +16,21 @@ export function Card({
   );
 }
 
-/** A titled block on a page, with an optional action on the right. */
+/*
+ * A link or button passed as a Section's `action` gets a 44px tap target
+ * here, whatever its own classes say, so every caller's "Add" or "All" is one.
+ * The header row is that tall with the margins around it drawn in to match, so
+ * the title sits where a 20px row would put it.
+ */
+const SECTION_ACTION =
+  "flex shrink-0 items-center gap-1 text-sm text-accent " +
+  "[&>a]:inline-flex [&>a]:min-h-11 [&>a]:min-w-11 [&>a]:items-center [&>a]:justify-end " +
+  "[&>button]:inline-flex [&>button]:min-h-11 [&>button]:min-w-11 [&>button]:items-center [&>button]:justify-end";
+
+/**
+ * A titled block on a page, with an optional action on the right. With no
+ * children (an empty list) it is the header alone, with its add action.
+ */
 export function Section({
   title,
   action,
@@ -25,16 +39,16 @@ export function Section({
 }: {
   title: string;
   action?: ReactNode;
-  children: ReactNode;
+  children?: ReactNode;
   id?: string;
 }) {
   return (
-    <section className="mt-6" id={id}>
-      <div className="mb-2 flex items-center justify-between gap-2 px-1">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-3">
+    <section className="mt-3" id={id}>
+      <div className="-mb-1 flex min-h-11 items-center justify-between gap-2 px-1">
+        <h2 className="min-w-0 wrap-anywhere text-sm font-semibold uppercase tracking-wide text-ink-3">
           {title}
         </h2>
-        {action}
+        {action ? <div className={SECTION_ACTION}>{action}</div> : null}
       </div>
       {children}
     </section>

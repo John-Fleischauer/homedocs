@@ -23,8 +23,7 @@ export default async function NewSeriesPage() {
         back={{ href: "/projects", label: "Projects" }}
       />
       <p className="mb-4 px-1 text-sm text-ink-3">
-        A recurring job: each new project starts from its checklist and
-        materials
+        A recurring job: new projects start with its to-dos and materials
       </p>
       <SeriesForm
         action={createSeriesAction}

@@ -10,6 +10,7 @@ import {
   type Choice,
 } from "@/lib/core/choices";
 import { Select, TextInput } from "./Field";
+import { focusUnlessTouch } from "./focus";
 
 /*
  * A dropdown of the usual answers, with "Other…" for the rest. The form posts
@@ -69,7 +70,7 @@ export function ChoiceInput({
           onChange={(e) => setValue(e.target.value)}
           placeholder={placeholder}
           aria-label={`${label}, other`}
-          autoFocus={picked}
+          ref={picked ? focusUnlessTouch : undefined}
         />
       ) : null}
     </div>

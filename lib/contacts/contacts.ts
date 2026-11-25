@@ -181,7 +181,7 @@ export async function createContact(
       .insert(contacts)
       .values({
         propertyId: scope.propertyId,
-        name: requireText(input.name, "Give it a name: a company or a person."),
+        name: requireText(input.name, "Give the contact a name."),
         company: cleanText(input.company, 200),
         phones: cleanMethods(input.phones),
         emails: cleanMethods(input.emails),
@@ -226,7 +226,7 @@ export async function updateContact(
     if (input.name !== undefined)
       patch.name = requireText(
         input.name,
-        "Give it a name: a company or a person.",
+        "Give the contact a name.",
       );
     if (input.company !== undefined)
       patch.company = cleanText(input.company, 200);

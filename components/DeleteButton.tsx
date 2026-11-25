@@ -40,7 +40,7 @@ export function DeleteButton({
       triggerLabel={compact ? `${label} ${what}` : undefined}
       triggerClass={
         compact
-          ? "flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink-3 hover:bg-sunk hover:text-danger " +
+          ? "flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink-3 hover:bg-sunk hover:text-danger " +
             className
           : buttonClass(variant, className)
       }

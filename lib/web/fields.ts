@@ -80,8 +80,7 @@ export function refusalMessage(error: z.ZodError): string {
   return [...new Set(error.issues.map((issue) => issue.message))].join(" ");
 }
 
-export const RELOAD =
-  "Something went wrong reading the form. Reload and try again.";
+export const RELOAD = "Couldn’t read the form. Reload and try again.";
 export const GONE = "That no longer exists. Reload and try again.";
 
 /* Far more than anyone types into one box, well under Next's 1MB action body

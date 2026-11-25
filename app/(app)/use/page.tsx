@@ -1,10 +1,10 @@
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { LinkButton } from "@/components/ui/Button";
 import { Section } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { requireRole } from "@/lib/auth/guards";
 import { db } from "@/lib/db";
-import { listParts } from "@/lib/parts/parts";
+import { listParts, partUnits } from "@/lib/parts/parts";
 import { CATEGORIES, summarize, TEMPLATES } from "@/lib/parts/templates";
 import { viewer } from "@/lib/web/context";
 import { ownerFromParams } from "@/lib/web/owner";
@@ -23,12 +23,14 @@ export default async function UsePage({
   const { scope } = await viewer();
   const params = await searchParams;
   const owner = await ownerFromParams(scope, params);
-  if (!owner) notFound();
+  // Reached with nothing to add the part to: a part on its own is still a part.
+  if (!owner) redirect("/parts/new");
   const parts = (await listParts(db, scope)).map(({ part }) => ({
     id: part.id,
     name: part.name,
     category: part.category,
     summary: summarize(part.category, part.fields),
+    units: partUnits(part),
   }));
   const q =
     owner.kind === "fixture" ? `fixture=${owner.id}` : `space=${owner.id}`;

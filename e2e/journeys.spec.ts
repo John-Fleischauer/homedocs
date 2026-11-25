@@ -254,12 +254,9 @@ test("a project with a quote and a to-do list", async ({ page }) => {
   await page.getByRole("button", { name: "Add Quote" }).click();
   await expect(page.getByText("$2,400.00")).toBeVisible();
   await page.getByRole("button", { name: "Accept" }).click();
-  await expect(
-    page
-      .getByText("Scheduled ·")
-      .or(page.getByText(/^Scheduled/))
-      .first(),
-  ).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Status" })).toHaveValue(
+    "scheduled",
+  );
 });
 
 test("a filter bought at two stores, one in person and one online", async ({

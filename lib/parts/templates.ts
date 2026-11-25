@@ -14,7 +14,12 @@
 export type Category =
   "bulb" | "paint" | "filter" | "battery" | "landscaping" | "other";
 
-import { tidyChoice, yesNoValue, type Choice } from "../core/choices";
+import {
+  matchChoice,
+  tidyChoice,
+  yesNoValue,
+  type Choice,
+} from "../core/choices";
 
 export type TemplateField = {
   key: string;
@@ -72,7 +77,7 @@ export const TEMPLATES: Record<Category, Template> = {
       {
         key: "base",
         label: "Base",
-        placeholder: "E26, E12, GU10",
+        placeholder: "E26",
         choices: [
           ["E26", "standard"],
           ["E12", "candelabra"],
@@ -89,7 +94,7 @@ export const TEMPLATES: Record<Category, Template> = {
       {
         key: "shape",
         label: "Shape",
-        placeholder: "A19, BR30, candelabra",
+        placeholder: "A19",
         choices: [
           ["A19", "standard"],
           "A21",
@@ -107,7 +112,7 @@ export const TEMPLATES: Record<Category, Template> = {
       },
       {
         key: "color_temp",
-        label: "Colour temperature",
+        label: "Colour Temperature",
         placeholder: "2700K",
         choices: [
           ["2200K", "candlelight"],
@@ -122,13 +127,19 @@ export const TEMPLATES: Record<Category, Template> = {
       {
         key: "brightness",
         label: "Brightness",
-        placeholder: "800 lumens / 60W equivalent",
+        placeholder: "800 lumens",
+        choices: [
+          ["450 lumens", "40W"],
+          ["800 lumens", "60W"],
+          ["1100 lumens", "75W"],
+          ["1600 lumens", "100W"],
+        ],
       },
-      { key: "dimmable", label: "Dimmable?", placeholder: "Yes", yesNo: true },
-      { key: "smart", label: "Smart bulb?", placeholder: "No", yesNo: true },
+      { key: "dimmable", label: "Dimmable", placeholder: "Yes", yesNo: true },
+      { key: "smart", label: "Smart Bulb", placeholder: "No", yesNo: true },
       {
         key: "brand",
-        label: "Brand / product",
+        label: "Brand and Product",
         placeholder: "Philips Ultra Definition",
       },
     ],
@@ -138,7 +149,7 @@ export const TEMPLATES: Record<Category, Template> = {
     label: "Paint Colour",
     unit: "gal",
     finishes: PAINT_SHEENS,
-    tip: "Copy these from the can’s label.",
+    tip: "Copy from the can’s label",
     // In the order a store's tint label reads, top to bottom.
     fields: [
       {
@@ -156,19 +167,19 @@ export const TEMPLATES: Record<Category, Template> = {
           "Farrow & Ball",
         ],
       },
-      { key: "store", label: "Store", placeholder: "#1234, 555-123-4567" },
-      { key: "mixed_on", label: "Date mixed", placeholder: "04/22/24" },
-      { key: "order", label: "Order number", placeholder: "0582820" },
+      { key: "store", label: "Store", placeholder: "Store #1234" },
+      { key: "mixed_on", label: "Date Mixed", placeholder: "04/22/24" },
+      { key: "order", label: "Order Number", placeholder: "0582820" },
       {
         key: "interior_exterior",
-        label: "Interior or exterior",
+        label: "Interior or Exterior",
         placeholder: "Interior",
         choices: ["Interior", "Exterior", "Interior/Exterior"],
       },
       {
         key: "product_line",
         label: "Product",
-        placeholder: "ProMar 200 Zero, Duration, Emerald",
+        placeholder: "Duration",
       },
       {
         key: "sheen",
@@ -176,23 +187,23 @@ export const TEMPLATES: Record<Category, Template> = {
         placeholder: "Flat",
         choices: PAINT_SHEENS,
       },
-      { key: "color_name", label: "Colour name", placeholder: "Repose Gray" },
+      { key: "color_name", label: "Colour Name", placeholder: "Repose Gray" },
       {
         key: "color_code",
-        label: "Colour code",
-        placeholder: "SW 7015, or “Custom match”",
+        label: "Colour Code",
+        placeholder: "SW 7015",
       },
       {
         key: "formula",
-        label: "Tint formula",
+        label: "Tint Formula",
         placeholder:
           "COLORANT OZ 32 64 128\nB1-Black 2 3 1 1\nR2-Maroon - 4 1 1",
-        hint: "One colorant per line; - for a blank.",
+        hint: "One colorant per line, - for a blank",
         multiline: true,
       },
       {
         key: "size",
-        label: "Container size",
+        label: "Container Size",
         placeholder: "Five gallon",
         choices: ["Sample", "Quart", "Gallon", "Five gallon"],
       },
@@ -212,7 +223,7 @@ export const TEMPLATES: Record<Category, Template> = {
       },
       {
         key: "product_number",
-        label: "Product number",
+        label: "Product Number",
         placeholder: "B30W12651",
       },
     ],
@@ -260,10 +271,14 @@ export const TEMPLATES: Record<Category, Template> = {
         placeholder: "MERV 8",
         choices: ["MERV 8", "MERV 11", "MERV 13", "MERV 16", "HEPA"],
       },
-      { key: "brand", label: "Brand / product", placeholder: "Filtrete 1500" },
+      {
+        key: "brand",
+        label: "Brand and Product",
+        placeholder: "Filtrete 1500",
+      },
       {
         key: "interval",
-        label: "Change every",
+        label: "Change Every",
         placeholder: "90 days",
         choices: ["30 days", "60 days", "90 days", "6 months", "12 months"],
       },
@@ -277,7 +292,7 @@ export const TEMPLATES: Record<Category, Template> = {
       {
         key: "size",
         label: "Size",
-        placeholder: "AA, 9V, CR2032",
+        placeholder: "AA",
         choices: [
           "AA",
           "AAA",
@@ -294,14 +309,14 @@ export const TEMPLATES: Record<Category, Template> = {
       },
       {
         key: "count",
-        label: "How many it takes",
+        label: "How Many Needed",
         placeholder: "4",
         count: true,
       },
       {
         key: "chemistry",
         label: "Type",
-        placeholder: "Lithium, alkaline",
+        placeholder: "Lithium",
         choices: ["Alkaline", "Lithium", "Rechargeable (NiMH)", "Lithium-ion"],
       },
     ],
@@ -314,11 +329,11 @@ export const TEMPLATES: Record<Category, Template> = {
       {
         key: "product",
         label: "Product",
-        placeholder: "Hardwood mulch, brown",
+        placeholder: "Hardwood mulch",
       },
       {
         key: "bag_size",
-        label: "Bag size",
+        label: "Bag Size",
         placeholder: "2 cu ft",
         choices: ["1.5 cu ft", "2 cu ft", "3 cu ft", "40 lb", "50 lb"],
       },
@@ -330,14 +345,58 @@ export const TEMPLATES: Record<Category, Template> = {
     label: "Other Part",
     unit: "",
     fields: [
-      { key: "brand", label: "Brand / product", placeholder: "" },
-      { key: "model", label: "Model / part number", placeholder: "" },
+      { key: "brand", label: "Brand and Product", placeholder: "" },
+      { key: "model", label: "Model or Part Number", placeholder: "" },
       { key: "size", label: "Size", placeholder: "" },
     ],
   },
 };
 
 export const CATEGORIES = Object.keys(TEMPLATES) as Category[];
+
+/*
+ * The units parts are usually sold and counted by, for the forms' dropdowns.
+ * Spelled as they are saved: singular, and "gal" and "ft" as formatQty shows
+ * them. Anything else is still typed, under "Other…".
+ */
+export const UNITS = [
+  "each",
+  "pack",
+  "box",
+  "bag",
+  "roll",
+  "bale",
+  "gal",
+  "quart",
+  "can",
+  "tube",
+  "ft",
+];
+
+/** The units to offer for a part: its own first, then the usual ones. */
+export function unitChoices(own: readonly string[] = []): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const u of [...own, ...UNITS]) {
+    const key = u.trim().toLowerCase();
+    if (key === "" || seen.has(key)) continue;
+    seen.add(key);
+    out.push(u.trim());
+  }
+  return out;
+}
+
+/**
+ * A typed unit as its list spells it: "Bags" and "bag" are both "bag", so the
+ * same unit isn't saved two ways. One the list doesn't have is kept as typed.
+ */
+export function tidyUnit(value: string, own: readonly string[] = []): string {
+  const choices = unitChoices(own);
+  const listed =
+    matchChoice(choices, value) ??
+    (/s$/i.test(value) ? matchChoice(choices, value.slice(0, -1)) : undefined);
+  return listed ?? tidyChoice(undefined, value);
+}
 
 export function isCategory(value: string): value is Category {
   return value in TEMPLATES;

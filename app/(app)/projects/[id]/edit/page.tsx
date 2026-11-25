@@ -9,7 +9,7 @@ import { viewer } from "@/lib/web/context";
 import { deleteProjectAction, updateProjectAction } from "../../actions";
 import { ProjectForm } from "../../project-form";
 
-export const metadata = { title: "Edit project" };
+export const metadata = { title: "Edit Project" };
 
 export default async function EditProjectPage({
   params,

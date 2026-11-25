@@ -45,7 +45,7 @@ export async function LinksSection({
   const thumbable = new Set(connected.map((c) => c.system));
   const homebox = connected.some((c) => c.system === "homebox");
   return (
-    <Section title="Linked">
+    <Section title="Linked Items">
       <div className="flex flex-col gap-3">
         {links.length ? (
           <List>
@@ -58,7 +58,7 @@ export async function LinksSection({
                   href={l.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex min-w-0 flex-1 items-center gap-3"
+                  className="flex min-h-11 min-w-0 flex-1 items-center gap-3"
                 >
                   <LinkThumb
                     src={

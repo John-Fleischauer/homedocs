@@ -9,7 +9,7 @@ export default async function AddPage() {
   await requireRole("member");
   return (
     <>
-      <PageHeader title="Add" subtitle="Tap + on a place to fill in where" />
+      <PageHeader title="Add" />
       <List>
         {addItems().map((item) => (
           <Row

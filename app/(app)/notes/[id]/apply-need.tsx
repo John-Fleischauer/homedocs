@@ -8,12 +8,10 @@ export function ApplyNeed({
   noteId,
   need,
   unit,
-  where,
 }: {
   noteId: string;
   need: number;
   unit: string;
-  where: string;
 }) {
   return (
     <ActionForm
@@ -21,7 +19,7 @@ export function ApplyNeed({
       className="mt-3 flex flex-col gap-2"
     >
       <SubmitButton variant="secondary" pendingText="Saving…">
-        Remember that {where} really needs {need} {unit}
+        Set Amount Needed to {need} {unit}
       </SubmitButton>
     </ActionForm>
   );

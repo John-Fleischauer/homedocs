@@ -22,6 +22,7 @@ const TABS: { href: string; label: string; icon: IconName }[] = [
 /* Pages reached from "More" light up the More tab. */
 const UNDER_MORE = [
   "/more",
+  "/systems",
   "/parts",
   "/fixtures",
   "/notes",
@@ -59,10 +60,10 @@ export function AppShell({
   return (
     <div className="min-h-dvh">
       <header className="no-print sticky top-0 z-30 border-b border-line bg-card">
-        <div className="mx-auto flex min-h-14 max-w-3xl items-center gap-3 px-4 py-2">
+        <div className="mx-auto flex min-h-14 max-w-3xl items-center gap-3 px-4 py-1.5">
           <Link
             href="/"
-            className="min-w-40 wrap-anywhere text-[17px] leading-snug font-semibold text-ink"
+            className="flex min-h-11 min-w-40 items-center wrap-anywhere text-[17px] leading-snug font-semibold text-ink"
           >
             {homeName}
           </Link>
@@ -75,7 +76,7 @@ export function AppShell({
                 key={tab.href}
                 href={tab.href}
                 aria-current={active === tab.href ? "page" : undefined}
-                className={`rounded-control px-3 py-2 text-sm font-medium ${
+                className={`flex min-h-11 items-center rounded-control px-3 text-sm font-medium ${
                   active === tab.href
                     ? "bg-accent-soft text-accent"
                     : "text-ink-2 hover:bg-sunk"
@@ -89,7 +90,7 @@ export function AppShell({
             <Link
               href="/search"
               aria-label="Search"
-              className="flex h-10 w-10 items-center justify-center rounded-full text-ink-2 hover:bg-sunk"
+              className="flex h-11 w-11 items-center justify-center rounded-full text-ink-2 hover:bg-sunk"
             >
               <Icon name="search" />
             </Link>

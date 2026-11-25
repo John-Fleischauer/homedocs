@@ -70,7 +70,9 @@ export function Photos({
                 <DeleteButton
                   compact
                   recoverable={false}
-                  what="this photo"
+                  what={
+                    a.mime.startsWith("image/") ? "this photo" : "this file"
+                  }
                   label="Remove"
                   action={remove.bind(null, a.id)}
                 />

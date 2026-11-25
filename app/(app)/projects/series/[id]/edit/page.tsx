@@ -48,7 +48,7 @@ export default async function EditSeriesPage({
       />
       <div className="mt-8 border-t border-line pt-6">
         <p className="mb-2 px-1 text-sm text-ink-3">
-          Its projects stay, with their checklists and materials.
+          Its projects stay, with their to-dos and materials
         </p>
         <DeleteButton
           action={deleteSeriesAction.bind(null, id)}

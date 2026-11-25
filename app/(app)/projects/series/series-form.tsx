@@ -3,12 +3,12 @@
 import { ActionForm, type FormAction } from "@/components/ActionForm";
 import {
   Field,
-  Select,
   SubmitButton,
   TextArea,
   TextInput,
 } from "@/components/ui/Field";
 import { focusUnlessTouch } from "@/components/ui/focus";
+import { ContactField, PlaceChips } from "../project-form";
 
 export function SeriesForm({
   action,
@@ -51,34 +51,8 @@ export function SeriesForm({
           placeholder="Rake out the old mulch first"
         />
       </Field>
-      {contacts.length ? (
-        <Field label="Usually Done By">
-          <Select name="contactId" defaultValue={initial?.contactId ?? ""}>
-            <option value="">—</option>
-            {contacts.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.label}
-              </option>
-            ))}
-          </Select>
-        </Field>
-      ) : null}
-      {places.length ? (
-        <Field label="Places" hint="Ctrl/⌘-click for more than one">
-          <select
-            name="spaceIds"
-            multiple
-            defaultValue={initial?.spaceIds ?? []}
-            className="min-h-32 w-full rounded-control border border-line bg-card px-2 py-2 text-[15px] text-ink"
-          >
-            {places.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.label}
-              </option>
-            ))}
-          </select>
-        </Field>
-      ) : null}
+      <ContactField contacts={contacts} defaultValue={initial?.contactId} />
+      <PlaceChips places={places} chosen={initial?.spaceIds} />
       <SubmitButton>{submit}</SubmitButton>
     </ActionForm>
   );

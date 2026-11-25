@@ -35,7 +35,13 @@ import {
   spacePath,
 } from "../search/rebuild";
 import { isHow, MAX_STORES, type StoreLink } from "./retailers";
-import { cleanFields, isCategory, TEMPLATES, type Category } from "./templates";
+import {
+  cleanFields,
+  isCategory,
+  TEMPLATES,
+  tidyUnit,
+  type Category,
+} from "./templates";
 
 export type Supply = typeof supplies.$inferSelect;
 export type SupplyUse = typeof supplyUses.$inferSelect;
@@ -62,13 +68,12 @@ function extraUnits(raw: string[] | undefined, unit: string): string[] {
   const seen = new Set([unit.toLowerCase()]);
   const out: string[] = [];
   for (const u of raw ?? []) {
-    const text = cleanText(u, 30);
+    const text = tidyUnit(cleanText(u, 30));
     if (text === "" || seen.has(text.toLowerCase())) continue;
     seen.add(text.toLowerCase());
     out.push(text);
   }
-  if (out.length > 8)
-    throw new ValidationError("That’s a lot of units — keep it to eight.");
+  if (out.length > 8) throw new ValidationError("Keep it to eight units.");
   return out;
 }
 
@@ -88,13 +93,12 @@ export function cleanStores(raw: PartInput["stores"]): StoreLink[] {
     out.push({ retailer, url, how: isHow(row.how) ? row.how : "either" });
   }
   if (out.length > MAX_STORES)
-    throw new ValidationError("That’s a lot of stores — keep it to ten.");
+    throw new ValidationError("Keep it to ten stores.");
   return out;
 }
 
 function category(raw: string): Category {
-  if (!isCategory(raw))
-    throw new ValidationError("Pick what kind of part this is.");
+  if (!isCategory(raw)) throw new ValidationError("Choose the part’s kind.");
   return raw;
 }
 
@@ -172,7 +176,7 @@ export async function createPart(
   const cat = category(input.category);
   const fields = cleanFields(cat, input.fields ?? {});
   const name = (input.name ?? "").trim() || suggestName(cat, fields);
-  const unit = cleanText(input.unit, 30) || TEMPLATES[cat].unit;
+  const unit = tidyUnit(cleanText(input.unit, 30)) || TEMPLATES[cat].unit;
   return inTransaction(exec, async (tx) => {
     const [row] = await tx
       .insert(supplies)
@@ -233,7 +237,8 @@ export async function updatePart(
         "Give the part a name.",
       );
     }
-    if (input.unit !== undefined) patch.unit = cleanText(input.unit, 30);
+    if (input.unit !== undefined)
+      patch.unit = tidyUnit(cleanText(input.unit, 30));
     if (input.extraUnits !== undefined || input.unit !== undefined) {
       patch.extraUnits = extraUnits(
         input.extraUnits ?? current!.extraUnits,
@@ -287,7 +292,10 @@ export type UseInput = {
 };
 
 export type UseView = SupplyUse & {
-  part: Pick<Supply, "id" | "name" | "category" | "fields" | "unit">;
+  part: Pick<
+    Supply,
+    "id" | "name" | "category" | "fields" | "unit" | "extraUnits"
+  >;
   owner: { kind: "fixture" | "place"; id: string; name: string; path: string };
 };
 
@@ -336,6 +344,7 @@ export async function listUses(
         category: supplies.category,
         fields: supplies.fields,
         unit: supplies.unit,
+        extraUnits: supplies.extraUnits,
       },
     })
     .from(supplyUses)
@@ -374,7 +383,9 @@ export async function addUse(
   const fixtureId = input.fixtureId || null;
   const spaceId = input.spaceId || null;
   if ((fixtureId ? 1 : 0) + (spaceId ? 1 : 0) !== 1)
-    throw new ValidationError("Say which fixture or place uses this part.");
+    throw new ValidationError(
+      "Choose the fixture or place that uses this part.",
+    );
   return inTransaction(exec, async (tx) => {
     const part = await getPart(tx, scope, input.supplyId);
     if (fixtureId) {
@@ -423,12 +434,9 @@ export async function addUse(
           TEMPLATES[part.category].finishes,
           cleanText(input.finish, 60),
         ),
-        quantity: parseQuantity(input.quantity, "How many"),
-        unit: cleanText(input.unit, 30) || part.unit,
-        quantityNeeded: parseQuantity(
-          input.quantityNeeded,
-          "How many it really needs",
-        ),
+        quantity: parseQuantity(input.quantity, "Amount"),
+        unit: tidyUnit(cleanText(input.unit, 30), partUnits(part)) || part.unit,
+        quantityNeeded: parseQuantity(input.quantityNeeded, "Amount needed"),
         notes: cleanText(input.notes, 2000),
         createdBy: actor.userId,
         updatedBy: actor.userId,
@@ -474,12 +482,13 @@ export async function updateUse(
       );
     }
     if (input.quantity !== undefined)
-      patch.quantity = parseQuantity(input.quantity, "How many");
-    if (input.unit !== undefined) patch.unit = cleanText(input.unit, 30);
+      patch.quantity = parseQuantity(input.quantity, "Amount");
+    if (input.unit !== undefined)
+      patch.unit = tidyUnit(cleanText(input.unit, 30));
     if (input.quantityNeeded !== undefined)
       patch.quantityNeeded = parseQuantity(
         input.quantityNeeded,
-        "How many it really needs",
+        "Amount needed",
       );
     if (input.notes !== undefined) patch.notes = cleanText(input.notes, 2000);
     const changes = diff(current, patch);

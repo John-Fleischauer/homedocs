@@ -8,7 +8,7 @@ import { noteOptions } from "@/lib/web/note-options";
 import { createNoteAction } from "../actions";
 import { NoteForm } from "../note-form";
 
-export const metadata = { title: "New Note" };
+export const metadata = { title: "New Entry" };
 
 export default async function NewNotePage({
   searchParams,
@@ -41,7 +41,7 @@ export default async function NewNotePage({
             : "/notes";
   return (
     <>
-      <PageHeader title="New Note" back={{ href: back, label: "Back" }} />
+      <PageHeader title="New Entry" back={{ href: back, label: "Back" }} />
       <NoteForm
         action={createNoteAction}
         options={options}
@@ -53,7 +53,7 @@ export default async function NewNotePage({
           projectId: p.project ?? null,
           unit: part?.unit ?? null,
         }}
-        submit="Save Note"
+        submit="Save Entry"
       />
     </>
   );

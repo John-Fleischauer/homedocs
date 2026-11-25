@@ -47,7 +47,7 @@ async function shrink(file: File): Promise<Blob> {
  */
 export function PhotoUpload({
   owner,
-  label = "Add Photo",
+  label = "Add Photo or File",
   tile,
 }: {
   owner: string;
@@ -55,6 +55,7 @@ export function PhotoUpload({
   tile?: { title: string; hint: string };
 }) {
   const input = useRef<HTMLInputElement>(null);
+  const errorText = "Couldn’t upload. Try again.";
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -82,14 +83,12 @@ export function PhotoUpload({
           const json = (await res.json().catch(() => ({}))) as {
             error?: string;
           };
-          throw new Error(json.error ?? "Couldn’t upload. Try again.");
+          throw new Error(json.error ?? errorText);
         }
       }
       router.refresh();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Couldn’t upload. Try again.",
-      );
+      setError(err instanceof Error ? err.message : errorText);
     } finally {
       setBusy(false);
     }

@@ -9,16 +9,21 @@ import {
   TextArea,
   TextInput,
 } from "@/components/ui/Field";
+import { Button } from "@/components/ui/Button";
 import { ChoiceInput, YesNoInput } from "@/components/ui/Choice";
+import { Icon } from "@/components/ui/icons";
 import { HEADING_PRESETS, withHeadings } from "@/lib/parts/formula";
 import type { StoreLink } from "@/lib/parts/retailers";
 import {
   CATEGORIES,
   TEMPLATES,
+  tidyUnit,
+  unitChoices,
   type Category,
   type TemplateField,
 } from "@/lib/parts/templates";
 import { StoreFields } from "./store-fields";
+import { UnitInput } from "./unit-input";
 import { UseFields } from "./use-fields";
 
 /* One part of the form under a heading, like a Section on the part's page. */
@@ -58,6 +63,14 @@ export function PartForm({
     initial?.category ?? "bulb",
   );
   const template = TEMPLATES[category];
+  /* What it's sold by: the usual unit, and any others ("roll", also "bale"). */
+  const own = [initial?.unit ?? "", ...(initial?.extraUnits ?? [])];
+  const [unit, setUnit] = useState(() =>
+    tidyUnit(initial?.unit ?? template.unit, own),
+  );
+  const [extra, setExtra] = useState<string[]>(initial?.extraUnits ?? []);
+  const [moreUnits, setMoreUnits] = useState(extra.length > 0);
+  const units = unitChoices([template.unit, ...own]);
   return (
     <ActionForm action={action}>
       {initial?.updatedAt ? (
@@ -70,12 +83,17 @@ export function PartForm({
           value={owner.id}
         />
       ) : null}
-      <Group title="What It Is">
+      <Group title="Details">
         <Field label="Kind">
           <Select
             name="category"
             value={category}
-            onChange={(e) => setCategory(e.target.value as Category)}
+            onChange={(e) => {
+              const next = e.target.value as Category;
+              setCategory(next);
+              // A new part takes the kind's usual unit; a saved one keeps its own.
+              setUnit(tidyUnit(initial?.unit ?? TEMPLATES[next].unit, own));
+            }}
           >
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>
@@ -104,35 +122,83 @@ export function PartForm({
             />
           ),
         )}
-        <Field label="Name" hint="Leave blank to use the details above">
+        <Field label="Name" hint="Filled from the details if blank">
           <TextInput name="name" defaultValue={initial?.name} />
         </Field>
       </Group>
       <Group title="Buying">
-        <Field label="Sold By" hint="Usual unit first, then others: roll, bale">
-          <TextInput
-            key={`units-${category}`}
-            name="units"
-            defaultValue={[
-              initial?.unit ?? template.unit,
-              ...(initial?.extraUnits ?? []),
-            ]
-              .filter(Boolean)
-              .join(", ")}
-            placeholder={template.unit}
+        <Field label="Sold By">
+          <UnitInput
+            name="unit"
+            label="Sold By"
+            choices={units}
+            value={unit}
+            onChange={setUnit}
           />
         </Field>
+        {moreUnits ? (
+          <fieldset>
+            <legend className="mb-1.5 text-sm font-medium text-ink-2">
+              Also Sold By
+            </legend>
+            <div className="flex flex-wrap gap-2">
+              {units
+                .filter((u) => u.toLowerCase() !== unit.toLowerCase())
+                .map((u) => {
+                  const on = extra.includes(u);
+                  return (
+                    <label
+                      key={u}
+                      className={`inline-flex min-h-11 cursor-pointer items-center rounded-full border px-3 text-sm ${
+                        on
+                          ? "border-accent bg-accent-soft text-accent"
+                          : "border-line bg-card text-ink-2"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        name="extraUnit"
+                        value={u}
+                        checked={on}
+                        onChange={(e) =>
+                          setExtra((all) =>
+                            e.target.checked
+                              ? [...all, u]
+                              : all.filter((x) => x !== u),
+                          )
+                        }
+                        className="sr-only"
+                      />
+                      {u}
+                    </label>
+                  );
+                })}
+            </div>
+            <TextInput
+              name="extraUnit"
+              className="mt-2"
+              placeholder="Another unit"
+              aria-label="Also Sold By, other"
+            />
+          </fieldset>
+        ) : (
+          <Button className="self-start" onClick={() => setMoreUnits(true)}>
+            <Icon name="plus" className="h-4 w-4" />
+            Add Another Unit
+          </Button>
+        )}
         <StoreFields initial={initial?.stores} />
       </Group>
-      <Group title="Notes">
+      <div className="border-t border-line pt-4">
         <Field label="Notes">
           <TextArea name="notes" defaultValue={initial?.notes} />
         </Field>
-      </Group>
+      </div>
       {owner ? (
         <UseFields
           key={category}
-          unit={template.unit}
+          unit={unit || template.unit}
+          units={units}
           finishes={template.finishes}
           ownerKind={owner.kind}
         />

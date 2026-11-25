@@ -203,7 +203,7 @@ anyway, so that gains nothing.
     (`documentsFor`, `components/DocumentsSection.tsx`): the ones linked one by one first, then the
     rest of what its tag or correspondent holds, each document once (a linked one keeps its Remove).
     Fixtures, parts and notes follow no tag and list only linked documents. No paperless row shows
-    under Linked, which is left to Homebox, Home Assistant and pasted addresses.
+    under Linked Items, which is left to Homebox, Home Assistant and pasted addresses.
   - **The house's tag:** `integrations.required_tags` (Settings → paperless, admin) lists tags every
     document must also have — for a paperless that also holds another home's papers. They are added
     to every Documents list (`tags__id__all=<filter>,<required>`), to "Add a document" searches,

@@ -172,7 +172,7 @@ describe("refused before anything is written", () => {
   it("a value outside its set", async () => {
     const { users: people } = await signIn();
     expect(await setRoleAction(people.viewer.id, "owner")).toEqual({
-      error: "Pick what they can do.",
+      error: "Choose a role.",
     });
     expect(await restoreAction("toString", crypto.randomUUID())).toEqual({
       error: "That can’t be restored.",

@@ -52,7 +52,7 @@ export async function DocumentsSection({
             href={filter.url}
             target="_blank"
             rel="noreferrer"
-            className="flex min-h-10 items-center gap-1 px-1 text-sm text-accent"
+            className="flex items-center gap-1 text-sm text-accent"
           >
             Open {kind ? KIND_LABEL[kind] : null}{" "}
             <Icon name="external" className="h-4 w-4" />
@@ -72,7 +72,7 @@ export async function DocumentsSection({
                   href={d.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex min-w-0 flex-1 items-center gap-3"
+                  className="flex min-h-11 min-w-0 flex-1 items-center gap-3"
                 >
                   <LinkThumb
                     src={
@@ -110,12 +110,10 @@ export async function DocumentsSection({
               </li>
             ))}
           </List>
-        ) : filter?.error ? null : (
-          <p className="px-1 text-sm text-ink-3">No documents yet</p>
-        )}
+        ) : null}
 
         {filter ? (
-          <div className="flex min-h-10 items-center gap-2 px-1">
+          <div className="flex min-h-11 items-center gap-2 px-1">
             <p
               className={`min-w-0 flex-1 text-sm ${filter.error ? "text-warn" : "text-ink-3"}`}
             >

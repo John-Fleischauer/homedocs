@@ -74,15 +74,13 @@ export async function deleteNoteAction(noteId: string): Promise<ActionResult> {
   redirect("/notes");
 }
 
-/** "Update needed amount to 15?" — carry a note's lesson onto the part's use. */
+/** "Set Amount Needed to 15 bags": carry a log entry's lesson onto the part's use. */
 export async function applyNeedAction(noteId: string): Promise<ActionResult> {
   return act({ id: noteId }, byId, async (input, { scope, actor }) => {
     const note = await getNote(db, scope, input.id);
     const need = suggestedNeed(note);
     if (need === null || !note.supplyId || !(note.spaceId || note.fixtureId)) {
-      throw new ValidationError(
-        "There’s no amount to carry over from this note.",
-      );
+      throw new ValidationError("This entry has no amount to save.");
     }
     const uses = await db
       .select({ id: supplyUses.id })
@@ -98,11 +96,11 @@ export async function applyNeedAction(noteId: string): Promise<ActionResult> {
       );
     if (uses.length !== 1)
       throw new ValidationError(
-        "Link the part to that place first, then try again.",
+        "Add the part to that place or fixture first, then try again.",
       );
     await updateUse(db, scope, actor, uses[0]!.id, {
       quantityNeeded: String(need),
     });
-    return { message: `Saved: it really needs ${need}.` };
+    return { message: "Amount needed saved" };
   });
 }

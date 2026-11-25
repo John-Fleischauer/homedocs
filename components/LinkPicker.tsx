@@ -129,7 +129,7 @@ export function LinkPicker({
             <button
               type="button"
               disabled={pending}
-              className="flex w-full min-h-12 flex-col items-start px-1 py-2 text-left hover:bg-sunk"
+              className="flex w-full min-h-12 flex-col items-start px-1 py-2 text-left wrap-anywhere hover:bg-sunk"
               onClick={() =>
                 start(async () => {
                   const r = await link(source!.system, h.externalId);
@@ -154,8 +154,7 @@ export function LinkPicker({
       {browsable && searched !== null && !error ? (
         // paperless filters by owner and sharing, so a short list is usually permissions, not a bug.
         <p className="px-1 text-xs text-ink-3">
-          Missing one? paperless only shows homedocs the {kind}s its paperless
-          user can see.
+          Only {kind}s the connected paperless user can see are listed
         </p>
       ) : null}
     </div>

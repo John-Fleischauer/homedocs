@@ -2,8 +2,9 @@
  * The systems every home starts with, and the guess at which one a fixture
  * belongs to. Pure, so the fixture form can make the same guess as you type.
  *
- * The backfill in migration 0003_systems.sql applies the same rules in SQL to
- * fixtures that existed before systems did; keep the two in step.
+ * The backfill in migration 0003_systems.sql applied these rules in SQL, once,
+ * to fixtures that existed before systems did. "Heating" and "cooling" came
+ * later, with the Heating or Cooling kind (lib/fixtures/kind-labels.ts).
  */
 
 export type SystemSeed = {
@@ -84,7 +85,7 @@ const RULES: [key: string, pattern: RegExp][] = [
   ["gas", /\bgas\b|propane/],
   [
     "hvac",
-    /hvac|furnace|air handler|\ba\/?c\b|air condition|heat pump|thermostat|boiler|mini-?split|ductless|air filter/,
+    /hvac|\bheating\b|\bcooling\b|furnace|air handler|\ba\/?c\b|air condition|heat pump|thermostat|boiler|mini-?split|ductless|air filter/,
   ],
   [
     "water",

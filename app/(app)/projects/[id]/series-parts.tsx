@@ -23,25 +23,27 @@ export function HowTo({
 }) {
   if (!text && !canEdit) return null;
   return (
-    <Card className="mt-4 px-4 py-3">
-      <div className="flex items-center justify-between gap-2">
+    <Card className="mt-4 py-1 pl-4 pr-2">
+      <div className="flex min-h-11 items-center justify-between gap-2">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-3">
           Instructions
         </h2>
         {canEdit ? (
           <Link
             href={`/projects/series/${seriesId}/edit`}
-            className="inline-flex min-h-11 items-center text-sm text-accent"
+            aria-label="Edit Instructions"
+            title="Edit"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink-3 hover:bg-sunk hover:text-ink"
           >
-            Edit
+            <Icon name="edit" className="h-[18px] w-[18px]" />
           </Link>
         ) : null}
       </div>
       {text ? (
-        <p className="whitespace-pre-wrap text-[15px] text-ink-2">{text}</p>
-      ) : (
-        <p className="text-sm text-ink-3">Nothing written yet</p>
-      )}
+        <p className="whitespace-pre-wrap wrap-anywhere pb-2 pr-2 text-[15px] text-ink-2">
+          {text}
+        </p>
+      ) : null}
     </Card>
   );
 }
@@ -71,14 +73,17 @@ export function LastTime({
           <Icon name="alert" className="mt-0.5 h-5 w-5 shrink-0" />
           <span className="min-w-0 flex-1 text-[15px]">
             <span className="font-semibold">Last Time:</span> {note.nextTime}
-            <Link href={`/notes/${note.id}`} className="block text-xs">
+            <Link
+              href={`/notes/${note.id}`}
+              className="flex min-h-11 items-center text-xs underline"
+            >
               From “{note.title}”, {formatDay(note.happenedOn)}
             </Link>
             {canEdit && !howTo.includes(note.nextTime) ? (
               <button
                 type="button"
                 disabled={pending}
-                className="mt-1 inline-flex min-h-11 items-center text-sm font-medium underline"
+                className="inline-flex min-h-11 items-center text-sm font-medium underline"
                 onClick={() =>
                   ask(
                     [
@@ -112,14 +117,14 @@ export function MakeSeriesButton({
   return (
     <div className="mt-8 flex flex-col items-start gap-2 border-t border-line pt-6">
       <p className="px-1 text-sm text-ink-3">
-        Reuse this checklist and materials next time
+        Reuse these to-dos and materials next time
       </p>
       <ConfirmInline
         action={make}
         verb="Make Series"
         variant="secondary"
         pendingText="Making…"
-        note="Its checklist and materials become the defaults, and its details the instructions"
+        note="Its to-dos and materials become the defaults, and its details the instructions"
       />
     </div>
   );

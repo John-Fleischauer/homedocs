@@ -14,7 +14,7 @@ test("add someone directly, and they sign in", async ({ page, browser }) => {
   await form.locator("[name=email]").fill("grandma@example.test");
   await form.locator("[name=role]").selectOption("viewer");
   await form.getByRole("button", { name: "Add Person" }).click();
-  await expect(page.getByText("Grandma can sign in now.")).toBeVisible();
+  await expect(page.getByText("Grandma can sign in now")).toBeVisible();
   await expect(
     page.getByText("grandma@example.test · not signed in yet"),
   ).toBeVisible();
@@ -23,7 +23,7 @@ test("add someone directly, and they sign in", async ({ page, browser }) => {
   await form.locator("[name=email]").fill("kid@example.test");
   await form.locator("[name=password]").fill("correct horse battery");
   await form.getByRole("button", { name: "Add Person" }).click();
-  await expect(page.getByText("Kid can sign in now.")).toBeVisible();
+  await expect(page.getByText("Kid can sign in now")).toBeVisible();
 
   const fresh = await browser.newContext({
     storageState: { cookies: [], origins: [] },

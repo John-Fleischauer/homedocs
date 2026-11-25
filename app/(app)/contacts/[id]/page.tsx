@@ -3,7 +3,6 @@ import { LinksSection } from "@/components/LinksSection";
 import { NoteList } from "@/components/NoteList";
 import { PhotoUpload } from "@/components/PhotoUpload";
 import { Photos } from "@/components/Photos";
-import { LinkButton } from "@/components/ui/Button";
 import { Card, Facts, List, Pill, Section } from "@/components/ui/Card";
 import { Icon } from "@/components/ui/icons";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -44,20 +43,26 @@ export default async function ContactPage({
         back={{ href: "/contacts", label: "Contacts" }}
         actions={
           canEdit ? (
-            <LinkButton href={`/contacts/${id}/edit`}>Edit</LinkButton>
+            <Link
+              href={`/contacts/${id}/edit`}
+              aria-label={`Edit ${contact.name}`}
+              title="Edit"
+              className="flex h-11 w-11 items-center justify-center rounded-control border border-line bg-card text-ink hover:bg-sunk"
+            >
+              <Icon name="edit" className="h-[18px] w-[18px]" />
+            </Link>
           ) : null
         }
       />
 
-      {contact.trades.length ? (
+      {contact.trades.length || contact.inGuide ? (
         <div className="mb-4 flex flex-wrap gap-2">
           {contact.trades.map((t) => (
             <Pill key={t.trade} tone={t.preferred ? "accent" : "neutral"}>
               {t.preferred ? (
                 <>
                   <span aria-hidden>★{"\u00a0"}</span>
-                  <span className="sr-only">Go-to </span>
-                  {label(t.trade)}
+                  Go-To {label(t.trade)}
                 </>
               ) : (
                 label(t.trade)
@@ -76,10 +81,17 @@ export default async function ContactPage({
                 href={telHref(p.value)}
                 className="flex min-h-14 items-center gap-3 px-4 py-2 hover:bg-sunk"
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-accent-ink">
+                <span
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+                    // The first number is what the page is for; one filled button a screen.
+                    i === 0
+                      ? "bg-accent text-accent-ink"
+                      : "bg-accent-soft text-accent"
+                  }`}
+                >
                   <Icon name="phone" />
                 </span>
-                <span>
+                <span className="min-w-0 wrap-anywhere">
                   <span className="block text-[17px] font-medium text-ink">
                     {p.value}
                   </span>
@@ -96,10 +108,10 @@ export default async function ContactPage({
                 href={`mailto:${e.value}`}
                 className="flex min-h-14 items-center gap-3 px-4 py-2 hover:bg-sunk"
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-soft text-accent">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
                   <Icon name="mail" />
                 </span>
-                <span>
+                <span className="min-w-0 wrap-anywhere">
                   <span className="block text-[15px] text-ink">{e.value}</span>
                   {e.label ? (
                     <span className="block text-sm text-ink-3">{e.label}</span>
@@ -145,23 +157,19 @@ export default async function ContactPage({
       ) : null}
 
       <Section
-        title="Notes"
+        title="Log"
         action={
           canEdit ? (
             <Link
               href={`/notes/new?contact=${id}`}
-              className="text-sm text-accent"
+              className="-my-3 flex min-h-11 items-center px-1 text-sm text-accent"
             >
-              Add Note
+              Add Entry
             </Link>
           ) : null
         }
       >
-        {notes.length ? (
-          <NoteList rows={notes} />
-        ) : (
-          <p className="px-1 text-sm text-ink-3">None yet</p>
-        )}
+        {notes.length ? <NoteList rows={notes} /> : null}
       </Section>
 
       <DocumentsSection

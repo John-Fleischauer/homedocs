@@ -6,25 +6,86 @@ import { TradeChips } from "@/components/TradeChips";
 import {
   Checkbox,
   Field,
+  Select,
   SubmitButton,
   TextArea,
   TextInput,
 } from "@/components/ui/Field";
 import { tradeLabeler, type TradeGroup } from "@/lib/contacts/trade-labels";
 import { focusUnlessTouch } from "@/components/ui/focus";
+import { OTHER_CHOICE } from "@/lib/core/choices";
 
 type Method = { label: string; value: string };
+
+/* What the label dropdown posts for "Other…"; the action saves it as no label. */
+const OTHER = OTHER_CHOICE;
+const PHONE_LABELS = ["Office", "Cell", "Home", "After Hours", "Emergency"];
+const EMAIL_LABELS = ["Office", "Personal", "Billing", "Support"];
+
+/*
+ * What a number or address is for: a dropdown of the usual answers. One saved
+ * in other words stays in the list as itself, and "Other…" swaps the dropdown
+ * for a box to type one.
+ */
+function MethodLabel({
+  name,
+  choices,
+  initial,
+  label,
+}: {
+  name: string;
+  choices: string[];
+  initial: string;
+  label: string;
+}) {
+  const [value, setValue] = useState(initial);
+  const [typing, setTyping] = useState(false);
+  if (typing)
+    return (
+      <TextInput
+        name={name}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder="Label"
+        aria-label={label}
+        ref={focusUnlessTouch}
+      />
+    );
+  const options =
+    initial && !choices.includes(initial) ? [...choices, initial] : choices;
+  return (
+    <Select
+      name={name}
+      value={value}
+      aria-label={label}
+      onChange={(e) => {
+        if (e.target.value === OTHER) {
+          setValue("");
+          setTyping(true);
+        } else setValue(e.target.value);
+      }}
+    >
+      <option value="">Label</option>
+      {options.map((o) => (
+        <option key={o}>{o}</option>
+      ))}
+      <option value={OTHER}>Other…</option>
+    </Select>
+  );
+}
 
 function Methods({
   prefix,
   label,
   type,
+  choices,
   initial,
   placeholder,
 }: {
   prefix: string;
   label: string;
-  type: string;
+  type: "tel" | "email";
+  choices: string[];
   initial: Method[];
   placeholder: string;
 }) {
@@ -37,19 +98,20 @@ function Methods({
     <fieldset className="flex flex-col gap-2">
       <legend className="mb-1.5 text-sm font-medium text-ink-2">{label}</legend>
       {rows.map((m, i) => (
-        <div key={i} className="grid grid-cols-[7rem_1fr] gap-2">
-          <TextInput
-            name={`${prefix}Label`}
-            defaultValue={m.label}
-            placeholder={i === 0 ? "Office" : "Cell"}
-            aria-label={`${label} ${i + 1} label`}
-          />
+        <div key={i} className="grid grid-cols-[1fr_8.5rem] gap-2">
           <TextInput
             name={`${prefix}Value`}
             type={type}
+            inputMode={type}
             defaultValue={m.value}
             placeholder={placeholder}
             aria-label={`${label} ${i + 1}`}
+          />
+          <MethodLabel
+            name={`${prefix}Label`}
+            choices={choices}
+            initial={m.label}
+            label={`${label} ${i + 1} Label`}
           />
         </div>
       ))}
@@ -97,18 +159,22 @@ export function ContactForm({
         <TextInput
           name="name"
           defaultValue={initial?.name}
-          placeholder="Ace Plumbing, City Water"
+          placeholder="Ace Plumbing"
           required
           ref={initial?.name ? undefined : focusUnlessTouch}
         />
       </Field>
-      <Field label="Company or Contact Person">
+      <Field
+        label="Contact Person or Company"
+        hint="Who to ask for there, or where this person works"
+      >
         <TextInput name="company" defaultValue={initial?.company} />
       </Field>
       <Methods
         prefix="phone"
         label="Phone"
         type="tel"
+        choices={PHONE_LABELS}
         initial={initial?.phones ?? []}
         placeholder="(555) 123-4567"
       />
@@ -116,6 +182,7 @@ export function ContactForm({
         prefix="email"
         label="Email"
         type="email"
+        choices={EMAIL_LABELS}
         initial={initial?.emails ?? []}
         placeholder="name@example.com"
       />
@@ -125,6 +192,7 @@ export function ContactForm({
           type="url"
           inputMode="url"
           defaultValue={initial?.website}
+          placeholder="https://"
         />
       </Field>
 
@@ -141,7 +209,7 @@ export function ContactForm({
             Go-To For
           </legend>
           <p className="mb-1 text-xs text-ink-3">
-            Shown on Home and the house guide
+            Who to call first; shown on Home and the house guide
           </p>
           {chosen.map((t) => (
             <Checkbox

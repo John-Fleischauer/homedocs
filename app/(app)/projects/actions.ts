@@ -306,8 +306,8 @@ async function sendToSeries(
   return {
     message:
       applied === 1
-        ? "Series updated."
-        : `Series updated (${applied} changes).`,
+        ? "Series updated"
+        : `Series updated (${applied} changes)`,
   };
 }
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Icon } from "@/components/ui/icons";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { requireRole } from "@/lib/auth/guards";
 import { listContacts } from "@/lib/contacts/contacts";
@@ -39,7 +40,7 @@ export default async function NewProjectPage({
           back={{ href: `/projects/series/${series.id}`, label: series.title }}
         />
         <p className="mb-4 rounded-control bg-accent-soft px-3 py-2 text-sm text-accent">
-          Starts with the series’{" "}
+          Starts with{" "}
           {series.items.length === 1
             ? "1 to-do"
             : `${series.items.length} to-dos`}{" "}
@@ -47,7 +48,6 @@ export default async function NewProjectPage({
           {series.materials.length === 1
             ? "1 material"
             : `${series.materials.length} materials`}
-          .
         </p>
         <ProjectForm
           action={createProjectAction}
@@ -73,20 +73,26 @@ export default async function NewProjectPage({
         back={{ href: "/projects", label: "Projects" }}
       />
       {allSeries.length ? (
-        <div className="mb-4 flex flex-col gap-2">
-          <p className="px-1 text-sm text-ink-3">Start from a series</p>
+        <section className="mb-5">
+          <h2 className="mb-2 px-1 text-sm font-semibold uppercase tracking-wide text-ink-3">
+            Start from a Series
+          </h2>
           <div className="flex flex-wrap gap-2">
             {allSeries.map((s) => (
               <Link
                 key={s.id}
                 href={`/projects/new?series=${s.id}`}
-                className="inline-flex min-h-11 items-center rounded-full border border-line bg-card px-4 text-sm text-ink-2"
+                className="inline-flex min-h-11 items-center gap-1 rounded-full border border-line bg-card py-1.5 pl-4 pr-2.5 wrap-anywhere text-sm text-ink-2 hover:bg-sunk"
               >
                 {s.title}
+                <Icon name="chevron" className="h-4 w-4 shrink-0 text-ink-3" />
               </Link>
             ))}
           </div>
-        </div>
+          <h2 className="mt-5 px-1 text-sm font-semibold uppercase tracking-wide text-ink-3">
+            Or a New Job
+          </h2>
+        </section>
       ) : null}
       <ProjectForm
         action={createProjectAction}

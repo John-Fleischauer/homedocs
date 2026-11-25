@@ -48,7 +48,14 @@ export default async function SeriesPage({
         back={{ href: "/projects", label: "Projects" }}
         actions={
           canEdit ? (
-            <LinkButton href={`/projects/series/${id}/edit`}>Edit</LinkButton>
+            <Link
+              href={`/projects/series/${id}/edit`}
+              aria-label="Edit"
+              title="Edit"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control border border-line bg-card text-ink hover:bg-sunk"
+            >
+              <Icon name="edit" className="h-5 w-5" />
+            </Link>
           ) : null
         }
       />
@@ -64,18 +71,16 @@ export default async function SeriesPage({
         </LinkButton>
       ) : null}
 
-      <Card className="mt-4 px-4 py-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-3">
-          Instructions
-        </h2>
-        {series.howTo ? (
-          <p className="whitespace-pre-wrap text-[15px] text-ink-2">
+      {series.howTo ? (
+        <Card className="mt-4 px-4 py-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-3">
+            Instructions
+          </h2>
+          <p className="whitespace-pre-wrap wrap-anywhere text-[15px] text-ink-2">
             {series.howTo}
           </p>
-        ) : (
-          <p className="text-sm text-ink-3">Nothing written yet</p>
-        )}
-      </Card>
+        </Card>
+      ) : null}
 
       {series.places.length || series.contact ? (
         <div className="mt-3 flex flex-wrap gap-2">
@@ -83,18 +88,18 @@ export default async function SeriesPage({
             <Link
               key={p.id}
               href={`/places/${p.id}`}
-              className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-card px-3 text-sm text-ink-2"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-line bg-card px-3 py-1.5 wrap-anywhere text-sm text-ink-2 hover:bg-sunk"
             >
-              <Icon name="place" className="h-4 w-4 text-accent" />
+              <Icon name="place" className="h-4 w-4 shrink-0 text-accent" />
               {p.name}
             </Link>
           ))}
           {series.contact ? (
             <Link
               href={`/contacts/${series.contact.id}`}
-              className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-card px-3 text-sm text-ink-2"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-line bg-card px-3 py-1.5 wrap-anywhere text-sm text-ink-2 hover:bg-sunk"
             >
-              <Icon name="contact" className="h-4 w-4 text-accent" />
+              <Icon name="contact" className="h-4 w-4 shrink-0 text-accent" />
               {series.contact.name}
             </Link>
           ) : null}
@@ -157,13 +162,11 @@ export default async function SeriesPage({
               />
             ))}
           </List>
-        ) : (
-          <p className="px-1 text-sm text-ink-3">None yet</p>
-        )}
+        ) : null}
       </Section>
 
       {notes.length ? (
-        <Section title="Past Notes">
+        <Section title="Log">
           <Lessons rows={lessons} />
           <div className="mt-3">
             <NoteList rows={notes} />

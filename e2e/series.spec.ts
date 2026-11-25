@@ -101,7 +101,7 @@ test("this year: a one-off roll, and the stairs only took 7, sent back to the se
 
   // The one modal confirm: it lists what the series will change.
   await stairs.getByRole("button", { name: "Update Series" }).click();
-  const ask = page.getByRole("dialog", { name: "Update the Series?" });
+  const ask = page.getByRole("dialog", { name: "Update Series?" });
   await expect(ask).toContainText(
     "Pine straw (around the stairs): 8 rolls → 7 rolls",
   );
@@ -111,8 +111,9 @@ test("this year: a one-off roll, and the stairs only took 7, sent back to the se
   await expect(page.getByText(/differences? from/)).toHaveCount(0);
   await noSeriousProblems(page);
 
-  await page.getByRole("button", { name: "Done" }).click();
-  await expect(page.getByText(/^Done/).first()).toBeVisible();
+  const status = page.getByRole("combobox", { name: "Status" });
+  await status.selectOption({ label: "Done" });
+  await expect(status).toHaveValue("done");
 });
 
 test("next year starts from 7 and 5, without the flowerbed roll", async ({
