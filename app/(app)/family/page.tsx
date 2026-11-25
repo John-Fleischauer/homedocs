@@ -28,10 +28,11 @@ import {
   ResetLink,
   RevokeButton,
   RoleSelect,
-  ROLE_NAME,
 } from "./parts";
 
 export const metadata = { title: "Family" };
+
+const ROLE_NAME = { admin: "Admin", member: "Member", viewer: "Viewer" };
 
 /* The trash, asked in place; its name says whom it removes. */
 function RemoveButton({
@@ -42,15 +43,17 @@ function RemoveButton({
   action: () => Promise<unknown>;
 }) {
   return (
-    <ConfirmInline
-      action={action}
-      verb="Remove"
-      subject={who}
-      note="They can no longer sign in"
-      trigger={<Icon name="trash" className="h-[18px] w-[18px]" />}
-      triggerLabel={`Remove ${who}`}
-      triggerClass="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink-3 hover:bg-sunk hover:text-danger"
-    />
+    <span className="ml-auto">
+      <ConfirmInline
+        action={action}
+        verb="Remove"
+        subject={who}
+        note="They can no longer sign in"
+        trigger={<Icon name="trash" className="h-[18px] w-[18px]" />}
+        triggerLabel={`Remove ${who}`}
+        triggerClass="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ink-3 hover:bg-sunk hover:text-danger"
+      />
+    </span>
   );
 }
 
@@ -82,7 +85,7 @@ export default async function FamilyPage() {
                     {a.email} · signed in {formatDay(localDay(a.createdAt))}
                   </span>
                 </span>
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <PlaceForm
                     action={placeAction.bind(null, a.id)}
                     suggested={placementRole()}
@@ -121,7 +124,7 @@ export default async function FamilyPage() {
               />
             </div>
             {p.id !== me.id ? (
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 {p.hasPassword || signIn.password ? (
                   <ResetLink action={resetAction.bind(null, p.id)} />
                 ) : (
@@ -181,7 +184,7 @@ export default async function FamilyPage() {
                 <span className="min-w-0 flex-1">
                   <span className="block wrap-anywhere text-[15px] text-ink">
                     {i.kind === "reset"
-                      ? `Password reset for ${i.label}`
+                      ? `Password link for ${i.label}`
                       : i.label || "Invite"}
                   </span>
                   <span className="block text-sm text-ink-3">

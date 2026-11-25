@@ -101,7 +101,7 @@ export async function createNote(
       .insert(logs)
       .values({
         propertyId: scope.propertyId,
-        title: requireText(input.title, "Say what happened in a few words."),
+        title: requireText(input.title, "Give the entry a title."),
         happenedOn: parseDate(input.happenedOn, "Date") ?? today(),
         body: cleanText(input.body),
         spaceId: input.spaceId || null,
@@ -148,10 +148,7 @@ export async function updateNote(
     await assertLinks(tx, scope, input);
     const patch: Partial<Note> = {};
     if (input.title !== undefined)
-      patch.title = requireText(
-        input.title,
-        "Say what happened in a few words.",
-      );
+      patch.title = requireText(input.title, "Give the entry a title.");
     if (input.happenedOn !== undefined)
       patch.happenedOn =
         parseDate(input.happenedOn, "Date") ?? current!.happenedOn;

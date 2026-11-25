@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ChoiceInput } from "@/components/ui/Choice";
 import { Field, TextInput } from "@/components/ui/Field";
 import { tidyUnit, unitChoices } from "@/lib/parts/templates";
+import { formatQty } from "@/lib/web/format";
 import { UnitInput } from "./unit-input";
 
 /* How a part is used by one fixture or place. Shown when adding a part from a page. */
@@ -42,7 +43,7 @@ export function UseFields({
           <TextInput
             name="quantity"
             inputMode="decimal"
-            defaultValue={initial?.quantity ?? ""}
+            defaultValue={formatQty(initial?.quantity)}
             placeholder="3"
           />
         </Field>
@@ -84,7 +85,7 @@ export function UseFields({
         <TextInput
           name="quantityNeeded"
           inputMode="decimal"
-          defaultValue={initial?.quantityNeeded ?? ""}
+          defaultValue={formatQty(initial?.quantityNeeded)}
         />
       </Field>
       <Field label="Notes">

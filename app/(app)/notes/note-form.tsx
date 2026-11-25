@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/Field";
 import { Icon } from "@/components/ui/icons";
 import { tidyUnit, unitChoices } from "@/lib/parts/templates";
-import { localDay } from "@/lib/web/format";
+import { formatQty, localDay } from "@/lib/web/format";
 import { focusUnlessTouch } from "@/components/ui/focus";
 import { UnitInput } from "../parts/unit-input";
 
@@ -201,7 +201,7 @@ export function NoteForm({
           <TextInput
             name="quantity"
             inputMode="decimal"
-            defaultValue={v("quantity")}
+            defaultValue={formatQty(v("quantity"))}
             placeholder="12"
           />
         </Field>

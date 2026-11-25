@@ -162,3 +162,46 @@ to a series (Update Series, Remove from Series, Update Series with All Changes, 
 Instructions): each changes what every later project in the series starts from, so it lists each
 change before it's made, which an inline question has no room for. `test/design/classes.test.ts`
 refuses `confirm()` and `alert()`.
+
+## 2026-11-25: The dated records are the Log, not Notes
+
+**Before:** "Notes" meant three things: the dated records of what happened (a repair, a filter
+change, mulch put down), the free-text box on every form, and the house guide's sections. A
+contact's page had two sections titled Notes, and a part's page called the same records History.
+
+**Now** (the owner's decision, in the design and usability pass): the dated record is a **log
+entry** and the collection is the **Log**: the list page, the More row, the section on every
+detail page (the part page's History included), Add Entry, New Entry, Edit Entry, Save Entry.
+"Notes" is left meaning the free-text box and the guide's sections.
+
+A UI word only. The URLs stay `/notes/...`, so saved links and the search index keep working; the
+tables (`logs`), the code (`lib/notes/`, `NoteList`, `createNote`) and the MCP tools (`add_note`,
+`get_note`, and their descriptions) are unchanged, so a connector set up before the rename
+behaves as it did.
+
+## 2026-11-25: A fixture's kind is picked from a list the family edits
+
+**Before:** Kind on the fixture form was a free-text box with suggestions. Nobody filled it in the
+same way twice, most fixtures had none, every fixture showed the same bulb, and the Fixtures list
+was one flat run.
+
+**Now** (the owner's decision, in the design and usability pass): Kind is a dropdown of the home's
+own list, built the way contact trades are: `properties.fixture_kinds` (null means
+`DEFAULT_FIXTURE_KINDS`, twelve kinds ending in Other), edited at `/fixtures/kinds` from an Edit
+List link beside the field, where a member adds, renames, removes and reorders. The form picks the
+kind from the name as it is typed until someone picks one, as System already did, and the system
+guess reads the kind too.
+
+The kind stays text on the fixture (`fixtures.category`), not a reference to a list row, so the
+connector's `create_fixture` keeps taking free text and a restore or an old fixture needs no
+mapping. Three rules follow from that. A kind is saved as the list spells it ("shutoff valve"
+becomes "Shutoff Valve"); one the list doesn't have is kept as typed, and the form offers it as
+an extra option so an edit never drops it. Removing a kind from the list leaves the fixtures that
+have it alone. Renaming one renames it on those fixtures and rebuilds their search documents (the
+cascade table in `lib/search/rebuild.ts`); renamed onto another kind's name, the two merge.
+
+The icon comes from the kind's words (`kindIcon`), not from a stored choice, so a kind the family
+adds and one typed before there was a list ("Ceiling fan") get a fitting icon without an icon
+picker; a fixture with no kind gets the icon its name suggests. The Fixtures list is grouped by
+place, with the kind in each row's icon and second line. Fixtures already in the database were
+not rewritten: their old kinds stay until someone edits them.

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LinkButton } from "@/components/ui/Button";
 import { findOpenInvite } from "@/lib/auth/invites";
 import { JoinForm } from "./join-form";
 
@@ -22,13 +22,12 @@ export default async function JoinPage({
     return (
       <>
         <h2 className="mb-2 text-xl font-semibold text-ink">Link Expired</h2>
-        <p className="text-[15px] text-ink-3">
-          Links work once, for a week. Ask for a new one, or{" "}
-          <Link href="/login" className="text-accent underline">
-            sign in
-          </Link>{" "}
-          if you have an account
+        <p className="mb-6 text-[15px] text-ink-3">
+          Links work once, for a week. Ask for a new one
         </p>
+        <LinkButton href="/login" className="w-full">
+          Sign In
+        </LinkButton>
       </>
     );
   }

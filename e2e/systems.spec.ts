@@ -14,7 +14,10 @@ test("a shutoff lands in Water & plumbing, and the system hands it over", async 
 }) => {
   await page.goto("/fixtures/new");
   await page.locator("[name=name]").fill("Main water shutoff");
-  await page.locator("[name=category]").fill("Shutoff valve");
+  // The kind follows the name, and the system follows both.
+  await expect(
+    page.getByRole("combobox", { name: "Kind" }).locator("option:checked"),
+  ).toHaveText("Shutoff Valve");
   const system = page.getByRole("combobox", { name: "System" });
   await expect(system.locator("option:checked")).toHaveText("Water & plumbing");
   await page.getByText("Show on House Guide").click();
@@ -31,7 +34,7 @@ test("a shutoff lands in Water & plumbing, and the system hands it over", async 
     page.getByRole("heading", { name: "Water & plumbing" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Key Fixtures" }),
+    page.getByRole("heading", { name: "On House Guide" }),
   ).toBeVisible();
   await expect(
     page.getByText("Red handle, quarter turn clockwise."),
@@ -79,9 +82,9 @@ test("a choice made by hand sticks while typing, and the family can add a system
   await page.getByText("Pool", { exact: true }).click();
   await page.getByRole("button", { name: "Add System" }).click();
   await expect(page.getByRole("heading", { name: "Pool" })).toBeVisible();
-  await expect(page.getByText("None yet")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Fixtures" })).toBeVisible();
   await page.goto("/systems");
   await expect(
-    page.getByRole("link", { name: /Pool.*Nothing yet/ }),
+    page.getByRole("link", { name: "Pool", exact: true }),
   ).toBeVisible();
 });

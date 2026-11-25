@@ -117,19 +117,20 @@ test("mulch: what we used, and the lesson for next time", async ({ page }) => {
   await page.locator("[name=quantity]").fill("12");
   await page.getByRole("button", { name: /Add to Front flowerbed/ }).click();
 
-  await page.getByRole("link", { name: "Add Note" }).click();
+  await page.getByRole("link", { name: "Add Entry" }).click();
   await page.locator("[name=title]").fill("Spring mulch");
   await page
     .locator("[name=supplyId]")
     .selectOption({ label: "Brown hardwood mulch" });
   await page.locator("[name=quantity]").fill("12");
-  await page.locator("[name=unit]").fill("bag");
+  // Picked, and already the part's own unit.
+  await answer(page, "unit", "bag");
   await page.locator("[name=nextTime]").fill("Needed 3 more bags");
-  await page.getByRole("button", { name: "Save Note" }).click();
+  await page.getByRole("button", { name: "Save Entry" }).click();
 
-  await page.getByRole("button", { name: /really needs 15/ }).click();
+  await page.getByRole("button", { name: /Set Amount Needed to 15/ }).click();
   await expect(
-    page.getByText(/Remembered: Front flowerbed really needs 15 bags/),
+    page.getByText(/Amount needed for Front flowerbed: 15 bags/),
   ).toBeVisible();
 });
 
@@ -142,7 +143,7 @@ test("question 2: how many bags does the front bed take?", async ({ page }) => {
   await expect(
     page.getByText(/Next Time:.*Needed 3 more bags/).first(),
   ).toBeVisible();
-  await expect(page.getByText(/really needs 15 bags/)).toBeVisible();
+  await expect(page.getByText(/actually needs 15 bags/)).toBeVisible();
 });
 
 test("question 3: which paint is in the bedroom?", async ({ page }) => {
@@ -271,15 +272,17 @@ test("a filter bought at two stores, one in person and one online", async ({
     "Home Depot",
   );
   await page
-    .getByLabel("Store 1: how it’s bought")
-    .selectOption({ label: "In store" });
+    .getByRole("radiogroup", { name: "Store 1: Where It’s Bought" })
+    .getByRole("radio", { name: "In Store" })
+    .click();
   await page.getByRole("button", { name: "Add Store" }).click();
   await page
     .getByLabel("Store 2 link")
     .fill("https://www.amazon.com/dp/B000000000");
   await page
-    .getByLabel("Store 2: how it’s bought")
-    .selectOption({ label: "Online" });
+    .getByRole("radiogroup", { name: "Store 2: Where It’s Bought" })
+    .getByRole("radio", { name: "Online" })
+    .click();
   await page.getByRole("button", { name: "Add Part" }).click();
 
   const stores = page.locator("#where-to-buy");
@@ -313,7 +316,7 @@ test("a bulb's details are picked, not typed, and an unusual one still fits", as
   await page.getByLabel("Shape, other").fill("R20");
   await answer(page, "f_color_temp", "3000K");
   await page
-    .getByRole("group", { name: "Dimmable?" })
+    .getByRole("group", { name: "Dimmable" })
     .getByText("Yes", { exact: true })
     .click();
   await page.getByRole("button", { name: "Add Part" }).click();
@@ -321,13 +324,13 @@ test("a bulb's details are picked, not typed, and an unusual one still fits", as
   await expect(
     page.getByRole("heading", { name: "R20 GU10 3000K bulb" }),
   ).toBeVisible();
-  await expect(page.getByText("Dimmable?")).toBeVisible();
+  await expect(page.getByText("Dimmable", { exact: true })).toBeVisible();
 
   // Editing opens on what was saved, the unusual shape included.
   await page.getByRole("link", { name: "Edit" }).click();
   await expect(page.getByLabel("Shape, other")).toHaveValue("R20");
   await expect(
-    page.getByRole("group", { name: "Dimmable?" }).getByLabel("Yes"),
+    page.getByRole("group", { name: "Dimmable" }).getByLabel("Yes"),
   ).toBeChecked();
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa"])

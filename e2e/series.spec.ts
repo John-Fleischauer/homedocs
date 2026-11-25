@@ -42,7 +42,12 @@ async function addMaterial(
 test("set up the pine straw series", async ({ page }) => {
   await page.goto("/parts/new?category=landscaping");
   await page.locator("[name=name]").fill("Pine straw");
-  await page.locator("[name=units]").fill("roll, bale");
+  await page.locator("[name=unit]").selectOption("roll");
+  await page.getByRole("button", { name: "Add Another Unit" }).click();
+  await page
+    .getByRole("group", { name: "Also Sold By" })
+    .getByText("bale", { exact: true })
+    .click();
   await page.getByRole("button", { name: "Add Part" }).click();
   await expect(page.getByRole("heading", { name: "Pine straw" })).toBeVisible();
   await expect(page.getByText("roll, bale")).toBeVisible();

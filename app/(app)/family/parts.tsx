@@ -9,7 +9,7 @@ import { Field, Select, SubmitButton, TextInput } from "@/components/ui/Field";
 import type { ActionResult } from "@/lib/web/action";
 import { keepFormValues, useClearOnSuccess } from "@/lib/keep-form-values";
 
-export const ROLE_NAME = {
+const ROLE_NAME = {
   admin: "Admin",
   member: "Member",
   viewer: "Viewer",
@@ -168,11 +168,9 @@ export function ResetLink({ action }: { action: FormAction }) {
     <form
       action={formAction}
       onReset={keepFormValues}
-      className="flex flex-col gap-2"
+      className="flex min-w-0 flex-col gap-2"
     >
-      {state.message ? (
-        <MadeLink url={state.message} />
-      ) : null}
+      {state.message ? <MadeLink url={state.message} /> : null}
       {state.error ? (
         <p role="alert" className="text-sm text-danger">
           {state.error}
@@ -181,7 +179,7 @@ export function ResetLink({ action }: { action: FormAction }) {
       {!state.message ? (
         <SubmitButton
           variant="secondary"
-          className="self-start text-sm"
+          className="self-start whitespace-nowrap text-sm"
           pendingText="Making link…"
         >
           Make Password Link
